@@ -1,8 +1,8 @@
 import {useState} from "react";
 import {GOODS} from "@/data/goods";
 import {formatMoney} from "@/game/format";
-import {getUsedWarehouse, holdingCostTotal, holdingUnitCost, holdingUnrealizedPnl} from "@/game/engine";
-import {WAREHOUSE_UPGRADE_COST, WAREHOUSE_UPGRADE_SIZE} from "@/game/constants";
+import {getUsedWarehouse, getWarehouseUpgradeCost, holdingCostTotal, holdingUnitCost, holdingUnrealizedPnl} from "@/game/engine";
+import {WAREHOUSE_UPGRADE_SIZE} from "@/game/constants";
 import type {GameState, GoodId} from "@/types/game";
 import {Button} from "@/components/Button";
 import {ConfirmModal} from "@/components/ConfirmModal";
@@ -23,7 +23,8 @@ export const MarketPanel = ({state, locked, highlightGoodId, onBuy, onSell, onUp
     const [confirmUpgrade, setConfirmUpgrade] = useState(false);
     const used = getUsedWarehouse(state);
     const free = Math.max(0, state.warehouseCapacity - used);
-    const canUpgrade = !locked && state.cash >= WAREHOUSE_UPGRADE_COST;
+    const upgradeCost = getWarehouseUpgradeCost(state.warehouseCapacity);
+    const canUpgrade = !locked && state.cash >= upgradeCost;
 
     return (
         <Section
@@ -37,7 +38,10 @@ export const MarketPanel = ({state, locked, highlightGoodId, onBuy, onSell, onUp
             }
         >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-xs font-bold">
-                <span>剩餘空間 {free} 格</span>
+                <div className="min-w-0">
+                    <p>剩餘空間 {free} 格</p>
+                    <p className="text-[10px] font-black text-(--muted)">下次擴建 {formatMoney(upgradeCost)}</p>
+                </div>
                 <Button size="sm" variant="secondary" disabled={!canUpgrade} className="w-auto!" onClick={() => setConfirmUpgrade(true)}>
                     升級 +{WAREHOUSE_UPGRADE_SIZE}
                 </Button>
@@ -68,7 +72,7 @@ export const MarketPanel = ({state, locked, highlightGoodId, onBuy, onSell, onUp
             {confirmUpgrade ? (
                 <ConfirmModal
                     title="升級倉庫？"
-                    message={`花 ${formatMoney(WAREHOUSE_UPGRADE_COST)} 升級倉庫 +${WAREHOUSE_UPGRADE_SIZE} 格。`}
+                    message={`花 ${formatMoney(upgradeCost)} 可升級倉庫 +${WAREHOUSE_UPGRADE_SIZE} 格（${state.warehouseCapacity} → ${state.warehouseCapacity + WAREHOUSE_UPGRADE_SIZE}）。`}
                     confirmLabel="升級"
                     cancelLabel="取消"
                     onCancel={() => setConfirmUpgrade(false)}

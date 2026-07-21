@@ -118,8 +118,8 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
                     onCancel={() => setPendingCompanyId(null)}
                     onConfirm={() => {
                         const id = pending.id;
-                        setPendingCompanyId(null);
                         onFound(id);
+                        setPendingCompanyId(null);
                     }}
                 />
             ) : null}

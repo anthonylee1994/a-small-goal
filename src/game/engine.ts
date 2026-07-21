@@ -38,7 +38,8 @@ import {
     START_HEALTH,
     START_REPUTATION,
     START_WAREHOUSE,
-    WAREHOUSE_UPGRADE_COST,
+    WAREHOUSE_UPGRADE_COST_BASE,
+    WAREHOUSE_UPGRADE_COST_GROWTH,
     WAREHOUSE_UPGRADE_SIZE,
 } from "./constants";
 import {clamp, formatMoney} from "./format";
@@ -564,22 +565,42 @@ export function sellGood(state: GameState, goodId: GoodId, quantity: number): Ga
     return checkAssetMilestones(next);
 }
 
+/** How many upgrades already applied from starting capacity. */
+export function warehouseUpgradeLevel(capacity: number): number {
+    return Math.max(0, Math.round((capacity - START_WAREHOUSE) / WAREHOUSE_UPGRADE_SIZE));
+}
+
+/**
+ * Next warehouse upgrade cost — exponential in upgrade level:
+ * BASE × GROWTH^level (level 0 = first upgrade from starting capacity).
+ */
+export function getWarehouseUpgradeCost(capacity: number): number {
+    const level = warehouseUpgradeLevel(capacity);
+    return Math.max(1, Math.round(WAREHOUSE_UPGRADE_COST_BASE * Math.pow(WAREHOUSE_UPGRADE_COST_GROWTH, level)));
+}
+
 export function upgradeWarehouse(state: GameState): GameState {
     if (state.phase !== "playing") return state;
-    if (state.cash < WAREHOUSE_UPGRADE_COST) {
-        return pushLog(state, `升級倉庫要 ${formatMoney(WAREHOUSE_UPGRADE_COST)}，錢唔夠。`, "bad");
+
+    const cost = getWarehouseUpgradeCost(state.warehouseCapacity);
+    if (state.cash < cost) {
+        return pushLog(state, `升級倉庫要 ${formatMoney(cost)}，錢唔夠。`, "bad");
     }
 
+    const before = state.warehouseCapacity;
+    const after = before + WAREHOUSE_UPGRADE_SIZE;
     let next: GameState = {
         ...state,
-        cash: state.cash - WAREHOUSE_UPGRADE_COST,
-        warehouseCapacity: state.warehouseCapacity + WAREHOUSE_UPGRADE_SIZE,
+        cash: state.cash - cost,
+        warehouseCapacity: after,
     };
-    return pushLog(next, `倉庫升級！容量 ${next.warehouseCapacity - WAREHOUSE_UPGRADE_SIZE} → ${next.warehouseCapacity}`, "good");
+    return pushLog(next, `倉庫升級！容量 ${before} → ${after}（第 ${warehouseUpgradeLevel(after)} 次擴建，花費 ${formatMoney(cost)}）`, "good");
 }
 
 export function foundCompany(state: GameState, companyId: CompanyTypeId): GameState {
-    if (state.phase !== "playing") return state;
+    if (state.phase !== "playing") {
+        return pushLog(state, "而家唔係操作階段，唔可以創業。", "bad");
+    }
     const def = COMPANY_MAP[companyId];
     if (!def) return state;
 

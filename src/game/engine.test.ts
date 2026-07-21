@@ -24,9 +24,23 @@ import {
     softenCashLoss,
     startGame,
     totalAssets,
+    getWarehouseUpgradeCost,
     upgradeWarehouse,
 } from "./engine";
-import {COMPANY_TOTAL_SHARES, DOCTOR_BASE_FEE, DOCTOR_FEE_CAP, DOCTOR_HEALTH_RESTORE, DOCTOR_WEALTH_RATE, START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
+import {
+    COMPANY_TOTAL_SHARES,
+    DOCTOR_BASE_FEE,
+    DOCTOR_FEE_CAP,
+    DOCTOR_HEALTH_RESTORE,
+    DOCTOR_WEALTH_RATE,
+    END_AGE,
+    START_AGE,
+    START_HEALTH,
+    START_WAREHOUSE,
+    WAREHOUSE_UPGRADE_COST_BASE,
+    WAREHOUSE_UPGRADE_COST_GROWTH,
+    WAREHOUSE_UPGRADE_SIZE,
+} from "./constants";
 import type {GameState} from "../types/game";
 
 function playingState(seed = 42): GameState {
@@ -281,11 +295,34 @@ describe("endTurn / assets", () => {
 
     it("upgradeWarehouse expands capacity when affordable", () => {
         let state = playingState(204);
-        state = {...state, cash: WAREHOUSE_UPGRADE_COST};
+        state = {...state, cash: getWarehouseUpgradeCost(state.warehouseCapacity)};
         const before = state.warehouseCapacity;
         state = upgradeWarehouse(state);
-        expect(state.warehouseCapacity).toBe(before + 50);
+        expect(state.warehouseCapacity).toBe(before + WAREHOUSE_UPGRADE_SIZE);
         expect(state.cash).toBe(0);
+    });
+
+    it("warehouse upgrade cost grows exponentially with capacity", () => {
+        const c0 = getWarehouseUpgradeCost(START_WAREHOUSE);
+        const c1 = getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE);
+        const c2 = getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE * 2);
+        expect(c0).toBe(WAREHOUSE_UPGRADE_COST_BASE);
+        expect(c1).toBe(Math.round(WAREHOUSE_UPGRADE_COST_BASE * WAREHOUSE_UPGRADE_COST_GROWTH));
+        expect(c2).toBe(Math.round(WAREHOUSE_UPGRADE_COST_BASE * WAREHOUSE_UPGRADE_COST_GROWTH ** 2));
+        expect(c1).toBeGreaterThan(c0);
+        expect(c2).toBeGreaterThan(c1);
+
+        let state = {...playingState(205), warehouseCapacity: START_WAREHOUSE, cash: 10_000_000};
+        const paid: number[] = [];
+        for (let i = 0; i < 3; i += 1) {
+            const beforeCash = state.cash;
+            const cost = getWarehouseUpgradeCost(state.warehouseCapacity);
+            state = upgradeWarehouse(state);
+            paid.push(beforeCash - state.cash);
+            expect(paid[i]).toBe(cost);
+        }
+        expect(paid[1]!).toBeGreaterThan(paid[0]!);
+        expect(paid[2]!).toBeGreaterThan(paid[1]!);
     });
 });
 

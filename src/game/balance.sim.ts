@@ -14,6 +14,7 @@ import {
     endTurn,
     foundCompany,
     getUsedWarehouse,
+    getWarehouseUpgradeCost,
     inflationFactor,
     marry,
     sellGood,
@@ -21,7 +22,6 @@ import {
     totalAssets,
     upgradeWarehouse,
 } from "./engine";
-import {WAREHOUSE_UPGRADE_COST} from "./constants";
 
 export type StrategyId = "trade_only" | "company_rush" | "hybrid" | "high_tier_yolo" | "low_tier_scalp";
 
@@ -58,7 +58,7 @@ function fairPrice(goodId: GoodId, age: number): number {
 
 function tryUpgradeWarehouse(state: GameState, reserve: number): GameState {
     let next = state;
-    while (next.cash >= WAREHOUSE_UPGRADE_COST + reserve && getUsedWarehouse(next) >= next.warehouseCapacity * 0.85) {
+    while (next.cash >= getWarehouseUpgradeCost(next.warehouseCapacity) + reserve && getUsedWarehouse(next) >= next.warehouseCapacity * 0.85) {
         const before = next.warehouseCapacity;
         next = upgradeWarehouse(next);
         if (next.warehouseCapacity === before) break;

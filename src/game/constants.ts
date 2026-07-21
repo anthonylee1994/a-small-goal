@@ -18,7 +18,12 @@ export const PRICE_CHEAP_RATIO = 0.9;
 export const PRICE_EXPENSIVE_RATIO = 1.15;
 
 export const WAREHOUSE_UPGRADE_SIZE = 50;
-export const WAREHOUSE_UPGRADE_COST = 50_000;
+/** First upgrade cost (capacity 100 → 150). Later upgrades grow exponentially. */
+export const WAREHOUSE_UPGRADE_COST_BASE = 50_000;
+/** cost = BASE × GROWTH^upgradeLevel */
+export const WAREHOUSE_UPGRADE_COST_GROWTH = 1.85;
+/** @deprecated use getWarehouseUpgradeCost — kept as first-tier alias */
+export const WAREHOUSE_UPGRADE_COST = WAREHOUSE_UPGRADE_COST_BASE;
 
 /** Softened from 5 so mid-game less “invisible tax”. Easy mode halves this. */
 export const HEALTH_DRAIN_PER_TURN = 4;
