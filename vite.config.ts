@@ -14,7 +14,8 @@ export default defineConfig({
         tailwindcss(),
         VitePWA({
             registerType: "autoUpdate",
-            injectRegister: "script",
+            // Manual register in main.tsx so we can force reload on new SW.
+            injectRegister: false,
             includeAssets: ["favicon.svg", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon.svg"],
             manifest: {
                 name: "一億小目標",
