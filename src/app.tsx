@@ -53,13 +53,9 @@ export const App = () => {
 
             <LogPanel entries={game.log} />
 
-            {showBirthReveal && family ? (
-                <BirthRevealModal family={family} onDismiss={() => dismissBirthReveal()} />
-            ) : null}
+            {showBirthReveal && family ? <BirthRevealModal family={family} onDismiss={() => dismissBirthReveal()} /> : null}
 
-            {!showBirthReveal && game.phase === "event" && event ? (
-                <EventModal event={event} onDismiss={() => dismissEvent()} />
-            ) : null}
+            {!showBirthReveal && game.phase === "event" && event ? <EventModal event={event} onDismiss={() => dismissEvent()} /> : null}
         </main>
     );
 };

@@ -23,7 +23,7 @@ const FAMILY_FLAVOR: Record<BirthFamilyDef["id"], {emoji: string; blurb: string}
     },
 };
 
-export function BirthRevealModal({family, onDismiss}: Props) {
+export const BirthRevealModal = ({family, onDismiss}: Props) => {
     const flavor = FAMILY_FLAVOR[family.id];
 
     return (
@@ -46,4 +46,4 @@ export function BirthRevealModal({family, onDismiss}: Props) {
             </div>
         </Modal>
     );
-}
+};
