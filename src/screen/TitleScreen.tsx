@@ -1,5 +1,4 @@
-import {Button} from "../components/Button";
-import {BrandIcon} from "@/ui/icons";
+import {Button} from "@/components/Button";
 
 interface Props {
     onStart: () => void;
@@ -9,8 +8,11 @@ export const TitleScreen = ({onStart}: Props) => {
     return (
         <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center gap-7 overflow-x-hidden px-5 py-10 text-center sm:px-6">
             <div className="relative mx-auto max-w-[min(100%,11rem)]">
-                <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-4xl border-4 border-(--border) bg-(--accent) shadow-[8px_8px_0_var(--border)] sm:h-40 sm:w-40" aria-hidden="true">
-                    <BrandIcon className="size-16 sm:size-20" strokeWidth={2.25} />
+                <div
+                    className="mx-auto flex h-36 w-36 items-center justify-center rounded-4xl border-4 border-(--border) bg-(--accent) shadow-[8px_8px_0_var(--border)] sm:h-40 sm:w-40 text-8xl"
+                    aria-hidden="true"
+                >
+                    💰
                 </div>
                 <span
                     className="absolute -top-2 right-0 rotate-6 rounded-xl border-2 border-(--border) bg-(--coral) px-2 py-1 text-xs font-black text-white shadow-[2px_2px_0_var(--border)]"
@@ -34,7 +36,6 @@ export const TitleScreen = ({onStart}: Props) => {
             </div>
 
             <Button onClick={onStart}>開始遊戲</Button>
-            <p className="text-[10px] font-bold text-(--muted)">MVP · 可安裝離線 App Shell · 遊戲進度唔會自動存檔</p>
         </main>
     );
 };

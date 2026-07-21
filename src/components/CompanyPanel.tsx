@@ -13,7 +13,7 @@ interface Props {
     onFound: (companyId: CompanyTypeId) => void;
 }
 
-export function CompanyPanel({state, locked, onFound}: Props) {
+export const CompanyPanel = ({state, locked, onFound}: Props) => {
     const [pendingCompanyId, setPendingCompanyId] = useState<CompanyTypeId | null>(null);
     const options = getCompanyOptions(state);
     const ownedCount = state.companies.length;
@@ -59,12 +59,7 @@ export function CompanyPanel({state, locked, onFound}: Props) {
                                 </div>
                             </div>
 
-                            <Button
-                                size="sm"
-                                variant={company.owned ? "ghost" : "secondary"}
-                                disabled={blocked}
-                                onClick={() => setPendingCompanyId(company.id)}
-                            >
+                            <Button size="sm" variant={company.owned ? "ghost" : "secondary"} disabled={blocked} onClick={() => setPendingCompanyId(company.id)}>
                                 {company.owned ? "已開業" : "創業"}
                             </Button>
                             {reasons.length > 0 && !company.owned ? <p className="mt-2 text-[11px] font-bold text-(--muted)">{reasons.join(" · ")}</p> : null}
@@ -90,4 +85,4 @@ export function CompanyPanel({state, locked, onFound}: Props) {
             ) : null}
         </Section>
     );
-}
+};

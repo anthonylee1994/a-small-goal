@@ -1,11 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="One Hundred Million Goal">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="96" fill="#FFD400"/>
-  <rect x="28" y="28" width="456" height="456" rx="80" fill="none" stroke="#1A1A1A" stroke-width="28"/>
-  <circle cx="256" cy="220" r="120" fill="#FFF8E7" stroke="#1A1A1A" stroke-width="22"/>
-  <circle cx="256" cy="220" r="78" fill="#FF6B5A" stroke="#1A1A1A" stroke-width="18"/>
-  <path d="M256 168 v104 M230 196 h52" fill="none" stroke="#FFF8E7" stroke-width="22" stroke-linecap="round"/>
-  <rect x="150" y="370" width="212" height="68" rx="20" fill="#3DD6A5" stroke="#1A1A1A" stroke-width="14"/>
-  <circle cx="196" cy="404" r="14" fill="#1A1A1A"/>
-  <circle cx="256" cy="404" r="14" fill="#1A1A1A"/>
-  <circle cx="316" cy="404" r="14" fill="#1A1A1A"/>
+  <text x="256" y="360" text-anchor="middle" font-size="340">💰</text>
 </svg>

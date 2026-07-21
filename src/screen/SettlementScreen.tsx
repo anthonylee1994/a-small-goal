@@ -11,7 +11,7 @@ interface Props {
     onRestart: () => void;
 }
 
-export function SettlementScreen({state, onRestart}: Props) {
+export const SettlementScreen = ({state, onRestart}: Props) => {
     const isDead = state.phase === "dead";
     const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
     const cash = state.cash;
@@ -73,4 +73,4 @@ export function SettlementScreen({state, onRestart}: Props) {
             <Button onClick={onRestart}>重新開始</Button>
         </main>
     );
-}
+};

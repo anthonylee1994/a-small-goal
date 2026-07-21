@@ -25,7 +25,7 @@ interface Props {
     onEndTurn: () => void;
 }
 
-export function BottomPanel({activeTab, onTabChange, endTurnDisabled, onEndTurn}: Props) {
+export const BottomPanel = ({activeTab, onTabChange, endTurnDisabled, onEndTurn}: Props) => {
     return (
         <nav className="border-t-4 border-(--border) bg-(--panel)/95 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
             <div className="flex flex-col gap-3">
@@ -57,4 +57,4 @@ export function BottomPanel({activeTab, onTabChange, endTurnDisabled, onEndTurn}
             </div>
         </nav>
     );
-}
+};

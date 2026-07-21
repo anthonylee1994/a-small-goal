@@ -14,7 +14,7 @@ interface Props {
     onMarry: (partnerId: PartnerId) => void;
 }
 
-export function FamilyPanel({state, locked, onMarry}: Props) {
+export const FamilyPanel = ({state, locked, onMarry}: Props) => {
     const [pendingPartnerId, setPendingPartnerId] = useState<PartnerId | null>(null);
     const partner = state.partnerId ? PARTNER_MAP[state.partnerId] : null;
     const PartnerIcon = partner ? PARTNER_ICONS[partner.id] : null;
@@ -116,4 +116,4 @@ export function FamilyPanel({state, locked, onMarry}: Props) {
             ) : null}
         </Section>
     );
-}
+};

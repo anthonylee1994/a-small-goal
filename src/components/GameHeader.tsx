@@ -15,7 +15,7 @@ const PHASE_LABEL: Record<GameState["phase"], string> = {
     retired: "退休",
 };
 
-export function GameHeader({state}: Props) {
+export const GameHeader = ({state}: Props) => {
     const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
     const progress = Math.min(1, Math.max(0, (state.age - START_AGE) / Math.max(1, END_AGE - START_AGE)));
 
@@ -58,4 +58,4 @@ export function GameHeader({state}: Props) {
             </div>
         </header>
     );
-}
+};
