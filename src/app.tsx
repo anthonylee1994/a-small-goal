@@ -1,6 +1,8 @@
 import {TitleScreen} from "./components/TitleScreen";
 import {Stat} from "./components/Stat";
 import {Button} from "./components/Button";
+import {EventModal} from "./components/EventModal";
+import {SettlementScreen} from "./components/SettlementScreen";
 import {useGame} from "./hooks/useGame";
 import {formatMoney} from "./game/format";
 import {BIRTH_FAMILY_MAP} from "./data/birthFamilies";
@@ -14,18 +16,7 @@ export const App = () => {
     }
 
     if (state.phase === "dead" || state.phase === "retired") {
-        const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
-        return (
-            <main className="mx-auto flex min-h-svh w-full max-w-md flex-col gap-4 px-4 py-6">
-                <h1 className="text-2xl font-black">{state.phase === "dead" ? "猝死結算" : "退休結算"}</h1>
-                <p className="text-sm text-(--muted)">
-                    {family ? `出身：${family.name}` : null}
-                    {state.phase === "dead" ? " · 未活到 60 歲" : null}
-                </p>
-                <p className="text-lg font-bold">總資產 {formatMoney(state.totalAssets ?? 0)}</p>
-                <Button onClick={() => restart()}>重新開始</Button>
-            </main>
-        );
+        return <SettlementScreen state={state} onRestart={() => restart()} />;
     }
 
     const event = getCurrentEvent(state);
@@ -50,16 +41,6 @@ export const App = () => {
                 <Stat label="名聲" value={String(state.reputation)} />
             </section>
 
-            {state.phase === "event" && event ? (
-                <section className="rounded-2xl border-4 border-(--border) bg-white p-4 text-left shadow-[4px_4px_0_var(--border)]">
-                    <h2 className="text-xl font-black">{event.title}</h2>
-                    <p className="mt-2 mb-4 text-sm text-(--muted)">{event.message}</p>
-                    <Button variant="secondary" onClick={() => dismissEvent()}>
-                        關閉事件
-                    </Button>
-                </section>
-            ) : null}
-
             {state.phase === "playing" ? <Button onClick={() => endTurn()}>下一年</Button> : null}
 
             <section className="text-left text-xs text-(--muted)">
@@ -72,6 +53,8 @@ export const App = () => {
                     ))}
                 </ul>
             </section>
+
+            {state.phase === "event" && event ? <EventModal event={event} onDismiss={() => dismissEvent()} /> : null}
         </main>
     );
 };

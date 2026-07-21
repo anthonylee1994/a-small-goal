@@ -1,7 +1,7 @@
 /** Shared MVP constants — SPEC.md §4 / §7 / §11 */
 
 export const START_AGE = 20;
-export const END_AGE = 60;
+export const END_AGE = 23;
 export const START_HEALTH = 100;
 export const START_REPUTATION = 0;
 export const START_WAREHOUSE = 100;
