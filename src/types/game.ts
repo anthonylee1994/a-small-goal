@@ -8,11 +8,52 @@ export type GoodTier = "low" | "mid" | "high";
 
 export type GoodId = "chips" | "vitasoy" | "phone" | "sneakers" | "bitcoin" | "gold" | "ev" | "options";
 
-export type CompanyTypeId = "bubble_tea" | "netcafe" | "ai_startup" | "property";
+export type CompanyTypeId =
+    | "bubble_tea"
+    | "claw_arcade"
+    | "esports"
+    | "ghost_kitchen"
+    | "tutoring"
+    | "feng_shui"
+    | "live_commerce"
+    | "ai_startup"
+    | "crypto_exchange"
+    | "parking_empire"
+    | "property";
 
 export type PartnerId = "mary" | "jenny" | "jessica";
 
-export type EventId = "snack_boom" | "crypto_crash" | "windfall" | "collapse" | "nothing";
+export type EventId =
+    | "snack_boom"
+    | "crypto_crash"
+    | "windfall"
+    | "collapse"
+    | "nothing"
+    | "vitasoy_craze"
+    | "phone_hype"
+    | "sneaker_frenzy"
+    | "gold_rush"
+    | "ev_subsidy"
+    | "options_moon"
+    | "phone_brick"
+    | "gold_dump"
+    | "options_wipeout"
+    | "sneaker_flop"
+    | "ev_price_war"
+    | "chips_recall"
+    | "bitcoin_moon"
+    | "gov_cash"
+    | "landlord_rage"
+    | "scam_course"
+    | "lai_see"
+    | "food_poisoning"
+    | "overtime_bonus"
+    | "spa_reboot"
+    | "typhoon_rest"
+    | "gym_trap"
+    | "mtr_apology"
+    | "relative_borrow"
+    | "lucky_draw";
 
 export type RankTier = "bottom" | "middle" | "almost" | "winner";
 
