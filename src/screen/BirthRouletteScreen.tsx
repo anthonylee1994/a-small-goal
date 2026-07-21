@@ -189,7 +189,6 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                 {families.map(family => {
                     const Icon = BIRTH_FAMILY_ICONS[family.id];
                     const active = phase === "done" && family.id === result.id;
-                    const odds = Math.round((family.weight / totalWeight) * 100);
                     return (
                         <li
                             key={family.id}
@@ -197,9 +196,8 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                             style={{background: WHEEL_COLORS[family.id]}}
                         >
                             <Icon className="mx-auto size-5" strokeWidth={2.25} aria-hidden="true" />
-                            <p className="mt-1 text-[10px] font-black leading-tight">{family.name}</p>
-                            <p className="text-[10px] font-bold tabular-nums text-(--ink)/70">{formatMoney(family.startingCash)}</p>
-                            <p className="text-[10px] font-black text-(--ink)/80">機率 {odds}%</p>
+                            <p className="mt-1 text-[14px] font-black leading-tight">{family.name}</p>
+                            <p className="text-[14px] font-bold tabular-nums text-(--ink)/70">{formatMoney(family.startingCash)}</p>
                         </li>
                     );
                 })}

@@ -43,8 +43,6 @@ export const MarketPanel = ({state, locked, highlightGoodId, onBuy, onSell, onUp
                 </Button>
             </div>
 
-            <p className="mb-2 text-[11px] font-bold text-(--muted)">綠＝平宜入手 · 灰＝合理 · 紅＝偏貴可考慮出貨</p>
-
             <ul className="space-y-3">
                 {GOODS.map(good => (
                     <GoodRow
