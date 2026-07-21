@@ -1,7 +1,7 @@
 import {useState} from "react";
-import {DOCTOR_HEALTH_RESTORE, ILLNESS_HEALTH_THRESHOLD} from "@/game/constants";
+import {ILLNESS_HEALTH_THRESHOLD} from "@/game/constants";
 import {formatMoney} from "@/game/format";
-import {getCurrentEvent, getDoctorFee, getUsedWarehouse, totalAssets} from "@/game/engine";
+import {getCurrentEvent, getUsedWarehouse, totalAssets} from "@/game/engine";
 import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 import {ActionToast} from "@/components/ActionToast";
 import {BottomPanel, type GameTab} from "@/components/BottomPanel";
@@ -13,8 +13,8 @@ import {FamilyPanel} from "@/components/FamilyPanel";
 import {GameHeader} from "@/components/GameHeader";
 import {LogPanel} from "@/components/LogPanel";
 import {MarketPanel} from "@/components/MarketPanel";
+import {SeeDoctorButton} from "@/components/SeeDoctorButton";
 import {Stat} from "@/components/Stat";
-import {HeartIcon} from "@/ui/icons";
 
 interface Props {
     state: GameState;
@@ -31,8 +31,6 @@ interface Props {
 
 export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onSeeDoctor, onEndTurn, onSuicide}: Props) => {
     const [confirmEndTurn, setConfirmEndTurn] = useState(false);
-    const [confirmDoctor, setConfirmDoctor] = useState(false);
-    const [doctorNotice, setDoctorNotice] = useState<string | null>(null);
     const [eventPreviewOpen, setEventPreviewOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<GameTab>("market");
 
@@ -42,7 +40,6 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
     const warehouseRatio = state.warehouseCapacity > 0 ? usedWarehouse / state.warehouseCapacity : 0;
     const assets = totalAssets(state);
     const showEventModal = Boolean(event && (state.phase === "event" || eventPreviewOpen));
-    const doctorFee = getDoctorFee(state);
 
     const cashTone = state.cash < 0 ? "danger" : state.cash < 10_000 ? "warn" : "default";
     const healthTone = state.health <= 0 ? "danger" : state.health < ILLNESS_HEALTH_THRESHOLD ? "warn" : "default";
@@ -51,19 +48,6 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
     const closeEventModal = () => {
         setEventPreviewOpen(false);
         if (state.phase === "event") onDismissEvent();
-    };
-
-    const handleDoctorClick = () => {
-        if (locked) return;
-        if (state.health >= 100) {
-            setDoctorNotice("你已經好健康，醫生話唔使睇。");
-            return;
-        }
-        if (state.cash < doctorFee) {
-            setDoctorNotice(`睇醫生要 ${formatMoney(doctorFee)}，你錢唔夠。`);
-            return;
-        }
-        setConfirmDoctor(true);
     };
 
     return (
@@ -81,18 +65,7 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
                         value={`${state.health}`}
                         tone={healthTone}
                         hint={state.health < ILLNESS_HEALTH_THRESHOLD ? "警戒：年結可能入院" : undefined}
-                        action={
-                            <button
-                                type="button"
-                                disabled={locked}
-                                onClick={handleDoctorClick}
-                                aria-label={`睇醫生，收費 ${formatMoney(doctorFee)}`}
-                                title={locked ? "而家唔可以睇醫生" : `睇醫生 · ${formatMoney(doctorFee)}`}
-                                className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border-2 border-(--border) bg-white text-(--danger) shadow-[2px_2px_0_var(--border)] transition-[transform,box-shadow] enabled:active:translate-x-px enabled:active:translate-y-px enabled:active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-                            >
-                                <HeartIcon className="size-3.5" strokeWidth={2.5} fill="currentColor" aria-hidden="true" />
-                            </button>
-                        }
+                        action={<SeeDoctorButton state={state} locked={locked} onSeeDoctor={onSeeDoctor} />}
                     />
                     <Stat label="名聲" value={String(state.reputation)} />
                     <Stat label="倉庫" value={`${usedWarehouse}/${state.warehouseCapacity}`} tone={warehouseTone} />
@@ -136,24 +109,6 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
                         onEndTurn();
                     }}
                 />
-            ) : null}
-
-            {confirmDoctor ? (
-                <ConfirmModal
-                    title="睇醫生？"
-                    message={`診所睇中你荷包，今次收 ${formatMoney(doctorFee)}，恢復 ${DOCTOR_HEALTH_RESTORE} 點健康（上限 100）。`}
-                    confirmLabel="求診"
-                    cancelLabel="下次先"
-                    onCancel={() => setConfirmDoctor(false)}
-                    onConfirm={() => {
-                        setConfirmDoctor(false);
-                        onSeeDoctor();
-                    }}
-                />
-            ) : null}
-
-            {doctorNotice ? (
-                <ConfirmModal title="睇唔成醫生" message={doctorNotice} confirmLabel="知道喇" cancelLabel={null} onCancel={() => setDoctorNotice(null)} onConfirm={() => setDoctorNotice(null)} />
             ) : null}
 
             {showEventModal && event ? <EventModal event={event} onDismiss={closeEventModal} /> : null}
