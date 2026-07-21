@@ -32,7 +32,7 @@ export const Modal = ({children, onClose, labelledBy, closeLabel = "關閉", cla
 
     return createPortal(
         <div className="fixed inset-0 z-200 flex items-center justify-center overflow-hidden overscroll-none px-4" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
-            <button type="button" className="modal-dimmer absolute inset-0 z-0 touch-none border-0 bg-black/45" aria-label={closeLabel} onClick={onClose} />
+            <button type="button" className="modal-dimmer absolute inset-0 z-0 touch-none border-0 bg-black/45 backdrop-blur-xs" aria-label={closeLabel} onClick={onClose} />
 
             <section
                 data-modal-panel
