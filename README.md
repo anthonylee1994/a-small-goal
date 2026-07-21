@@ -82,7 +82,7 @@ SPEC.md         產品／實作規格（唯一真相來源）
 
 ## 目前狀態
 
-專案已 scaffold；標題頁同 PWA manifest 可用。Engine 多數 action 仍係 stub，等 Phase 1 按 SPEC 補齊。
+Phase 1 規則層已接上：投胎、事件、買賣、創業／結婚 API、`endTurn` 結算同資產評級可用。完整 MVP UI 留待 Phase 2。
 
 ## License
 

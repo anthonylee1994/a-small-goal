@@ -1,3 +1,5 @@
+import {Button} from "./Button";
+
 interface Props {
     onStart: () => void;
 }
@@ -16,12 +18,7 @@ export const TitleScreen = ({onStart}: Props) => {
                 <p className="text-center text-base leading-relaxed text-(--muted)">20 歲起步，40 年內靠炒賣、創業同家庭選擇，目標喺 60 歲前累積至少一億。</p>
             </div>
 
-            <div
-                onClick={onStart}
-                className="cursor-pointer rounded-2xl border-4 border-(--border) bg-(--coral) px-6 py-3 text-xl font-black text-white shadow-[4px_4px_0_var(--border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
-            >
-                開始遊戲
-            </div>
+            <Button onClick={onStart}>開始遊戲</Button>
         </main>
     );
 };

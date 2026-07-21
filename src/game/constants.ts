@@ -2,7 +2,6 @@
 
 export const START_AGE = 20;
 export const END_AGE = 60;
-export const START_CASH = 10_000;
 export const START_HEALTH = 100;
 export const START_REPUTATION = 0;
 export const START_WAREHOUSE = 100;
@@ -24,5 +23,6 @@ export const ILLNESS_HEALTH_RESTORE = 15;
 export const BASE_CHILD_CHANCE = 0.18;
 export const CHILD_MATURE_YEARS = 18;
 export const CHILD_TUITION = 30_000;
+export const MAX_CHILDREN = 4;
 
 export const MAX_LOGS = 40;

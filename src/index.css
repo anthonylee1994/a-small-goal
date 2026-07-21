@@ -41,7 +41,3 @@ body {
 #root {
     min-height: 100svh;
 }
-
-button {
-    font: inherit;
-}

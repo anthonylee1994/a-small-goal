@@ -2,10 +2,19 @@
 
 export type Phase = "title" | "event" | "playing" | "dead" | "retired";
 export type GameOverReason = "death" | "retirement";
+export type BirthFamilyId = "low_class" | "middle_class" | "high_class";
 
 export type GoodTier = "low" | "mid" | "high";
 
-export type GoodId = "chips" | "vitasoy" | "phone" | "sneakers" | "bitcoin" | "gold" | "ev" | "options";
+export type GoodId =
+    | "chips"
+    | "vitasoy"
+    | "phone"
+    | "sneakers"
+    | "bitcoin"
+    | "gold"
+    | "ev"
+    | "options";
 
 export type CompanyTypeId = "bubble_tea" | "netcafe" | "ai_startup" | "property";
 
@@ -40,12 +49,77 @@ export interface Rank {
     message: string;
 }
 
+export interface GoodDef {
+    id: GoodId;
+    name: string;
+    tier: GoodTier;
+    basePrice: number;
+    /** Warehouse slots per unit. */
+    space: number;
+}
+
+export interface CompanyDef {
+    id: CompanyTypeId;
+    name: string;
+    cost: number;
+    annualIncome: number;
+    maintenance: number;
+    valuation: number;
+    minReputation: number;
+    failChance: number;
+}
+
+export interface PartnerInstantEffect {
+    cash?: number;
+    health?: number;
+    reputation?: number;
+}
+
+export interface PartnerYearlyEffect {
+    cash?: number;
+    health?: number;
+    reputation?: number;
+    childChanceBonus?: number;
+}
+
+export interface PartnerDef {
+    id: PartnerId;
+    name: string;
+    weddingCost: number;
+    requireCash?: number;
+    requireReputation?: number;
+    requireAssets?: number;
+    instant: PartnerInstantEffect;
+    yearly: PartnerYearlyEffect;
+}
+
+export type EventEffect =
+    | {type: "price_mult"; goodId: GoodId; mult: number}
+    | {type: "cash"; amount: number}
+    | {type: "health"; amount: number};
+
+export interface EventDef {
+    id: EventId;
+    title: string;
+    message: string;
+    weight: number;
+    effects: EventEffect[];
+}
+
+export interface BirthFamilyDef {
+    id: BirthFamilyId;
+    name: string;
+    startingCash: number;
+    weight: number;
+}
+
 export interface GameState {
     phase: Phase;
     age: number;
     cash: number;
     health: number;
     reputation: number;
+    birthFamilyId: BirthFamilyId | null;
     warehouseCapacity: number;
     inventory: Record<GoodId, number>;
     prices: Record<GoodId, number>;

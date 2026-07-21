@@ -133,7 +133,7 @@
 ```ts
 type Phase = "title" | "event" | "playing" | "dead" | "retired";
 type GameOverReason = "death" | "retirement";
-type BirthFamilyId = "public_housing" | "middle_class" | "mid_levels";
+type BirthFamilyId = "low_class" | "middle_class" | "high_class";
 
 interface GameState {
     phase: Phase;
