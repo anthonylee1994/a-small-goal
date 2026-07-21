@@ -3,7 +3,7 @@ import {GOOD_MAP} from "@/data/goods";
 import {formatMoney} from "@/game/format";
 import {Button} from "@/components/Button";
 import {Modal} from "@/components/Modal";
-import {EVENT_EMOJI} from "@/ui/icons";
+import {EVENT_ICONS} from "@/ui/icons";
 
 interface Props {
     event: EventDef;
@@ -11,22 +11,17 @@ interface Props {
 }
 
 export const EventModal = ({event, onDismiss}: Props) => {
+    const Icon = EVENT_ICONS[event.id];
+
     return (
         <Modal onClose={onDismiss} labelledBy="event-modal-title" closeLabel="關閉事件">
             <div className="comic-burst mb-3 flex items-center gap-3">
-                <div
-                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl border-4 border-(--border) bg-(--accent) text-4xl shadow-[4px_4px_0_var(--border)]"
-                    aria-hidden="true"
-                >
-                    {EVENT_EMOJI[event.id]}
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl border-4 border-(--border) bg-(--accent) shadow-[4px_4px_0_var(--border)]" aria-hidden="true">
+                    <Icon className="size-8" strokeWidth={2.25} />
                 </div>
                 <div>
                     <p className="text-xs font-black tracking-wide text-(--coral)">啪！今年突發事件</p>
-                    <h2
-                        id="event-modal-title"
-                        className="text-2xl font-black leading-tight"
-                        style={{fontFamily: "var(--font-display)"}}
-                    >
+                    <h2 id="event-modal-title" className="text-2xl font-black leading-tight" style={{fontFamily: "var(--font-display)"}}>
                         {event.title}
                     </h2>
                 </div>

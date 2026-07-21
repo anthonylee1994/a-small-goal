@@ -43,6 +43,4 @@ export const COMPANIES: readonly CompanyDef[] = [
     },
 ] as const;
 
-export const COMPANY_MAP: Record<CompanyTypeId, CompanyDef> = Object.fromEntries(
-    COMPANIES.map(c => [c.id, c]),
-) as Record<CompanyTypeId, CompanyDef>;
+export const COMPANY_MAP: Record<CompanyTypeId, CompanyDef> = Object.fromEntries(COMPANIES.map(c => [c.id, c])) as Record<CompanyTypeId, CompanyDef>;

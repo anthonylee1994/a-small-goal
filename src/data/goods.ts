@@ -11,7 +11,4 @@ export const GOODS: readonly GoodDef[] = [
     {id: "options", name: "美股期權", tier: "high", basePrice: 15_000, space: 1},
 ] as const;
 
-export const GOOD_MAP: Record<GoodId, GoodDef> = Object.fromEntries(GOODS.map(g => [g.id, g])) as Record<
-    GoodId,
-    GoodDef
->;
+export const GOOD_MAP: Record<GoodId, GoodDef> = Object.fromEntries(GOODS.map(g => [g.id, g])) as Record<GoodId, GoodDef>;

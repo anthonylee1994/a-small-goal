@@ -1,4 +1,5 @@
 import {Button} from "../components/Button";
+import {BrandIcon} from "@/ui/icons";
 
 interface Props {
     onStart: () => void;
@@ -9,7 +10,7 @@ export const TitleScreen = ({onStart}: Props) => {
         <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center gap-7 px-6 py-10 text-center">
             <div className="relative mx-auto">
                 <div className="mx-auto flex h-40 w-40 items-center justify-center rounded-4xl border-4 border-(--border) bg-(--accent) shadow-[8px_8px_0_var(--border)]" aria-hidden="true">
-                    <span className="text-8xl leading-none">🤑</span>
+                    <BrandIcon className="size-20" strokeWidth={2.25} />
                 </div>
                 <span
                     className="absolute -top-2 -right-3 rotate-6 rounded-xl border-2 border-(--border) bg-(--coral) px-2 py-1 text-xs font-black text-white shadow-[2px_2px_0_var(--border)]"
@@ -21,7 +22,7 @@ export const TitleScreen = ({onStart}: Props) => {
                     className="absolute -bottom-1 -left-4 -rotate-6 rounded-xl border-2 border-(--border) bg-(--mint) px-2 py-1 text-xs font-black shadow-[2px_2px_0_var(--border)]"
                     aria-hidden="true"
                 >
-                    HK$1億
+                    $1億
                 </span>
             </div>
 

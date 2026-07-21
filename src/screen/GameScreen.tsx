@@ -6,7 +6,7 @@ import {BIRTH_FAMILY_MAP} from "@/data/birthFamilies";
 import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 import {ActionToast} from "@/components/ActionToast";
 import {BirthRevealModal} from "@/components/BirthRevealModal";
-import {Button} from "@/components/Button";
+import {BottomPanel, type GameTab} from "@/components/BottomPanel";
 import {CompanyPanel} from "@/components/CompanyPanel";
 import {ConfirmModal} from "@/components/ConfirmModal";
 import {EventModal} from "@/components/EventModal";
@@ -32,6 +32,8 @@ interface Props {
 export const GameScreen = ({state, onDismissBirthReveal, onDismissEvent, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onEndTurn}: Props) => {
     const [confirmEndTurn, setConfirmEndTurn] = useState(false);
     const [eventPreviewOpen, setEventPreviewOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<GameTab>("market");
+
     const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
     const showBirthReveal = Boolean(family && !state.birthRevealed);
     const event = getCurrentEvent(state);
@@ -51,39 +53,42 @@ export const GameScreen = ({state, onDismissBirthReveal, onDismissEvent, onBuy, 
     };
 
     return (
-        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col gap-4 px-4 pt-5 pb-28">
+        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col">
             <ActionToast latest={state.log[0]} />
 
-            <GameHeader state={state} />
+            <div className="flex flex-1 flex-col gap-3 px-4 pt-4 pb-44">
+                <GameHeader state={state} />
 
-            <section className="grid grid-cols-2 gap-2 text-sm">
-                <Stat label="年齡" value={`${state.age} 歲`} />
-                <Stat label="現金" value={formatMoney(state.cash)} tone={cashTone} hint={state.debtTurns > 0 ? `負債 ${state.debtTurns} 年` : undefined} />
-                <Stat label="健康" value={String(state.health)} tone={healthTone} hint={state.health < ILLNESS_HEALTH_THRESHOLD ? "警戒：年結可能入院" : undefined} />
-                <Stat label="名聲" value={String(state.reputation)} />
-                <Stat label="倉庫" value={`${usedWarehouse}/${state.warehouseCapacity}`} tone={warehouseTone} />
-                <Stat label="總資產" value={formatMoney(assets)} tone="good" />
-            </section>
+                <section className="grid grid-cols-2 gap-2 text-sm">
+                    <Stat label="年齡" value={`${state.age} 歲`} />
+                    <Stat label="現金" value={formatMoney(state.cash)} tone={cashTone} hint={state.debtTurns > 0 ? `負債 ${state.debtTurns} 年` : undefined} />
+                    <Stat label="健康" value={String(state.health)} tone={healthTone} hint={state.health < ILLNESS_HEALTH_THRESHOLD ? "警戒：年結可能入院" : undefined} />
+                    <Stat label="名聲" value={String(state.reputation)} />
+                    <Stat label="倉庫" value={`${usedWarehouse}/${state.warehouseCapacity}`} tone={warehouseTone} />
+                    <Stat label="總資產" value={formatMoney(assets)} tone="good" />
+                </section>
 
-            {state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD ? (
-                <div className="rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-2 text-sm font-black text-(--danger) shadow-[3px_3px_0_var(--border)]" role="status">
-                    {state.cash < 0 ? "現金見紅！年結會觸發清盤。" : null}
-                    {state.cash < 0 && state.health < ILLNESS_HEALTH_THRESHOLD ? " " : null}
-                    {state.health < ILLNESS_HEALTH_THRESHOLD ? "健康危險，小心猝死。" : null}
+                {state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD ? (
+                    <div className="rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-2 text-sm font-black text-(--danger) shadow-[3px_3px_0_var(--border)]" role="status">
+                        {state.cash < 0 ? "現金見紅！年結會觸發清盤。" : null}
+                        {state.cash < 0 && state.health < ILLNESS_HEALTH_THRESHOLD ? " " : null}
+                        {state.health < ILLNESS_HEALTH_THRESHOLD ? "健康危險，小心猝死。" : null}
+                    </div>
+                ) : null}
+
+                <EventPanel state={state} onOpen={() => setEventPreviewOpen(true)} />
+
+                <div role="tabpanel">
+                    {activeTab === "market" ? <MarketPanel state={state} locked={locked} onBuy={onBuy} onSell={onSell} onUpgradeWarehouse={onUpgradeWarehouse} /> : null}
+                    {activeTab === "company" ? <CompanyPanel state={state} locked={locked} onFound={onFoundCompany} /> : null}
+                    {activeTab === "family" ? <FamilyPanel state={state} locked={locked} onMarry={onMarry} /> : null}
+                    {activeTab === "log" ? <LogPanel entries={state.log} limit={20} /> : null}
                 </div>
-            ) : null}
+            </div>
 
-            <EventPanel state={state} onOpen={() => setEventPreviewOpen(true)} />
-            <MarketPanel state={state} locked={locked} onBuy={onBuy} onSell={onSell} onUpgradeWarehouse={onUpgradeWarehouse} />
-            <CompanyPanel state={state} locked={locked} onFound={onFoundCompany} />
-            <FamilyPanel state={state} locked={locked} onMarry={onMarry} />
-            <LogPanel entries={state.log} />
-
-            <div className="fixed inset-x-0 bottom-0 z-30 border-t-4 border-(--border) bg-(--bg)/95 px-4 py-3 backdrop-blur-sm">
-                <div className="mx-auto max-w-md">
-                    <Button variant="danger" disabled={locked} onClick={() => setConfirmEndTurn(true)}>
-                        結束今年
-                    </Button>
+            <div className="fixed inset-x-0 bottom-0 z-30">
+                <div className="mx-auto w-full max-w-md">
+                    <BottomPanel activeTab={activeTab} onTabChange={setActiveTab} endTurnDisabled={locked} onEndTurn={() => setConfirmEndTurn(true)} />
                 </div>
             </div>
 

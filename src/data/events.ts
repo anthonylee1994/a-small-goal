@@ -34,7 +34,4 @@ export const EVENTS: readonly EventDef[] = [
     },
 ] as const;
 
-export const EVENT_MAP: Record<EventId, EventDef> = Object.fromEntries(EVENTS.map(e => [e.id, e])) as Record<
-    EventId,
-    EventDef
->;
+export const EVENT_MAP: Record<EventId, EventDef> = Object.fromEntries(EVENTS.map(e => [e.id, e])) as Record<EventId, EventDef>;

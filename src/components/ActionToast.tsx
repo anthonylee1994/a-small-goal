@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState} from "react";
+import {X} from "lucide-react";
 import type {LogEntry} from "@/types/game";
 
 interface Props {
@@ -13,7 +14,7 @@ const TONE_BG: Record<LogEntry["tone"], string> = {
 };
 
 const SHOW_MS = 2200;
-const FADE_MS = 280;
+const BOUNCE_OUT_MS = 320;
 
 export const ActionToast = ({latest}: Props) => {
     const [entry, setEntry] = useState<LogEntry | null>(null);
@@ -36,7 +37,7 @@ export const ActionToast = ({latest}: Props) => {
         removeTimer.current = window.setTimeout(() => {
             setEntry(null);
             setLeaving(false);
-        }, FADE_MS);
+        }, BOUNCE_OUT_MS);
     };
 
     useEffect(() => {
@@ -50,7 +51,7 @@ export const ActionToast = ({latest}: Props) => {
             removeTimer.current = window.setTimeout(() => {
                 setEntry(null);
                 setLeaving(false);
-            }, FADE_MS);
+            }, BOUNCE_OUT_MS);
         }, SHOW_MS);
         return clearTimers;
     }, [latest]);
@@ -66,9 +67,7 @@ export const ActionToast = ({latest}: Props) => {
             >
                 <p className="min-w-0 flex-1 leading-snug">{entry.text}</p>
                 <button type="button" aria-label="關閉提示" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 border-(--border) bg-white" onClick={dismiss}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M3 3l8 8M11 3L3 11" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-                    </svg>
+                    <X className="size-3.5" strokeWidth={2.75} aria-hidden="true" />
                 </button>
             </div>
         </div>

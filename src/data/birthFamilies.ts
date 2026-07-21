@@ -6,6 +6,4 @@ export const BIRTH_FAMILIES: readonly BirthFamilyDef[] = [
     {id: "high_class", name: "二世祖", startingCash: 1_000_000, weight: 1},
 ] as const;
 
-export const BIRTH_FAMILY_MAP: Record<BirthFamilyId, BirthFamilyDef> = Object.fromEntries(
-    BIRTH_FAMILIES.map(f => [f.id, f]),
-) as Record<BirthFamilyId, BirthFamilyDef>;
+export const BIRTH_FAMILY_MAP: Record<BirthFamilyId, BirthFamilyDef> = Object.fromEntries(BIRTH_FAMILIES.map(f => [f.id, f])) as Record<BirthFamilyId, BirthFamilyDef>;

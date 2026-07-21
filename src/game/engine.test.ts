@@ -1,20 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {EVENT_MAP} from "../data/events";
-import {
-    beginTurn,
-    buyGood,
-    createInitialState,
-    dismissBirthReveal,
-    dismissEvent,
-    endTurn,
-    getRank,
-    inventoryValue,
-    sellGood,
-    startGame,
-    totalAssets,
-    upgradeWarehouse,
-} from "./engine";
+import {beginTurn, buyGood, createInitialState, dismissBirthReveal, dismissEvent, endTurn, getRank, inventoryValue, sellGood, startGame, totalAssets, upgradeWarehouse} from "./engine";
 import {START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
 import type {GameState} from "../types/game";
 
@@ -52,9 +39,7 @@ describe("createInitialState / startGame", () => {
         expect(state.log.some(l => l.text.includes("投胎成功"))).toBe(true);
 
         const event = EVENT_MAP[state.currentEventId!];
-        const cashDelta = event.effects
-            .filter(e => e.type === "cash")
-            .reduce((sum, e) => sum + (e.type === "cash" ? e.amount : 0), 0);
+        const cashDelta = event.effects.filter(e => e.type === "cash").reduce((sum, e) => sum + (e.type === "cash" ? e.amount : 0), 0);
         expect(state.cash).toBe(family.startingCash + cashDelta);
     });
 

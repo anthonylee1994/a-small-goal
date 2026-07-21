@@ -1,14 +1,48 @@
-import type {CompanyTypeId, EventId, GoodId, GoodTier, PartnerId} from "@/types/game";
+import {
+    Bitcoin,
+    Bot,
+    Building2,
+    Car,
+    Castle,
+    ChartLine,
+    CircleDollarSign,
+    CircleHelp,
+    Coffee,
+    Cookie,
+    Crown,
+    CupSoda,
+    Dices,
+    Factory,
+    Footprints,
+    Frown,
+    Heart,
+    HeartHandshake,
+    Home,
+    Medal,
+    Monitor,
+    PartyPopper,
+    ShoppingCart,
+    Skull,
+    Smartphone,
+    Smile,
+    Tent,
+    TrendingDown,
+    Trophy,
+    TriangleAlert,
+    Zap,
+    type LucideIcon,
+} from "lucide-react";
+import type {BirthFamilyId, CompanyTypeId, EventId, GoodId, GoodTier, PartnerId, RankTier} from "@/types/game";
 
-export const GOOD_EMOJI: Record<GoodId, string> = {
-    chips: "🥔",
-    vitasoy: "🧃",
-    phone: "📱",
-    sneakers: "👟",
-    bitcoin: "₿",
-    gold: "🥇",
-    ev: "🚗",
-    options: "📈",
+export const GOOD_ICONS: Record<GoodId, LucideIcon> = {
+    chips: Cookie,
+    vitasoy: CupSoda,
+    phone: Smartphone,
+    sneakers: Footprints,
+    bitcoin: Bitcoin,
+    gold: Medal,
+    ev: Car,
+    options: ChartLine,
 };
 
 export const TIER_LABEL: Record<GoodTier, string> = {
@@ -17,22 +51,44 @@ export const TIER_LABEL: Record<GoodTier, string> = {
     high: "高階",
 };
 
-export const COMPANY_EMOJI: Record<CompanyTypeId, string> = {
-    bubble_tea: "🧋",
-    netcafe: "🖥️",
-    ai_startup: "🤖",
-    property: "🏢",
+export const COMPANY_ICONS: Record<CompanyTypeId, LucideIcon> = {
+    bubble_tea: Coffee,
+    netcafe: Monitor,
+    ai_startup: Bot,
+    property: Building2,
 };
 
-export const PARTNER_EMOJI: Record<PartnerId, string> = {
-    ming: "😎",
-    yan: "💅",
-    kei: "👑",
+export const PARTNER_ICONS: Record<PartnerId, LucideIcon> = {
+    mary: Smile,
+    jenny: Heart,
+    jessica: Crown,
 };
 
-export const EVENT_EMOJI: Record<EventId, string> = {
-    snack_boom: "💥",
-    crypto_crash: "📉",
-    windfall: "🎰",
-    collapse: "😵",
+export const EVENT_ICONS: Record<EventId, LucideIcon> = {
+    snack_boom: Zap,
+    crypto_crash: TrendingDown,
+    windfall: Dices,
+    collapse: Frown,
 };
+
+export const BIRTH_FAMILY_ICONS: Record<BirthFamilyId, LucideIcon> = {
+    low_class: Tent,
+    middle_class: Home,
+    high_class: Castle,
+};
+
+export const RANK_ICONS: Record<RankTier, LucideIcon> = {
+    winner: Trophy,
+    almost: Footprints,
+    middle: Home,
+    bottom: Frown,
+};
+
+export const BrandIcon = CircleDollarSign;
+export const MarketSectionIcon = ShoppingCart;
+export const CompanySectionIcon = Factory;
+export const FamilySectionIcon = HeartHandshake;
+export const ConfirmDangerIcon = TriangleAlert;
+export const ConfirmHelpIcon = CircleHelp;
+export const DeathIcon = Skull;
+export const RetireIcon = PartyPopper;

@@ -6,19 +6,11 @@ export type BirthFamilyId = "low_class" | "middle_class" | "high_class";
 
 export type GoodTier = "low" | "mid" | "high";
 
-export type GoodId =
-    | "chips"
-    | "vitasoy"
-    | "phone"
-    | "sneakers"
-    | "bitcoin"
-    | "gold"
-    | "ev"
-    | "options";
+export type GoodId = "chips" | "vitasoy" | "phone" | "sneakers" | "bitcoin" | "gold" | "ev" | "options";
 
 export type CompanyTypeId = "bubble_tea" | "netcafe" | "ai_startup" | "property";
 
-export type PartnerId = "ming" | "yan" | "kei";
+export type PartnerId = "mary" | "jenny" | "jessica";
 
 export type EventId = "snack_boom" | "crypto_crash" | "windfall" | "collapse";
 
@@ -93,10 +85,7 @@ export interface PartnerDef {
     yearly: PartnerYearlyEffect;
 }
 
-export type EventEffect =
-    | {type: "price_mult"; goodId: GoodId; mult: number}
-    | {type: "cash"; amount: number}
-    | {type: "health"; amount: number};
+export type EventEffect = {type: "price_mult"; goodId: GoodId; mult: number} | {type: "cash"; amount: number} | {type: "health"; amount: number};
 
 export interface EventDef {
     id: EventId;

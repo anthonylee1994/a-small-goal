@@ -10,15 +10,7 @@ interface Props {
     className?: string;
 }
 
-export const Button = ({
-    children,
-    onClick,
-    type = "button",
-    variant = "primary",
-    size = "md",
-    disabled = false,
-    className = "",
-}: Props) => {
+export const Button = ({children, onClick, type = "button", variant = "primary", size = "md", disabled = false, className = ""}: Props) => {
     const baseClasses =
         "inline-flex items-center justify-center border-4 border-(--border) font-black shadow-[4px_4px_0_var(--border)] transition-[transform,box-shadow] active:enabled:translate-x-0.5 active:enabled:translate-y-0.5 active:enabled:shadow-none disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none";
     const sizeClasses = {

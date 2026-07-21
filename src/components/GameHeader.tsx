@@ -1,6 +1,7 @@
 import {START_AGE, END_AGE} from "@/game/constants";
 import {BIRTH_FAMILY_MAP} from "@/data/birthFamilies";
 import type {GameState} from "@/types/game";
+import {BrandIcon} from "@/ui/icons";
 
 interface Props {
     state: GameState;
@@ -31,11 +32,8 @@ export function GameHeader({state}: Props) {
                         {PHASE_LABEL[state.phase]}
                     </p>
                 </div>
-                <div
-                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-4 border-(--border) bg-(--accent) text-3xl shadow-[3px_3px_0_var(--border)]"
-                    aria-hidden="true"
-                >
-                    🤑
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-4 border-(--border) bg-(--accent) shadow-[3px_3px_0_var(--border)]" aria-hidden="true">
+                    <BrandIcon className="size-7" strokeWidth={2.5} />
                 </div>
             </div>
 
