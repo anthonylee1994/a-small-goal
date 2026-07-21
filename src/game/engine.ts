@@ -612,14 +612,14 @@ function settleCompanies(state: GameState, rng: Rng): {state: GameState; message
         // New shops get a grace period so "just opened → gone next year" feels less BS.
         const yearsOpen = next.age - company.foundedAge;
         if (yearsOpen < COMPANY_COLLAPSE_GRACE_YEARS) {
-            messages.push(`${def.name}：新舖保護期（還差 ${COMPANY_COLLAPSE_GRACE_YEARS - yearsOpen} 年先有倒閉風險）`);
+            messages.push(`${def.name}：新舖保護期（仲差 ${COMPANY_COLLAPSE_GRACE_YEARS - yearsOpen} 年先有倒閉風險）`);
             kept.push(company);
             continue;
         }
 
         const failChance = companyCollapseChance(next, company.typeId);
         if (rng() < failChance) {
-            messages.push(`${def.name} 倒閉！估值歸 0。（本年倒閉率約 ${(failChance * 100).toFixed(0)}%）`);
+            messages.push(`${def.name} 倒閉！估值歸 0。（今年倒閉率約 ${(failChance * 100).toFixed(0)}%）`);
             next = {...next, reputation: clamp(next.reputation - 8, 0, 100)};
         } else {
             kept.push(company);

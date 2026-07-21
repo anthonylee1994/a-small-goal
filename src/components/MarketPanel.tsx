@@ -167,7 +167,6 @@ const GoodRow = ({goodId, name, price, owned, unitCost, totalCost, unrealizedPnl
 
                     <p className="mt-1 text-lg font-black leading-none tabular-nums" style={{fontFamily: "var(--font-display)"}}>
                         {formatMoney(price)}
-                        <span className="ml-1 text-[10px] font-bold text-(--muted)">市價</span>
                     </p>
                 </div>
             </div>
