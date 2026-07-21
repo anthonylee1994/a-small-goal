@@ -2,10 +2,8 @@ import {useState} from "react";
 import {ILLNESS_HEALTH_THRESHOLD} from "@/game/constants";
 import {formatMoney} from "@/game/format";
 import {getCurrentEvent, getUsedWarehouse, totalAssets} from "@/game/engine";
-import {BIRTH_FAMILY_MAP} from "@/data/birthFamilies";
 import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 import {ActionToast} from "@/components/ActionToast";
-import {BirthRevealModal} from "@/components/BirthRevealModal";
 import {BottomPanel, type GameTab} from "@/components/BottomPanel";
 import {CompanyPanel} from "@/components/CompanyPanel";
 import {ConfirmModal} from "@/components/ConfirmModal";
@@ -19,7 +17,6 @@ import {Stat} from "@/components/Stat";
 
 interface Props {
     state: GameState;
-    onDismissBirthReveal: () => void;
     onDismissEvent: () => void;
     onBuy: (goodId: GoodId, quantity: number) => void;
     onSell: (goodId: GoodId, quantity: number) => void;
@@ -29,19 +26,17 @@ interface Props {
     onEndTurn: () => void;
 }
 
-export const GameScreen = ({state, onDismissBirthReveal, onDismissEvent, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onEndTurn}: Props) => {
+export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onEndTurn}: Props) => {
     const [confirmEndTurn, setConfirmEndTurn] = useState(false);
     const [eventPreviewOpen, setEventPreviewOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<GameTab>("market");
 
-    const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
-    const showBirthReveal = Boolean(family && !state.birthRevealed);
     const event = getCurrentEvent(state);
-    const locked = state.phase !== "playing" || showBirthReveal;
+    const locked = state.phase !== "playing";
     const usedWarehouse = getUsedWarehouse(state);
     const warehouseRatio = state.warehouseCapacity > 0 ? usedWarehouse / state.warehouseCapacity : 0;
     const assets = totalAssets(state);
-    const showEventModal = Boolean(!showBirthReveal && event && (state.phase === "event" || eventPreviewOpen));
+    const showEventModal = Boolean(event && (state.phase === "event" || eventPreviewOpen));
 
     const cashTone = state.cash < 0 ? "danger" : state.cash < 10_000 ? "warn" : "default";
     const healthTone = state.health <= 0 ? "danger" : state.health < ILLNESS_HEALTH_THRESHOLD ? "warn" : "default";
@@ -107,7 +102,6 @@ export const GameScreen = ({state, onDismissBirthReveal, onDismissEvent, onBuy, 
                 />
             ) : null}
 
-            {showBirthReveal && family ? <BirthRevealModal family={family} onDismiss={onDismissBirthReveal} /> : null}
             {showEventModal && event ? <EventModal event={event} onDismiss={closeEventModal} /> : null}
         </main>
     );

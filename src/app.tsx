@@ -1,4 +1,5 @@
 import {TitleScreen} from "@/screen/TitleScreen";
+import {BirthRouletteScreen} from "@/screen/BirthRouletteScreen";
 import {GameScreen} from "@/screen/GameScreen";
 import {SettlementScreen} from "@/screen/SettlementScreen";
 import {useGameStore} from "@/stores/gameStore";
@@ -24,10 +25,13 @@ export const App = () => {
         return <SettlementScreen state={game} onRestart={() => restart()} />;
     }
 
+    if (!game.birthRevealed && game.birthFamilyId) {
+        return <BirthRouletteScreen state={game} onConfirm={() => dismissBirthReveal()} />;
+    }
+
     return (
         <GameScreen
             state={game}
-            onDismissBirthReveal={() => dismissBirthReveal()}
             onDismissEvent={() => dismissEvent()}
             onBuy={buy}
             onSell={sell}
