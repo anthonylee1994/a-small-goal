@@ -49,6 +49,24 @@ body {
     overflow-x: hidden;
 }
 
+/* While a modal is open: hard-stop background scroll / rubber-band. */
+html:has(body.modal-scroll-locked),
+body.modal-scroll-locked {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+    touch-action: none;
+}
+
+body.modal-scroll-locked #root {
+    overscroll-behavior: none;
+}
+
+/* Allow vertical scroll only inside the dialog panel itself. */
+body.modal-scroll-locked [data-modal-panel] {
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+}
+
 /* Narrow phones (320px): keep money / labels from forcing horizontal scroll */
 .tabular-nums {
     overflow-wrap: anywhere;
