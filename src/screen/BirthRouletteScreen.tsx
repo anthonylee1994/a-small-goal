@@ -123,8 +123,6 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
         };
     }, [landMod, reduceMotion]);
 
-    const totalWeight = families.reduce((sum, f) => sum + f.weight, 0);
-
     return (
         <main className="mx-auto flex w-full max-w-md flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5">
             <div>

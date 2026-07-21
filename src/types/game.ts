@@ -152,6 +152,8 @@ export interface GameState {
     birthRevealed: boolean; // 開局揭示投胎後先變 true，之後先出事件 modal
     warehouseCapacity: number;
     inventory: Record<GoodId, number>;
+    /** Total purchase cost basis per good (weighted average on buy, proportional on sell). */
+    inventoryCost: Record<GoodId, number>;
     prices: Record<GoodId, number>;
     companies: OwnedCompany[];
     partnerId: PartnerId | null;

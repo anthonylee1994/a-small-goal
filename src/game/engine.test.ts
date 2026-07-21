@@ -12,6 +12,8 @@ import {
     foundCompany,
     getDoctorFee,
     getRank,
+    holdingCostTotal,
+    holdingUnitCost,
     inventoryValue,
     priceSignal,
     seeDoctor,
@@ -111,7 +113,23 @@ describe("buyGood / sellGood", () => {
         state = buyGood(state, "chips", 3);
         expect(state.inventory.chips).toBe(3);
         expect(state.cash).toBe(1_000_000 - 60);
+        expect(holdingCostTotal(state, "chips")).toBe(60);
+        expect(holdingUnitCost(state, "chips")).toBe(20);
         expect(state.log.some(l => l.text.includes("買入"))).toBe(true);
+    });
+
+    it("tracks weighted average holding cost across buys and sells", () => {
+        let state = {...playingState(105), cash: 1_000_000, prices: {...playingState(105).prices, chips: 10}};
+        state = buyGood(state, "chips", 2); // cost 20
+        state = {...state, prices: {...state.prices, chips: 30}};
+        state = buyGood(state, "chips", 2); // cost +60 → total 80 for 4
+        expect(holdingCostTotal(state, "chips")).toBe(80);
+        expect(holdingUnitCost(state, "chips")).toBe(20);
+        state = {...state, prices: {...state.prices, chips: 40}};
+        state = sellGood(state, "chips", 2); // half cost 40, revenue 80, pnl +40
+        expect(state.inventory.chips).toBe(2);
+        expect(holdingCostTotal(state, "chips")).toBe(40);
+        expect(state.log.some(l => l.text.includes("帳面賺"))).toBe(true);
     });
 
     it("rejects buy when cash is insufficient and logs reason", () => {

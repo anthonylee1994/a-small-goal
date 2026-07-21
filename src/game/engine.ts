@@ -99,6 +99,28 @@ export function inventoryValue(state: GameState): number {
     return total;
 }
 
+/** Total purchase cost basis for one good. */
+export function holdingCostTotal(state: GameState, goodId: GoodId): number {
+    const qty = state.inventory[goodId] ?? 0;
+    if (qty <= 0) return 0;
+    return Math.max(0, state.inventoryCost?.[goodId] ?? 0);
+}
+
+/** Weighted-average unit cost; 0 when empty. */
+export function holdingUnitCost(state: GameState, goodId: GoodId): number {
+    const qty = state.inventory[goodId] ?? 0;
+    if (qty <= 0) return 0;
+    return Math.round(holdingCostTotal(state, goodId) / qty);
+}
+
+/** Mark-to-market P&L vs cost basis (positive = floating profit). */
+export function holdingUnrealizedPnl(state: GameState, goodId: GoodId): number {
+    const qty = state.inventory[goodId] ?? 0;
+    if (qty <= 0) return 0;
+    const market = qty * (state.prices[goodId] ?? 0);
+    return market - holdingCostTotal(state, goodId);
+}
+
 export function companyValue(state: GameState): number {
     return state.companies.reduce((sum, c) => sum + (COMPANY_MAP[c.typeId]?.valuation ?? 0), 0);
 }
@@ -260,6 +282,7 @@ export function normalizeGameState(raw: GameState): GameState {
         companyFoundAttempts: raw.companyFoundAttempts ?? 0,
         lastTurnSummary: raw.lastTurnSummary ?? null,
         inventory: {...emptyInventory(), ...raw.inventory},
+        inventoryCost: {...emptyInventory(), ...(raw.inventoryCost ?? {})},
         prices: {...emptyPrices(), ...raw.prices},
         companies: raw.companies ?? [],
         children: raw.children ?? [],
@@ -278,6 +301,7 @@ export function createInitialState(seed?: number): GameState {
         birthRevealed: true,
         warehouseCapacity: START_WAREHOUSE,
         inventory: emptyInventory(),
+        inventoryCost: emptyInventory(),
         prices: emptyPrices(),
         companies: [],
         partnerId: null,
@@ -401,12 +425,22 @@ export function buyGood(state: GameState, goodId: GoodId, quantity: number): Gam
         return pushLog(state, `錢唔夠！需要 ${formatMoney(cost)}。`, "bad");
     }
 
+    const prevQty = state.inventory[goodId] ?? 0;
+    const prevCost = state.inventoryCost?.[goodId] ?? 0;
+    const nextQty = prevQty + quantity;
+    const nextCost = prevCost + cost;
+
     let next: GameState = {
         ...state,
         cash: state.cash - cost,
         inventory: {
             ...state.inventory,
-            [goodId]: (state.inventory[goodId] ?? 0) + quantity,
+            [goodId]: nextQty,
+        },
+        inventoryCost: {
+            ...emptyInventory(),
+            ...state.inventoryCost,
+            [goodId]: nextCost,
         },
     };
     next = pushLog(next, `買入 ${good.name} x${quantity}，花費 ${formatMoney(cost)}。`, "info");
@@ -426,15 +460,27 @@ export function sellGood(state: GameState, goodId: GoodId, quantity: number): Ga
 
     const price = state.prices[goodId] ?? 0;
     const revenue = price * quantity;
+    const prevCost = state.inventoryCost?.[goodId] ?? 0;
+    const costSold = owned > 0 ? Math.round((prevCost * quantity) / owned) : 0;
+    const remainQty = owned - quantity;
+    const remainCost = remainQty <= 0 ? 0 : Math.max(0, prevCost - costSold);
+    const pnl = revenue - costSold;
+
     let next: GameState = {
         ...state,
         cash: state.cash + revenue,
         inventory: {
             ...state.inventory,
-            [goodId]: owned - quantity,
+            [goodId]: remainQty,
+        },
+        inventoryCost: {
+            ...emptyInventory(),
+            ...state.inventoryCost,
+            [goodId]: remainCost,
         },
     };
-    next = pushLog(next, `賣出 ${good.name} x${quantity}，收入 ${formatMoney(revenue)}。`, "good");
+    const pnlText = pnl === 0 ? "" : pnl > 0 ? `，帳面賺 ${formatMoney(pnl)}` : `，帳面蝕 ${formatMoney(Math.abs(pnl))}`;
+    next = pushLog(next, `賣出 ${good.name} x${quantity}，收入 ${formatMoney(revenue)}${pnlText}。`, pnl >= 0 ? "good" : "bad");
     if (revenue > 0 && !next.milestonesUnlocked.includes("first_trade_profit")) {
         next = unlockMilestone(next, "first_trade_profit", "【第一桶金】成功賣出貨品套現，炒家之路開始。");
     }
@@ -694,6 +740,7 @@ function forceLiquidate(state: GameState): {state: GameState; messages: string[]
             ...next,
             cash: next.cash + revenue,
             inventory: {...next.inventory, [good.id]: 0},
+            inventoryCost: {...emptyInventory(), ...next.inventoryCost, [good.id]: 0},
         };
         messages.push(`清盤賣出 ${good.name} x${qty}，得返 ${formatMoney(revenue)}`);
     }
