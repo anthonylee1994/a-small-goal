@@ -23,8 +23,8 @@ export function SettlementScreen({state, onRestart}: Props) {
     const RankIcon = RANK_ICONS[rank.tier];
 
     return (
-        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center px-5 py-8 text-center">
-            <div className="relative mx-auto mb-2">
+        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
+            <div className="relative mx-auto mb-2 max-w-36">
                 <div
                     className={`mx-auto flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-(--border) shadow-[5px_5px_0_var(--border)] ${
                         isDead ? "bg-[#ffe4e6]" : "bg-(--accent)"
@@ -34,7 +34,7 @@ export function SettlementScreen({state, onRestart}: Props) {
                     <StatusIcon className="size-12" strokeWidth={2.25} />
                 </div>
                 <span
-                    className="absolute -right-6 -top-2 rotate-12 rounded-lg border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black shadow-[2px_2px_0_var(--border)]"
+                    className="absolute -top-2 right-0 rotate-12 rounded-lg border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black shadow-[2px_2px_0_var(--border)]"
                     aria-hidden="true"
                 >
                     {isDead ? "GG" : "WIN?"}

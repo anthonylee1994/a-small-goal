@@ -23,7 +23,7 @@ export function GameHeader({state}: Props) {
         <header className="rounded-2xl border-4 border-(--border) bg-(--panel) p-4 shadow-[4px_4px_0_var(--border)]">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-black leading-none" style={{fontFamily: "var(--font-display)"}}>
+                    <h1 className="text-xl font-black leading-none sm:text-2xl" style={{fontFamily: "var(--font-display)"}}>
                         一億小目標
                     </h1>
                     <p className="mt-1 text-xs font-bold text-(--muted)">

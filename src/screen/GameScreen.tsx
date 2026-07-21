@@ -53,10 +53,10 @@ export const GameScreen = ({state, onDismissBirthReveal, onDismissEvent, onBuy, 
     };
 
     return (
-        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col">
+        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col overflow-x-hidden">
             <ActionToast latest={state.log[0]} />
 
-            <div className="flex flex-1 flex-col gap-3 px-4 pt-4 pb-44">
+            <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-44 sm:px-4 sm:pt-4">
                 <GameHeader state={state} />
 
                 <section className="grid grid-cols-2 gap-2 text-sm">
