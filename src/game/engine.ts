@@ -3,7 +3,7 @@ import {COMPANIES, COMPANY_MAP} from "../data/companies";
 import {EVENT_MAP, EVENTS} from "../data/events";
 import {GOOD_MAP, GOODS} from "../data/goods";
 import {PARTNER_MAP, PARTNERS} from "../data/partners";
-import type {Child, CompanyTypeId, EventDef, GameState, GoodId, LogEntry, MilestoneId, OwnedCompany, PartnerId, Rank, RankTier, TurnSummary} from "../types/game";
+import type {Child, CompanyClosure, CompanyTypeId, EventDef, GameState, GoodId, LogEntry, MilestoneId, OwnedCompany, PartnerId, Rank, RankTier, TurnSummary} from "../types/game";
 import {
     BASE_CHILD_CHANCE,
     CASH_LOSS_MAX_FRACTION,
@@ -103,8 +103,9 @@ export function normalizeOwnedCompany(raw: Partial<OwnedCompany> & {typeId: Comp
 }
 
 function makeLog(state: GameState, text: string, tone: LogEntry["tone"]): LogEntry {
+    // Include text hash so consecutive same-length logs (e.g. two founding fails) get distinct ids for toast.
     return {
-        id: `${state.seed ?? 0}-${state.age}-${state.log.length}`,
+        id: `${state.seed ?? 0}-${state.age}-${state.log.length}-${hashString(text)}`,
         age: state.age,
         text,
         tone,
@@ -354,7 +355,12 @@ export function normalizeGameState(raw: GameState): GameState {
         easyMode: raw.easyMode ?? false,
         milestonesUnlocked: raw.milestonesUnlocked ?? [],
         companyFoundAttempts: raw.companyFoundAttempts ?? 0,
-        lastTurnSummary: raw.lastTurnSummary ?? null,
+        lastTurnSummary: raw.lastTurnSummary
+            ? {
+                  ...raw.lastTurnSummary,
+                  closures: raw.lastTurnSummary.closures ?? [],
+              }
+            : null,
         inventory: {...emptyInventory(), ...raw.inventory},
         inventoryCost: {...emptyInventory(), ...(raw.inventoryCost ?? {})},
         prices: {...emptyPrices(), ...raw.prices},
@@ -781,9 +787,10 @@ function companyCollapseChance(state: GameState, companyTypeId: CompanyTypeId): 
     return clamp(def.failChance - state.reputation / 500, 0.01, 0.35);
 }
 
-function settleCompanies(state: GameState, rng: Rng): {state: GameState; messages: string[]} {
+function settleCompanies(state: GameState, rng: Rng): {state: GameState; messages: string[]; closures: CompanyClosure[]} {
     let next = {...state};
     const messages: string[] = [];
+    const closures: CompanyClosure[] = [];
     const kept: typeof next.companies = [];
 
     for (const raw of next.companies) {
@@ -810,12 +817,13 @@ function settleCompanies(state: GameState, rng: Rng): {state: GameState; message
         if (rng() < failChance) {
             messages.push(`${def.name} 倒閉！持股同估值歸 0。（今年倒閉率約 ${(failChance * 100).toFixed(0)}%）`);
             next = {...next, reputation: clamp(next.reputation - 8, 0, 100)};
+            closures.push({typeId: company.typeId, name: def.name, shares: company.shares, reason: "collapse"});
         } else {
             kept.push(company);
         }
     }
 
-    return {state: {...next, companies: kept}, messages};
+    return {state: {...next, companies: kept}, messages, closures};
 }
 
 function settleFamily(state: GameState, rng: Rng): {state: GameState; messages: string[]} {
@@ -915,9 +923,10 @@ function settleHealth(state: GameState): {state: GameState; messages: string[]} 
     return {state: next, messages};
 }
 
-function forceLiquidate(state: GameState): {state: GameState; messages: string[]} {
+function forceLiquidate(state: GameState): {state: GameState; messages: string[]; closures: CompanyClosure[]} {
     let next = {...state};
     const messages: string[] = [];
+    const closures: CompanyClosure[] = [];
 
     for (const good of GOODS) {
         if (next.cash >= 0) break;
@@ -948,11 +957,12 @@ function forceLiquidate(state: GameState): {state: GameState; messages: string[]
             const revenue = price * company.shares;
             next = {...next, cash: next.cash + revenue};
             messages.push(`清盤沽清${def.name} ${company.shares} 股，得返 ${formatMoney(revenue)}`);
+            closures.push({typeId: company.typeId, name: def.name, shares: company.shares, reason: "liquidated"});
         }
         next = {...next, companies: remaining};
     }
 
-    return {state: next, messages};
+    return {state: next, messages, closures};
 }
 
 function finishDeath(state: GameState): GameState {
@@ -1012,6 +1022,7 @@ export function endTurn(state: GameState): GameState {
 
     const rng = turnRng(state, 4242);
     const messages: string[] = [];
+    const closures: CompanyClosure[] = [];
     const cashBefore = state.cash;
     const healthBefore = state.health;
     let companyNet = 0;
@@ -1021,6 +1032,7 @@ export function endTurn(state: GameState): GameState {
         const cos = settleCompanies(next, rng);
         next = cos.state;
         messages.push(...cos.messages);
+        closures.push(...cos.closures);
         for (const company of state.companies) {
             const def = COMPANY_MAP[company.typeId];
             if (!def) continue;
@@ -1044,13 +1056,14 @@ export function endTurn(state: GameState): GameState {
         const liq = forceLiquidate(next);
         next = liq.state;
         messages.push(...liq.messages);
+        closures.push(...liq.closures);
         if (next.cash < 0) {
             messages.push("清盤後仍然負債，破產出局");
         }
     }
 
     for (const msg of messages) {
-        next = pushLog(next, msg, msg.includes("倒閉") || msg.includes("見紅") || msg.includes("破產") ? "bad" : "info");
+        next = pushLog(next, msg, msg.includes("倒閉") || msg.includes("見紅") || msg.includes("破產") || msg.includes("清盤沽清") ? "bad" : "info");
     }
 
     const summary: TurnSummary = {
@@ -1061,6 +1074,7 @@ export function endTurn(state: GameState): GameState {
         healthAfter: next.health,
         companyNet,
         highlights: messages.slice(0, 6),
+        closures,
     };
     next = {...next, lastTurnSummary: summary};
     next = checkAgeMilestones(next);

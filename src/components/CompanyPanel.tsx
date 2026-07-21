@@ -1,4 +1,5 @@
-import {useState, type ComponentType} from "react";
+import {useEffect, useRef, useState, type ComponentType} from "react";
+import {COMPANY_MAP} from "@/data/companies";
 import {COMPANY_COLLAPSE_GRACE_YEARS, COMPANY_TOTAL_SHARES} from "@/game/constants";
 import {formatMoney} from "@/game/format";
 import {getCompanyOptions} from "@/game/engine";
@@ -17,11 +18,45 @@ interface Props {
     onSellShares: (companyId: CompanyTypeId, shares: number) => void;
 }
 
+interface FoundNotice {
+    title: string;
+    message: string;
+    danger: boolean;
+}
+
 export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}: Props) => {
     const [pendingCompanyId, setPendingCompanyId] = useState<CompanyTypeId | null>(null);
+    const [foundNotice, setFoundNotice] = useState<FoundNotice | null>(null);
+    const expectFoundId = useRef<CompanyTypeId | null>(null);
     const options = getCompanyOptions(state);
     const ownedCount = state.companies.length;
     const pending = pendingCompanyId ? options.find(c => c.id === pendingCompanyId) : null;
+
+    useEffect(() => {
+        const companyId = expectFoundId.current;
+        if (!companyId) return;
+        expectFoundId.current = null;
+
+        const def = COMPANY_MAP[companyId];
+        const name = def?.name ?? companyId;
+        const owned = state.companies.some(c => c.typeId === companyId);
+        const latest = state.log[0]?.text;
+
+        if (owned) {
+            setFoundNotice({
+                title: "創業成功！",
+                message: latest && latest.includes(name) ? latest : `成功創立${name}！持有 ${COMPANY_TOTAL_SHARES} 股（100%）。`,
+                danger: false,
+            });
+            return;
+        }
+
+        setFoundNotice({
+            title: "創業失敗",
+            message: latest && (latest.includes("失敗") || latest.includes(name) || latest.includes("錢唔夠") || latest.includes("名聲")) ? latest : `開${name}失敗，再試多次或者先去賺錢／抬名聲。`,
+            danger: true,
+        });
+    }, [state.companies, state.log, state.cash, state.reputation, state.companyFoundAttempts]);
 
     return (
         <Section
@@ -118,9 +153,22 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
                     onCancel={() => setPendingCompanyId(null)}
                     onConfirm={() => {
                         const id = pending.id;
-                        onFound(id);
+                        expectFoundId.current = id;
                         setPendingCompanyId(null);
+                        onFound(id);
                     }}
+                />
+            ) : null}
+
+            {foundNotice ? (
+                <ConfirmModal
+                    title={foundNotice.title}
+                    message={foundNotice.message}
+                    confirmLabel="知道喇"
+                    cancelLabel={null}
+                    danger={foundNotice.danger}
+                    onCancel={() => setFoundNotice(null)}
+                    onConfirm={() => setFoundNotice(null)}
                 />
             ) : null}
         </Section>

@@ -110,6 +110,14 @@ export interface Rank {
     message: string;
 }
 
+/** Company lost during year-end settlement. */
+export interface CompanyClosure {
+    typeId: CompanyTypeId;
+    name: string;
+    shares: number;
+    reason: "collapse" | "liquidated";
+}
+
 /** One-screen highlight after endTurn settlement. */
 export interface TurnSummary {
     age: number;
@@ -119,6 +127,8 @@ export interface TurnSummary {
     healthAfter: number;
     companyNet: number;
     highlights: string[];
+    /** Companies that closed this settlement (倒閉／清盤). */
+    closures: CompanyClosure[];
 }
 
 export type MilestoneId = "assets_1m" | "assets_10m" | "assets_50m" | "assets_100m" | "first_trade_profit" | "first_company" | "first_marriage" | "age_40";

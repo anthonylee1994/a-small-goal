@@ -11,6 +11,7 @@ interface Props {
 export const TurnSummaryModal = ({summary, onDismiss}: Props) => {
     const cashDelta = summary.cashAfter - summary.cashBefore;
     const healthDelta = summary.healthAfter - summary.healthBefore;
+    const closures = summary.closures ?? [];
 
     return (
         <Modal onClose={onDismiss} labelledBy="turn-summary-title" closeLabel="關閉年結">
@@ -18,6 +19,20 @@ export const TurnSummaryModal = ({summary, onDismiss}: Props) => {
             <h2 id="turn-summary-title" className="mt-1 text-2xl font-black leading-tight" style={{fontFamily: "var(--font-display)"}}>
                 {summary.age} 歲 · 結算完成
             </h2>
+
+            {closures.length > 0 ? (
+                <div className="mt-4 rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-3 shadow-[3px_3px_0_var(--border)]" role="alert">
+                    <p className="text-sm font-black text-(--danger)">公司結業通知</p>
+                    <ul className="mt-2 space-y-1.5 text-xs font-bold text-(--ink)">
+                        {closures.map(c => (
+                            <li key={`${c.reason}-${c.typeId}`} className="rounded-xl border-2 border-(--border) bg-white px-2.5 py-2">
+                                <p className="font-black">{c.name}</p>
+                                <p className="mt-0.5 text-(--muted)">{c.reason === "collapse" ? `倒閉結業 · 持股 ${c.shares}% 同估值歸零` : `清盤沽清 · 已沽出持股 ${c.shares}%`}</p>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : null}
 
             <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-bold">
                 <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2">
@@ -43,7 +58,9 @@ export const TurnSummaryModal = ({summary, onDismiss}: Props) => {
             {summary.highlights.length > 0 ? (
                 <ul className="mt-3 max-h-40 space-y-1 overflow-y-auto rounded-xl border-2 border-(--border) bg-white px-3 py-2 text-xs font-bold">
                     {summary.highlights.map((line, i) => (
-                        <li key={`${i}-${line.slice(0, 12)}`}>{line}</li>
+                        <li key={`${i}-${line.slice(0, 12)}`} className={line.includes("倒閉") || line.includes("清盤沽清") ? "text-(--danger)" : undefined}>
+                            {line}
+                        </li>
                     ))}
                 </ul>
             ) : null}

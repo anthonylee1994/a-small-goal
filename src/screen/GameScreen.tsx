@@ -52,6 +52,7 @@ export const GameScreen = ({
     const [eventPreviewOpen, setEventPreviewOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<GameTab>("market");
     const [highlightGoodId, setHighlightGoodId] = useState<GoodId | null>(null);
+    const [closuresAcknowledged, setClosuresAcknowledged] = useState(false);
 
     const event = getCurrentEvent(state);
     const locked = state.phase !== "playing";
@@ -59,8 +60,16 @@ export const GameScreen = ({
     const warehouseRatio = state.warehouseCapacity > 0 ? usedWarehouse / state.warehouseCapacity : 0;
     const assets = totalAssets(state);
     const showingSummary = Boolean(state.lastTurnSummary);
+    const yearClosures = state.lastTurnSummary?.closures ?? [];
+    const showClosureNotice = showingSummary && yearClosures.length > 0 && !closuresAcknowledged;
+    const showTurnSummary = showingSummary && (!yearClosures.length || closuresAcknowledged);
     const showEventModal = Boolean(event && !showingSummary && (state.phase === "event" || eventPreviewOpen));
     const endTurnRisky = state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD;
+
+    useEffect(() => {
+        // New year-end summary → re-show closure popup if any.
+        setClosuresAcknowledged(false);
+    }, [state.lastTurnSummary?.age, state.lastTurnSummary?.closures?.length]);
 
     const cashTone = state.cash < 0 ? "danger" : state.cash < 10_000 ? "warn" : "default";
     const healthTone = state.health <= 0 ? "danger" : state.health < ILLNESS_HEALTH_THRESHOLD ? "warn" : "default";
@@ -153,7 +162,21 @@ export const GameScreen = ({
                 />
             ) : null}
 
-            {showingSummary && state.lastTurnSummary ? <TurnSummaryModal summary={state.lastTurnSummary} onDismiss={onDismissTurnSummary} /> : null}
+            {showClosureNotice ? (
+                <ConfirmModal
+                    title={yearClosures.length > 1 ? `有 ${yearClosures.length} 間公司結業！` : "公司結業！"}
+                    message={yearClosures
+                        .map(c => (c.reason === "collapse" ? `「${c.name}」倒閉結業，持股 ${c.shares}% 同估值歸零。` : `「${c.name}」因清盤被沽清，持股 ${c.shares}% 已套現。`))
+                        .join("\n")}
+                    confirmLabel="知道喇"
+                    cancelLabel={null}
+                    danger
+                    onCancel={() => setClosuresAcknowledged(true)}
+                    onConfirm={() => setClosuresAcknowledged(true)}
+                />
+            ) : null}
+
+            {showTurnSummary && state.lastTurnSummary ? <TurnSummaryModal summary={state.lastTurnSummary} onDismiss={onDismissTurnSummary} /> : null}
 
             {showEventModal && event ? <EventModal event={event} onDismiss={closeEventModal} onJumpToMarket={handleJumpToMarket} /> : null}
         </main>
