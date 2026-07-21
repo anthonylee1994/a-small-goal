@@ -32,6 +32,13 @@ export const EVENTS: readonly EventDef[] = [
             {type: "cash", amount: -20_000},
         ],
     },
+    {
+        id: "nothing",
+        title: "冇事發生",
+        message: "今年平平淡淡，唔使大喜大悲，繼續捱落去就得。",
+        weight: 1,
+        effects: [],
+    },
 ] as const;
 
 export const EVENT_MAP: Record<EventId, EventDef> = Object.fromEntries(EVENTS.map(e => [e.id, e])) as Record<EventId, EventDef>;

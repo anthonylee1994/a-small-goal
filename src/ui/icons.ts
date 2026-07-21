@@ -19,6 +19,7 @@ import {
     HeartHandshake,
     Home,
     Medal,
+    Meh,
     Monitor,
     PartyPopper,
     ShoppingCart,
@@ -69,6 +70,7 @@ export const EVENT_ICONS: Record<EventId, LucideIcon> = {
     crypto_crash: TrendingDown,
     windfall: Dices,
     collapse: Frown,
+    nothing: Meh,
 };
 
 export const BIRTH_FAMILY_ICONS: Record<BirthFamilyId, LucideIcon> = {

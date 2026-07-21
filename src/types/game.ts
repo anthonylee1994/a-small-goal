@@ -12,7 +12,7 @@ export type CompanyTypeId = "bubble_tea" | "netcafe" | "ai_startup" | "property"
 
 export type PartnerId = "mary" | "jenny" | "jessica";
 
-export type EventId = "snack_boom" | "crypto_crash" | "windfall" | "collapse";
+export type EventId = "snack_boom" | "crypto_crash" | "windfall" | "collapse" | "nothing";
 
 export type RankTier = "bottom" | "middle" | "almost" | "winner";
 

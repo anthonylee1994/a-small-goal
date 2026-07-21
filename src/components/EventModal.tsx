@@ -30,9 +30,11 @@ export const EventModal = ({event, onDismiss}: Props) => {
             <p className="text-sm leading-relaxed text-(--muted)">{event.message}</p>
 
             <ul className="mt-4 space-y-1 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-sm font-bold">
-                {event.effects.map((effect, index) => (
-                    <li key={`${effect.type}-${index}`}>{effectLabel(effect)}</li>
-                ))}
+                {event.effects.length === 0 ? (
+                    <li>冇特別影響</li>
+                ) : (
+                    event.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{effectLabel(effect)}</li>)
+                )}
             </ul>
 
             <div className="mt-5">
