@@ -3,6 +3,7 @@ import {GOOD_MAP} from "@/data/goods";
 import {formatMoney} from "@/game/format";
 import {Button} from "@/components/Button";
 import {Modal} from "@/components/Modal";
+import {EVENT_EMOJI} from "@/ui/icons";
 
 interface Props {
     event: EventDef;
@@ -12,11 +13,26 @@ interface Props {
 export const EventModal = ({event, onDismiss}: Props) => {
     return (
         <Modal onClose={onDismiss} labelledBy="event-modal-title" closeLabel="關閉事件">
-            <p className="mb-2 text-xs font-black tracking-wide text-(--coral)">今年突發事件</p>
-            <h2 id="event-modal-title" className="text-2xl font-black leading-tight" style={{fontFamily: "var(--font-display)"}}>
-                {event.title}
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-(--muted)">{event.message}</p>
+            <div className="comic-burst mb-3 flex items-center gap-3">
+                <div
+                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl border-4 border-(--border) bg-(--accent) text-4xl shadow-[4px_4px_0_var(--border)]"
+                    aria-hidden="true"
+                >
+                    {EVENT_EMOJI[event.id]}
+                </div>
+                <div>
+                    <p className="text-xs font-black tracking-wide text-(--coral)">啪！今年突發事件</p>
+                    <h2
+                        id="event-modal-title"
+                        className="text-2xl font-black leading-tight"
+                        style={{fontFamily: "var(--font-display)"}}
+                    >
+                        {event.title}
+                    </h2>
+                </div>
+            </div>
+
+            <p className="text-sm leading-relaxed text-(--muted)">{event.message}</p>
 
             <ul className="mt-4 space-y-1 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-sm font-bold">
                 {event.effects.map((effect, index) => (

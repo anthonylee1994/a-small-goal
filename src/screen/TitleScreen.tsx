@@ -6,16 +6,30 @@ interface Props {
 
 export const TitleScreen = ({onStart}: Props) => {
     return (
-        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center gap-8 p-10 text-center">
-            <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-4xl border-4 border-(--border) bg-(--accent) shadow-[6px_6px_0_var(--border)]" aria-hidden="true">
-                <span className="text-7xl leading-none">💰</span>
+        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center gap-7 px-6 py-10 text-center">
+            <div className="relative mx-auto">
+                <div className="mx-auto flex h-40 w-40 items-center justify-center rounded-4xl border-4 border-(--border) bg-(--accent) shadow-[8px_8px_0_var(--border)]" aria-hidden="true">
+                    <span className="text-8xl leading-none">🤑</span>
+                </div>
+                <span
+                    className="absolute -top-2 -right-3 rotate-6 rounded-xl border-2 border-(--border) bg-(--coral) px-2 py-1 text-xs font-black text-white shadow-[2px_2px_0_var(--border)]"
+                    aria-hidden="true"
+                >
+                    啪！
+                </span>
+                <span
+                    className="absolute -bottom-1 -left-4 -rotate-6 rounded-xl border-2 border-(--border) bg-(--mint) px-2 py-1 text-xs font-black shadow-[2px_2px_0_var(--border)]"
+                    aria-hidden="true"
+                >
+                    HK$1億
+                </span>
             </div>
 
             <div className="space-y-3">
                 <h1 className="text-4xl font-black leading-none tracking-tight" style={{fontFamily: "var(--font-display)"}}>
                     一億小目標
                 </h1>
-                <p className="text-center text-base leading-relaxed text-(--muted)">20 歲起步，40 年內靠炒賣、創業同家庭選擇，目標喺 60 歲前累積至少一億。</p>
+                <p className="text-base leading-relaxed text-(--muted)">20 歲起步，40 年內靠炒賣、創業同家庭選擇，目標喺 60 歲前累積至少一億。</p>
             </div>
 
             <Button onClick={onStart}>開始遊戲</Button>

@@ -66,6 +66,28 @@ body {
     }
 }
 
+@keyframes toast-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toast-fade-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+}
+
 .modal-dimmer {
     animation: modal-dimmer-in 160ms ease-out both;
 }
@@ -75,9 +97,23 @@ body {
     transform-origin: center center;
 }
 
+.action-toast {
+    animation: toast-slide-in 220ms ease-out both;
+}
+
+.action-toast-out {
+    animation: toast-fade-out 280ms ease-in both;
+}
+
+.comic-burst {
+    position: relative;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .modal-dimmer,
-    .modal-panel {
+    .modal-panel,
+    .action-toast,
+    .action-toast-out {
         animation: none;
     }
 }
