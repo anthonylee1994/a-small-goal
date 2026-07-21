@@ -10,6 +10,7 @@ import {
     CASH_LOSS_MIN_RESERVE,
     CHILD_MATURE_YEARS,
     CHILD_TUITION,
+    COMPANY_COLLAPSE_GRACE_YEARS,
     COMPANY_FAIL_REFUND_RATE,
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
@@ -543,6 +544,12 @@ export function marry(state: GameState, partnerId: PartnerId): GameState {
     return checkAssetMilestones(next);
 }
 
+function companyCollapseChance(state: GameState, companyTypeId: CompanyTypeId): number {
+    const def = COMPANY_MAP[companyTypeId];
+    if (!def) return 0;
+    return clamp(def.failChance - state.reputation / 500, 0.01, 0.35);
+}
+
 function settleCompanies(state: GameState, rng: Rng): {state: GameState; messages: string[]} {
     let next = {...state};
     const messages: string[] = [];
@@ -556,9 +563,17 @@ function settleCompanies(state: GameState, rng: Rng): {state: GameState; message
         next = {...next, cash: next.cash - def.maintenance};
         messages.push(`${def.name}：收入 +${formatMoney(def.annualIncome)}，維護 -${formatMoney(def.maintenance)}`);
 
-        const failChance = clamp(def.failChance - next.reputation / 500, 0.01, 0.35);
+        // New shops get a grace period so "just opened → gone next year" feels less BS.
+        const yearsOpen = next.age - company.foundedAge;
+        if (yearsOpen < COMPANY_COLLAPSE_GRACE_YEARS) {
+            messages.push(`${def.name}：新舖保護期（還差 ${COMPANY_COLLAPSE_GRACE_YEARS - yearsOpen} 年先有倒閉風險）`);
+            kept.push(company);
+            continue;
+        }
+
+        const failChance = companyCollapseChance(next, company.typeId);
         if (rng() < failChance) {
-            messages.push(`${def.name} 倒閉！估值歸 0。`);
+            messages.push(`${def.name} 倒閉！估值歸 0。（本年倒閉率約 ${(failChance * 100).toFixed(0)}%）`);
             next = {...next, reputation: clamp(next.reputation - 8, 0, 100)};
         } else {
             kept.push(company);
@@ -834,12 +849,20 @@ export function getPartnerOptions(state: GameState) {
 }
 
 export function getCompanyOptions(state: GameState) {
-    return COMPANIES.map(c => ({
-        ...c,
-        owned: state.companies.some(x => x.typeId === c.id),
-        canAfford: state.cash >= c.cost,
-        repOk: state.reputation >= c.minReputation,
-    }));
+    return COMPANIES.map(c => {
+        const owned = state.companies.find(x => x.typeId === c.id);
+        const yearsOpen = owned ? state.age - owned.foundedAge : null;
+        const inGrace = owned != null && yearsOpen != null && yearsOpen < COMPANY_COLLAPSE_GRACE_YEARS;
+        return {
+            ...c,
+            owned: owned != null,
+            canAfford: state.cash >= c.cost,
+            repOk: state.reputation >= c.minReputation,
+            annualCollapseChance: companyCollapseChance(state, c.id),
+            inGrace,
+            graceYearsLeft: owned != null && yearsOpen != null ? Math.max(0, COMPANY_COLLAPSE_GRACE_YEARS - yearsOpen) : null,
+        };
+    });
 }
 
 export function getCurrentEvent(state: GameState): EventDef | null {

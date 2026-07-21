@@ -42,6 +42,8 @@ export const CASH_LOSS_MIN_RESERVE = 1_000;
 
 /** Failed founding refunds this fraction of cost (after first free success). */
 export const COMPANY_FAIL_REFUND_RATE = 0.5;
+/** Years after founding before annual collapse rolls apply (0 = founding year endTurn only). */
+export const COMPANY_COLLAPSE_GRACE_YEARS = 2;
 
 export const BASE_CHILD_CHANCE = 0.18;
 export const CHILD_MATURE_YEARS = 18;

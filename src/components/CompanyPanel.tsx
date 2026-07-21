@@ -1,4 +1,5 @@
 import {useState} from "react";
+import {COMPANY_COLLAPSE_GRACE_YEARS} from "@/game/constants";
 import {formatMoney} from "@/game/format";
 import {getCompanyOptions} from "@/game/engine";
 import type {CompanyTypeId, GameState} from "@/types/game";
@@ -27,7 +28,9 @@ export const CompanyPanel = ({state, locked, onFound}: Props) => {
             action={<span className="rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black text-(--ink)">持有 {ownedCount}</span>}
         >
             {ownedCount === 0 ? (
-                <p className="mb-3 rounded-xl border-2 border-dashed border-(--border) bg-(--bg) px-3 py-2 text-center text-xs font-bold text-(--muted)">未開過公司。開業有風險，失敗都會扣錢。</p>
+                <p className="mb-3 rounded-xl border-2 border-dashed border-(--border) bg-(--bg) px-3 py-2 text-center text-xs font-bold text-(--muted)">
+                    未開過公司。第一次創業保底成功；之後開業失敗退一半。年結有機會倒閉（新舖有保護期）。
+                </p>
             ) : null}
 
             <ul className="space-y-3">
@@ -38,6 +41,7 @@ export const CompanyPanel = ({state, locked, onFound}: Props) => {
                     if (!company.canAfford) reasons.push(`要 ${formatMoney(company.cost)}`);
                     if (!company.repOk) reasons.push(`名聲 ≥ ${company.minReputation}`);
                     const Icon = COMPANY_ICONS[company.id];
+                    const collapsePct = Math.round(company.annualCollapseChance * 100);
 
                     return (
                         <li key={company.id} className="rounded-2xl border-2 border-(--border) bg-[#f4fff9] p-3">
@@ -56,6 +60,13 @@ export const CompanyPanel = ({state, locked, onFound}: Props) => {
                                     <p className="text-[11px] font-bold leading-snug text-(--muted)">
                                         年收 {formatMoney(company.annualIncome)} · 維護 {formatMoney(company.maintenance)} · 估值 {formatMoney(company.valuation)}
                                     </p>
+                                    {company.owned ? (
+                                        <p className="mt-1 text-[11px] font-black text-(--coral)">
+                                            {company.inGrace ? `新舖保護中 · 仲有 ${company.graceYearsLeft} 年免倒閉` : `年結倒閉率約 ${collapsePct}%`}
+                                        </p>
+                                    ) : (
+                                        <p className="mt-1 text-[11px] font-bold text-(--muted)">年結倒閉率約 {collapsePct}%（開業後有保護期）</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -71,7 +82,7 @@ export const CompanyPanel = ({state, locked, onFound}: Props) => {
             {pending ? (
                 <ConfirmModal
                     title={`開「${pending.name}」？`}
-                    message={`投資 ${formatMoney(pending.cost)}。失敗都會蝕晒籌備費。`}
+                    message={`投資 ${formatMoney(pending.cost)}。第一次創業保底成功，之後失敗退一半籌備費。開業後 ${COMPANY_COLLAPSE_GRACE_YEARS} 年內唔會倒閉，之後每年結算有機會倒閉。`}
                     confirmLabel="創業"
                     cancelLabel="取消"
                     danger

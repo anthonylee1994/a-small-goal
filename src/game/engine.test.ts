@@ -310,6 +310,21 @@ describe("foundCompany first success + refund", () => {
         expect(state.companyFoundAttempts).toBe(1);
         expect(state.milestonesUnlocked).toContain("first_company");
     });
+
+    it("keeps newly founded companies through grace period endTurns", () => {
+        let state = {...playingState(502), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0, health: 100};
+        state = foundCompany(state, "bubble_tea");
+        expect(state.companies).toHaveLength(1);
+        const foundedAge = state.age;
+        // Two year-ends during grace (COMPANY_COLLAPSE_GRACE_YEARS = 2) must not wipe the shop.
+        state = endTurn(state);
+        if (state.phase === "event") state = dismissEvent(state);
+        expect(state.companies.some(c => c.typeId === "bubble_tea")).toBe(true);
+        state = endTurn(state);
+        if (state.phase === "event") state = dismissEvent(state);
+        expect(state.companies.some(c => c.typeId === "bubble_tea")).toBe(true);
+        expect(state.age).toBe(foundedAge + 2);
+    });
 });
 
 describe("seeDoctor", () => {
