@@ -142,6 +142,7 @@ interface GameState {
     health: number;
     reputation: number;
     birthFamilyId: BirthFamilyId | null; // title 階段為 null；startGame 後必填
+    birthRevealed: boolean; // false 時先顯示投胎 popup，關閉後先出事件 modal
     warehouseCapacity: number;
     inventory: Record<GoodId, number>;
     prices: Record<GoodId, number>;
@@ -275,6 +276,7 @@ totalAssets = cash + inventoryValue + companyValue
 ```ts
 createInitialState(seed?: number): GameState
 startGame(state: GameState, seed?: number): GameState
+dismissBirthReveal(state: GameState): GameState
 beginTurn(state: GameState): GameState
 dismissEvent(state: GameState): GameState
 buyGood(state: GameState, goodId: GoodId, quantity: number): GameState

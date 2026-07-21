@@ -5,6 +5,7 @@ import {
     beginTurn,
     buyGood,
     createInitialState,
+    dismissBirthReveal,
     dismissEvent,
     endTurn,
     getRank,
@@ -20,6 +21,9 @@ import type {GameState} from "../types/game";
 function playingState(seed = 42): GameState {
     let state = startGame(createInitialState(), seed);
     expect(state.phase).toBe("event");
+    expect(state.birthRevealed).toBe(false);
+    state = dismissBirthReveal(state);
+    expect(state.birthRevealed).toBe(true);
     state = dismissEvent(state);
     expect(state.phase).toBe("playing");
     return state;
@@ -41,6 +45,7 @@ describe("createInitialState / startGame", () => {
     it("startGame rolls a birth family and enters event phase", () => {
         const state = startGame(createInitialState(), 7);
         expect(state.birthFamilyId).not.toBeNull();
+        expect(state.birthRevealed).toBe(false);
         const family = BIRTH_FAMILY_MAP[state.birthFamilyId!];
         expect(state.phase).toBe("event");
         expect(state.currentEventId).not.toBeNull();
@@ -51,6 +56,14 @@ describe("createInitialState / startGame", () => {
             .filter(e => e.type === "cash")
             .reduce((sum, e) => sum + (e.type === "cash" ? e.amount : 0), 0);
         expect(state.cash).toBe(family.startingCash + cashDelta);
+    });
+
+    it("dismissBirthReveal unlocks the event flow", () => {
+        let state = startGame(createInitialState(), 11);
+        expect(state.birthRevealed).toBe(false);
+        state = dismissBirthReveal(state);
+        expect(state.birthRevealed).toBe(true);
+        expect(dismissBirthReveal(state)).toEqual(state);
     });
 
     it("fixed seed reproduces the same birth family", () => {

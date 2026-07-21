@@ -2,6 +2,7 @@ import {create} from "zustand";
 import {
     buyGood,
     createInitialState,
+    dismissBirthReveal,
     dismissEvent,
     endTurn,
     foundCompany,
@@ -15,6 +16,7 @@ import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 interface GameActions {
     start: (seed?: number) => void;
     restart: (seed?: number) => void;
+    dismissBirthReveal: () => void;
     dismissEvent: () => void;
     buy: (goodId: GoodId, quantity: number) => void;
     sell: (goodId: GoodId, quantity: number) => void;
@@ -33,6 +35,7 @@ export const useGameStore = create<GameStore>(set => ({
 
     start: seed => set(s => ({game: startGame(s.game, seed)})),
     restart: seed => set(s => ({game: startGame(s.game, seed)})),
+    dismissBirthReveal: () => set(s => ({game: dismissBirthReveal(s.game)})),
     dismissEvent: () => set(s => ({game: dismissEvent(s.game)})),
     buy: (goodId, quantity) => set(s => ({game: buyGood(s.game, goodId, quantity)})),
     sell: (goodId, quantity) => set(s => ({game: sellGood(s.game, goodId, quantity)})),

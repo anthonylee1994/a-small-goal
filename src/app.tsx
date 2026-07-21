@@ -2,6 +2,7 @@ import {TitleScreen} from "@/screen/TitleScreen";
 import {Stat} from "@/components/Stat";
 import {Button} from "@/components/Button";
 import {EventModal} from "@/components/EventModal";
+import {BirthRevealModal} from "@/components/BirthRevealModal";
 import {SettlementScreen} from "@/screen/SettlementScreen";
 import {LogPanel} from "@/components/LogPanel";
 import {useGameStore} from "@/stores/gameStore";
@@ -13,6 +14,7 @@ export const App = () => {
     const game = useGameStore(s => s.game);
     const start = useGameStore(s => s.start);
     const restart = useGameStore(s => s.restart);
+    const dismissBirthReveal = useGameStore(s => s.dismissBirthReveal);
     const dismissEvent = useGameStore(s => s.dismissEvent);
     const endTurn = useGameStore(s => s.endTurn);
 
@@ -26,6 +28,7 @@ export const App = () => {
 
     const event = getCurrentEvent(game);
     const family = game.birthFamilyId ? BIRTH_FAMILY_MAP[game.birthFamilyId] : null;
+    const showBirthReveal = Boolean(family && !game.birthRevealed);
 
     return (
         <main className="mx-auto flex min-h-svh w-full max-w-md flex-col gap-4 px-4 py-6">
@@ -50,7 +53,13 @@ export const App = () => {
 
             <LogPanel entries={game.log} />
 
-            {game.phase === "event" && event ? <EventModal event={event} onDismiss={() => dismissEvent()} /> : null}
+            {showBirthReveal && family ? (
+                <BirthRevealModal family={family} onDismiss={() => dismissBirthReveal()} />
+            ) : null}
+
+            {!showBirthReveal && game.phase === "event" && event ? (
+                <EventModal event={event} onDismiss={() => dismissEvent()} />
+            ) : null}
         </main>
     );
 };

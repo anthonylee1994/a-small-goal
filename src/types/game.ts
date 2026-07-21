@@ -119,7 +119,8 @@ export interface GameState {
     cash: number;
     health: number;
     reputation: number;
-    birthFamilyId: BirthFamilyId | null;
+    birthFamilyId: BirthFamilyId | null; // title 階段為 null；startGame 後必填
+    birthRevealed: boolean; // 開局揭示投胎後先變 true，之後先出事件 modal
     warehouseCapacity: number;
     inventory: Record<GoodId, number>;
     prices: Record<GoodId, number>;

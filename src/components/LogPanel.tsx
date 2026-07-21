@@ -1,4 +1,4 @@
-import type {LogEntry} from "../types/game";
+import type {LogEntry} from "@/types/game";
 
 interface Props {
     entries: LogEntry[];
@@ -28,7 +28,7 @@ const TONE_STYLES: Record<LogEntry["tone"], {dot: string; chip: string; label: s
     },
 };
 
-export function LogPanel({entries, limit = 8}: Props) {
+export const LogPanel = ({entries, limit = 8}: Props) => {
     const visible = entries.slice(0, limit);
 
     return (
@@ -65,4 +65,4 @@ export function LogPanel({entries, limit = 8}: Props) {
             )}
         </section>
     );
-}
+};

@@ -168,6 +168,7 @@ export function createInitialState(seed?: number): GameState {
         health: START_HEALTH,
         reputation: START_REPUTATION,
         birthFamilyId: null,
+        birthRevealed: true,
         warehouseCapacity: START_WAREHOUSE,
         inventory: emptyInventory(),
         prices: emptyPrices(),
@@ -193,12 +194,18 @@ export function startGame(state: GameState, seed?: number): GameState {
         ...createInitialState(nextSeed),
         cash: family.startingCash,
         birthFamilyId: family.id,
+        birthRevealed: false,
         seed: nextSeed,
     };
 
     next = pushLog(next, `投胎成功：你而家係一名${family.name}，起步資金 ${formatMoney(family.startingCash)}`, "good");
 
     return beginTurn(next);
+}
+
+export function dismissBirthReveal(state: GameState): GameState {
+    if (state.birthRevealed || !state.birthFamilyId) return state;
+    return {...state, birthRevealed: true};
 }
 
 export function beginTurn(state: GameState): GameState {
