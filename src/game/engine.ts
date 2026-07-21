@@ -3,15 +3,21 @@ import {COMPANIES, COMPANY_MAP} from "../data/companies";
 import {EVENT_MAP, EVENTS} from "../data/events";
 import {GOOD_MAP, GOODS} from "../data/goods";
 import {PARTNER_MAP, PARTNERS} from "../data/partners";
-import type {Child, CompanyTypeId, EventDef, GameState, GoodId, LogEntry, PartnerId, Rank, RankTier} from "../types/game";
+import type {Child, CompanyTypeId, EventDef, GameState, GoodId, LogEntry, MilestoneId, PartnerId, Rank, RankTier, TurnSummary} from "../types/game";
 import {
     BASE_CHILD_CHANCE,
+    CASH_LOSS_MAX_FRACTION,
+    CASH_LOSS_MIN_RESERVE,
     CHILD_MATURE_YEARS,
     CHILD_TUITION,
+    COMPANY_FAIL_REFUND_RATE,
     DOCTOR_BASE_FEE,
+    DOCTOR_FEE_CAP,
     DOCTOR_HEALTH_RESTORE,
     DOCTOR_WEALTH_RATE,
     END_AGE,
+    FREE_CHECKUP_AGE_STEP,
+    FREE_CHECKUP_HEALTH,
     HEALTH_DRAIN_PER_TURN,
     ILLNESS_FEE,
     ILLNESS_HEALTH_RESTORE,
@@ -19,6 +25,9 @@ import {
     INFLATION_PER_YEAR,
     MAX_CHILDREN,
     MAX_LOGS,
+    MILESTONE_THRESHOLDS,
+    PRICE_CHEAP_RATIO,
+    PRICE_EXPENSIVE_RATIO,
     PRICE_RANDOM_MAX,
     PRICE_RANDOM_MIN,
     START_AGE,
@@ -30,6 +39,12 @@ import {
 } from "./constants";
 import {clamp, formatMoney} from "./format";
 import {createRng, pickWeighted, randomBetween, randomInt, type Rng} from "./rng";
+
+export type PriceSignal = "cheap" | "fair" | "expensive";
+
+export interface StartGameOptions {
+    easyMode?: boolean;
+}
 
 const CHILD_NAMES = ["小明", "小美", "阿強", "嘉欣", "梓軒", "詩詩", "浩然", "欣怡", "子傑", "樂怡"];
 
@@ -138,16 +153,35 @@ function eventPriceMults(event: EventDef): Partial<Record<GoodId, number>> {
     return mults;
 }
 
+/** Soften cash losses so a single event cannot wipe a poor run. Easy mode halves losses. */
+export function softenCashLoss(rawAmount: number, cash: number, easyMode: boolean): number {
+    if (rawAmount >= 0) return rawAmount;
+
+    let loss = -rawAmount;
+    if (easyMode) loss = Math.ceil(loss / 2);
+
+    const byFraction = Math.floor(Math.max(0, cash) * CASH_LOSS_MAX_FRACTION);
+    const byReserve = Math.max(0, cash - CASH_LOSS_MIN_RESERVE);
+    loss = Math.min(loss, byFraction, byReserve, Math.max(0, cash));
+    return -loss;
+}
+
 function applyEventNonPriceEffects(state: GameState, event: EventDef): {state: GameState; messages: string[]} {
     let next = {...state};
     const messages: string[] = [];
 
     for (const effect of event.effects) {
         switch (effect.type) {
-            case "cash":
-                next = {...next, cash: next.cash + effect.amount};
-                messages.push(effect.amount >= 0 ? `現金 +${formatMoney(effect.amount)}` : `現金 ${formatMoney(effect.amount)}`);
+            case "cash": {
+                const amount = softenCashLoss(effect.amount, next.cash, next.easyMode);
+                next = {...next, cash: next.cash + amount};
+                if (amount !== effect.amount && effect.amount < 0) {
+                    messages.push(`現金 ${formatMoney(amount)}（原 ${formatMoney(effect.amount)}，已封頂保護）`);
+                } else {
+                    messages.push(amount >= 0 ? `現金 +${formatMoney(amount)}` : `現金 ${formatMoney(amount)}`);
+                }
                 break;
+            }
             case "health":
                 next = {...next, health: clamp(next.health + effect.amount, 0, 100)};
                 messages.push(`健康 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`);
@@ -161,6 +195,75 @@ function applyEventNonPriceEffects(state: GameState, event: EventDef): {state: G
     }
 
     return {state: next, messages};
+}
+
+export function fairUnitPrice(goodId: GoodId, age: number): number {
+    const good = GOOD_MAP[goodId];
+    if (!good) return 0;
+    return Math.max(1, Math.round(good.basePrice * inflationFactor(age)));
+}
+
+export function priceSignal(price: number, fair: number): PriceSignal {
+    if (fair <= 0) return "fair";
+    const ratio = price / fair;
+    if (ratio <= PRICE_CHEAP_RATIO) return "cheap";
+    if (ratio >= PRICE_EXPENSIVE_RATIO) return "expensive";
+    return "fair";
+}
+
+export function priceSignalLabel(signal: PriceSignal): string {
+    switch (signal) {
+        case "cheap":
+            return "平";
+        case "expensive":
+            return "貴";
+        default:
+            return "合理";
+    }
+}
+
+function unlockMilestone(state: GameState, id: MilestoneId, text: string): GameState {
+    if (state.milestonesUnlocked.includes(id)) return state;
+    let next: GameState = {
+        ...state,
+        milestonesUnlocked: [...state.milestonesUnlocked, id],
+    };
+    return pushLog(next, `🏅 ${text}`, "good");
+}
+
+function checkAssetMilestones(state: GameState): GameState {
+    let next = state;
+    const assets = totalAssets(next);
+    for (const m of MILESTONE_THRESHOLDS) {
+        if (assets >= m.threshold) {
+            next = unlockMilestone(next, m.id, `【${m.title}】${m.message}`);
+        }
+    }
+    return next;
+}
+
+function checkAgeMilestones(state: GameState): GameState {
+    if (state.age >= 40) {
+        return unlockMilestone(state, "age_40", "【不惑之年】活到 40 歲，仲未猝死已經贏咗一半人。");
+    }
+    return state;
+}
+
+/** Fill fields missing from older persisted saves. */
+export function normalizeGameState(raw: GameState): GameState {
+    return {
+        ...createInitialState(raw.seed),
+        ...raw,
+        easyMode: raw.easyMode ?? false,
+        milestonesUnlocked: raw.milestonesUnlocked ?? [],
+        companyFoundAttempts: raw.companyFoundAttempts ?? 0,
+        lastTurnSummary: raw.lastTurnSummary ?? null,
+        inventory: {...emptyInventory(), ...raw.inventory},
+        prices: {...emptyPrices(), ...raw.prices},
+        companies: raw.companies ?? [],
+        children: raw.children ?? [],
+        log: raw.log ?? [],
+    };
 }
 
 export function createInitialState(seed?: number): GameState {
@@ -184,11 +287,16 @@ export function createInitialState(seed?: number): GameState {
         gameOverReason: null,
         log: [],
         seed,
+        easyMode: false,
+        milestonesUnlocked: [],
+        companyFoundAttempts: 0,
+        lastTurnSummary: null,
     };
 }
 
-export function startGame(state: GameState, seed?: number): GameState {
+export function startGame(state: GameState, seed?: number, options?: StartGameOptions): GameState {
     const nextSeed = seed ?? state.seed ?? Date.now();
+    const easyMode = options?.easyMode ?? state.easyMode ?? false;
     const rng = createRng(nextSeed);
     const family = pickWeighted(rng, BIRTH_FAMILIES);
 
@@ -198,11 +306,20 @@ export function startGame(state: GameState, seed?: number): GameState {
         birthFamilyId: family.id,
         birthRevealed: false,
         seed: nextSeed,
+        easyMode,
     };
 
     next = pushLog(next, `投胎成功：你而家係一名${family.name}，起步資金 ${formatMoney(family.startingCash)}`, "good");
+    if (easyMode) {
+        next = pushLog(next, "簡易模式開啟：健康消耗減半、負面現金事件較溫和。", "info");
+    }
 
     return beginTurn(next);
+}
+
+export function dismissTurnSummary(state: GameState): GameState {
+    if (!state.lastTurnSummary) return state;
+    return {...state, lastTurnSummary: null};
 }
 
 export function dismissBirthReveal(state: GameState): GameState {
@@ -241,10 +358,11 @@ export function dismissEvent(state: GameState): GameState {
     return {...state, phase: "playing", eventDismissed: true};
 }
 
-/** 睇醫生收費：基價 + 總資產抽成（有錢就收貴啲）。 */
+/** 睇醫生收費：基價 + 總資產抽成（有 cap）。 */
 export function getDoctorFee(state: GameState): number {
     const assets = Math.max(0, totalAssets(state));
-    return Math.max(DOCTOR_BASE_FEE, Math.round(DOCTOR_BASE_FEE + assets * DOCTOR_WEALTH_RATE));
+    const raw = Math.round(DOCTOR_BASE_FEE + assets * DOCTOR_WEALTH_RATE);
+    return Math.min(DOCTOR_FEE_CAP, Math.max(DOCTOR_BASE_FEE, raw));
 }
 
 export function seeDoctor(state: GameState): GameState {
@@ -290,7 +408,8 @@ export function buyGood(state: GameState, goodId: GoodId, quantity: number): Gam
             [goodId]: (state.inventory[goodId] ?? 0) + quantity,
         },
     };
-    return pushLog(next, `買入 ${good.name} x${quantity}，花費 ${formatMoney(cost)}。`, "info");
+    next = pushLog(next, `買入 ${good.name} x${quantity}，花費 ${formatMoney(cost)}。`, "info");
+    return checkAssetMilestones(next);
 }
 
 export function sellGood(state: GameState, goodId: GoodId, quantity: number): GameState {
@@ -314,7 +433,11 @@ export function sellGood(state: GameState, goodId: GoodId, quantity: number): Ga
             [goodId]: owned - quantity,
         },
     };
-    return pushLog(next, `賣出 ${good.name} x${quantity}，收入 ${formatMoney(revenue)}。`, "good");
+    next = pushLog(next, `賣出 ${good.name} x${quantity}，收入 ${formatMoney(revenue)}。`, "good");
+    if (revenue > 0 && !next.milestonesUnlocked.includes("first_trade_profit")) {
+        next = unlockMilestone(next, "first_trade_profit", "【第一桶金】成功賣出貨品套現，炒家之路開始。");
+    }
+    return checkAssetMilestones(next);
 }
 
 export function upgradeWarehouse(state: GameState): GameState {
@@ -349,15 +472,24 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
     const successChance = clamp(0.55 + state.reputation / 200 - def.failChance, 0.35, 0.95);
     const rng = turnRng(state, 100 + companyId.length);
     const roll = rng();
+    const firstAttempt = state.companyFoundAttempts === 0;
+    const guaranteed = firstAttempt;
 
     let next: GameState = {
         ...state,
         cash: state.cash - def.cost,
+        companyFoundAttempts: state.companyFoundAttempts + 1,
     };
 
-    if (roll > successChance) {
-        next = pushLog(next, `開${def.name}失敗！蝕晒 ${formatMoney(def.cost)} 籌備費。（成功率 ${(successChance * 100).toFixed(0)}%）`, "bad");
-        return {...next, reputation: clamp(next.reputation - 3, 0, 100)};
+    if (!guaranteed && roll > successChance) {
+        const refund = Math.round(def.cost * COMPANY_FAIL_REFUND_RATE);
+        next = {
+            ...next,
+            cash: next.cash + refund,
+            reputation: clamp(next.reputation - 3, 0, 100),
+        };
+        next = pushLog(next, `開${def.name}失敗！退回一半籌備費 ${formatMoney(refund)}，淨蝕 ${formatMoney(def.cost - refund)}。（成功率 ${(successChance * 100).toFixed(0)}%）`, "bad");
+        return next;
     }
 
     next = {
@@ -365,7 +497,10 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
         companies: [...next.companies, {typeId: companyId, foundedAge: next.age}],
         reputation: clamp(next.reputation + 5, 0, 100),
     };
-    return pushLog(next, `成功創立${def.name}！`, "good");
+    const bonus = guaranteed ? "（第一次創業保底成功！）" : "";
+    next = pushLog(next, `成功創立${def.name}！${bonus}`, "good");
+    next = unlockMilestone(next, "first_company", "【老闆上身】成功開舖，開始食公司紅利。");
+    return checkAssetMilestones(next);
 }
 
 export function canMarry(state: GameState, partnerId: PartnerId): string | null {
@@ -404,7 +539,8 @@ export function marry(state: GameState, partnerId: PartnerId): GameState {
     if (def.instant.cash) {
         next = pushLog(next, `新婚即時效果：現金 ${formatMoney(def.instant.cash)}`, "good");
     }
-    return next;
+    next = unlockMilestone(next, "first_marriage", "【成家立室】結咗婚，有人同你分擔健康消耗。");
+    return checkAssetMilestones(next);
 }
 
 function settleCompanies(state: GameState, rng: Rng): {state: GameState; messages: string[]} {
@@ -498,6 +634,7 @@ function settleHealth(state: GameState): {state: GameState; messages: string[]} 
     const messages: string[] = [];
 
     let drain = HEALTH_DRAIN_PER_TURN;
+    if (next.easyMode) drain = Math.max(1, Math.ceil(drain / 2));
     if (next.partnerId) {
         const bonus = PARTNER_MAP[next.partnerId]?.yearly.health ?? 0;
         drain -= bonus;
@@ -507,13 +644,22 @@ function settleHealth(state: GameState): {state: GameState; messages: string[]} 
     next = {...next, health: clamp(next.health - Math.max(0, drain), 0, 100)};
     messages.push(`一年操勞，健康 ${drain > 0 ? `-${drain}` : "無損"}`);
 
+    if (next.age > START_AGE && next.age % FREE_CHECKUP_AGE_STEP === 0 && next.health > 0) {
+        const before = next.health;
+        next = {...next, health: clamp(next.health + FREE_CHECKUP_HEALTH, 0, 100)};
+        messages.push(`五年免費身體檢查，健康 ${before} → ${next.health}`);
+    }
+
     if (next.health > 0 && next.health < ILLNESS_HEALTH_THRESHOLD) {
+        let fee = ILLNESS_FEE;
+        if (next.easyMode) fee = Math.ceil(fee / 2);
+        fee = Math.min(fee, Math.max(0, next.cash));
         next = {
             ...next,
-            cash: next.cash - ILLNESS_FEE,
+            cash: next.cash - fee,
             health: clamp(next.health + ILLNESS_HEALTH_RESTORE, 0, 100),
         };
-        messages.push(`大病住院！醫療費 ${formatMoney(ILLNESS_FEE)}，健康恢復至 ${next.health}`);
+        messages.push(`大病住院！醫療費 ${formatMoney(fee)}，健康恢復至 ${next.health}`);
     }
 
     return {state: next, messages};
@@ -612,12 +758,19 @@ export function endTurn(state: GameState): GameState {
 
     const rng = turnRng(state, 4242);
     const messages: string[] = [];
+    const cashBefore = state.cash;
+    const healthBefore = state.health;
+    let companyNet = 0;
     let next: GameState = {...state};
 
     {
         const cos = settleCompanies(next, rng);
         next = cos.state;
         messages.push(...cos.messages);
+        for (const company of state.companies) {
+            const def = COMPANY_MAP[company.typeId];
+            if (def) companyNet += def.annualIncome - def.maintenance;
+        }
     }
     {
         const family = settleFamily(next, rng);
@@ -643,6 +796,19 @@ export function endTurn(state: GameState): GameState {
     for (const msg of messages) {
         next = pushLog(next, msg, msg.includes("倒閉") || msg.includes("見紅") || msg.includes("破產") ? "bad" : "info");
     }
+
+    const summary: TurnSummary = {
+        age: state.age,
+        cashBefore,
+        cashAfter: next.cash,
+        healthBefore,
+        healthAfter: next.health,
+        companyNet,
+        highlights: messages.slice(0, 6),
+    };
+    next = {...next, lastTurnSummary: summary};
+    next = checkAgeMilestones(next);
+    next = checkAssetMilestones(next);
 
     if (next.health <= 0) return finishDeath(next);
     if (next.cash < 0) return finishBankruptcy(next);

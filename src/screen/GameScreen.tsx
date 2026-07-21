@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {ILLNESS_HEALTH_THRESHOLD} from "@/game/constants";
 import {formatMoney} from "@/game/format";
 import {getCurrentEvent, getUsedWarehouse, totalAssets} from "@/game/engine";
@@ -15,10 +15,12 @@ import {LogPanel} from "@/components/LogPanel";
 import {MarketPanel} from "@/components/MarketPanel";
 import {SeeDoctorButton} from "@/components/SeeDoctorButton";
 import {Stat} from "@/components/Stat";
+import {TurnSummaryModal} from "@/components/TurnSummaryModal";
 
 interface Props {
     state: GameState;
     onDismissEvent: () => void;
+    onDismissTurnSummary: () => void;
     onBuy: (goodId: GoodId, quantity: number) => void;
     onSell: (goodId: GoodId, quantity: number) => void;
     onUpgradeWarehouse: () => void;
@@ -29,25 +31,41 @@ interface Props {
     onSuicide: () => void;
 }
 
-export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onSeeDoctor, onEndTurn, onSuicide}: Props) => {
+export const GameScreen = ({state, onDismissEvent, onDismissTurnSummary, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onSeeDoctor, onEndTurn, onSuicide}: Props) => {
     const [confirmEndTurn, setConfirmEndTurn] = useState(false);
     const [eventPreviewOpen, setEventPreviewOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<GameTab>("market");
+    const [highlightGoodId, setHighlightGoodId] = useState<GoodId | null>(null);
 
     const event = getCurrentEvent(state);
     const locked = state.phase !== "playing";
     const usedWarehouse = getUsedWarehouse(state);
     const warehouseRatio = state.warehouseCapacity > 0 ? usedWarehouse / state.warehouseCapacity : 0;
     const assets = totalAssets(state);
-    const showEventModal = Boolean(event && (state.phase === "event" || eventPreviewOpen));
+    const showingSummary = Boolean(state.lastTurnSummary);
+    const showEventModal = Boolean(event && !showingSummary && (state.phase === "event" || eventPreviewOpen));
+    const endTurnRisky = state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD;
 
     const cashTone = state.cash < 0 ? "danger" : state.cash < 10_000 ? "warn" : "default";
     const healthTone = state.health <= 0 ? "danger" : state.health < ILLNESS_HEALTH_THRESHOLD ? "warn" : "default";
     const warehouseTone = warehouseRatio >= 1 ? "danger" : warehouseRatio >= 0.85 ? "warn" : "default";
 
+    useEffect(() => {
+        if (!highlightGoodId) return;
+        const el = document.getElementById(`good-${highlightGoodId}`);
+        el?.scrollIntoView({behavior: "smooth", block: "center"});
+        const t = window.setTimeout(() => setHighlightGoodId(null), 2500);
+        return () => window.clearTimeout(t);
+    }, [highlightGoodId, activeTab]);
+
     const closeEventModal = () => {
         setEventPreviewOpen(false);
         if (state.phase === "event") onDismissEvent();
+    };
+
+    const handleJumpToMarket = (goodId: GoodId) => {
+        setActiveTab("market");
+        setHighlightGoodId(goodId);
     };
 
     return (
@@ -56,6 +74,12 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
 
             <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-44 sm:px-4 sm:pt-4">
                 <GameHeader state={state} onSuicide={onSuicide} />
+
+                {state.easyMode ? (
+                    <div className="rounded-xl border-2 border-(--border) bg-(--mint) px-3 py-1.5 text-center text-[11px] font-black" role="status">
+                        簡易模式 · 健康／扣款較溫和
+                    </div>
+                ) : null}
 
                 <section className="grid grid-cols-2 gap-2 text-sm">
                     <Stat label="年齡" value={`${state.age} 歲`} />
@@ -83,7 +107,9 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
                 <EventPanel state={state} onOpen={() => setEventPreviewOpen(true)} />
 
                 <div role="tabpanel">
-                    {activeTab === "market" ? <MarketPanel state={state} locked={locked} onBuy={onBuy} onSell={onSell} onUpgradeWarehouse={onUpgradeWarehouse} /> : null}
+                    {activeTab === "market" ? (
+                        <MarketPanel state={state} locked={locked} highlightGoodId={highlightGoodId} onBuy={onBuy} onSell={onSell} onUpgradeWarehouse={onUpgradeWarehouse} />
+                    ) : null}
                     {activeTab === "company" ? <CompanyPanel state={state} locked={locked} onFound={onFoundCompany} /> : null}
                     {activeTab === "family" ? <FamilyPanel state={state} locked={locked} onMarry={onMarry} /> : null}
                     {activeTab === "log" ? <LogPanel entries={state.log} limit={20} /> : null}
@@ -99,10 +125,10 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
             {confirmEndTurn ? (
                 <ConfirmModal
                     title="結束今年？"
-                    message="會結算公司、家庭同健康，之後進入下一年。"
-                    confirmLabel="結束今年"
+                    message={endTurnRisky ? "而家現金見紅或者健康危險，確定要結算？可能入院或者清盤。可以撳「再諗諗」繼續操作。" : "會結算公司、家庭同健康，之後進入下一年。未準備好可以撳「再諗諗」。"}
+                    confirmLabel={endTurnRisky ? "仍然結束" : "結束今年"}
                     cancelLabel="再諗諗"
-                    danger
+                    danger={endTurnRisky}
                     onCancel={() => setConfirmEndTurn(false)}
                     onConfirm={() => {
                         setConfirmEndTurn(false);
@@ -111,7 +137,9 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
                 />
             ) : null}
 
-            {showEventModal && event ? <EventModal event={event} onDismiss={closeEventModal} /> : null}
+            {showingSummary && state.lastTurnSummary ? <TurnSummaryModal summary={state.lastTurnSummary} onDismiss={onDismissTurnSummary} /> : null}
+
+            {showEventModal && event ? <EventModal event={event} onDismiss={closeEventModal} onJumpToMarket={handleJumpToMarket} /> : null}
         </main>
     );
 };

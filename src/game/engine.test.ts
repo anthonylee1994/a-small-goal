@@ -1,8 +1,27 @@
 import {describe, expect, it} from "vitest";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {EVENT_MAP} from "../data/events";
-import {beginTurn, buyGood, createInitialState, dismissBirthReveal, dismissEvent, endTurn, getDoctorFee, getRank, inventoryValue, seeDoctor, sellGood, startGame, totalAssets, upgradeWarehouse} from "./engine";
-import {DOCTOR_BASE_FEE, DOCTOR_HEALTH_RESTORE, DOCTOR_WEALTH_RATE, START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
+import {
+    beginTurn,
+    buyGood,
+    createInitialState,
+    dismissBirthReveal,
+    dismissEvent,
+    endTurn,
+    fairUnitPrice,
+    foundCompany,
+    getDoctorFee,
+    getRank,
+    inventoryValue,
+    priceSignal,
+    seeDoctor,
+    sellGood,
+    softenCashLoss,
+    startGame,
+    totalAssets,
+    upgradeWarehouse,
+} from "./engine";
+import {DOCTOR_BASE_FEE, DOCTOR_FEE_CAP, DOCTOR_HEALTH_RESTORE, DOCTOR_WEALTH_RATE, START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
 import type {GameState} from "../types/game";
 
 function playingState(seed = 42): GameState {
@@ -39,8 +58,17 @@ describe("createInitialState / startGame", () => {
         expect(state.log.some(l => l.text.includes("投胎成功"))).toBe(true);
 
         const event = EVENT_MAP[state.currentEventId!];
-        const cashDelta = event.effects.filter(e => e.type === "cash").reduce((sum, e) => sum + (e.type === "cash" ? e.amount : 0), 0);
+        const rawCash = event.effects.filter(e => e.type === "cash").reduce((sum, e) => sum + (e.type === "cash" ? e.amount : 0), 0);
+        const cashDelta = softenCashLoss(rawCash, family.startingCash, false);
         expect(state.cash).toBe(family.startingCash + cashDelta);
+        expect(state.easyMode).toBe(false);
+        expect(state.milestonesUnlocked).toEqual([]);
+    });
+
+    it("startGame can enable easy mode", () => {
+        const state = startGame(createInitialState(), 7, {easyMode: true});
+        expect(state.easyMode).toBe(true);
+        expect(state.log.some(l => l.text.includes("簡易模式"))).toBe(true);
     });
 
     it("dismissBirthReveal unlocks the event flow", () => {
@@ -83,7 +111,7 @@ describe("buyGood / sellGood", () => {
         state = buyGood(state, "chips", 3);
         expect(state.inventory.chips).toBe(3);
         expect(state.cash).toBe(1_000_000 - 60);
-        expect(state.log[0]?.text).toContain("買入");
+        expect(state.log.some(l => l.text.includes("買入"))).toBe(true);
     });
 
     it("rejects buy when cash is insufficient and logs reason", () => {
@@ -257,13 +285,42 @@ describe("beginTurn immutability", () => {
     });
 });
 
+describe("softenCashLoss / priceSignal", () => {
+    it("caps negative cash losses against balance and reserve", () => {
+        expect(softenCashLoss(-40_000, 10_000, false)).toBe(-5_000);
+        expect(softenCashLoss(-40_000, 10_000, true)).toBe(-5_000);
+        expect(softenCashLoss(-10_000, 100_000, false)).toBe(-10_000);
+        expect(softenCashLoss(-10_000, 100_000, true)).toBe(-5_000);
+        expect(softenCashLoss(8_888, 1_000, false)).toBe(8_888);
+    });
+
+    it("labels prices cheap / fair / expensive vs fair unit", () => {
+        const fair = fairUnitPrice("chips", START_AGE);
+        expect(priceSignal(Math.round(fair * 0.8), fair)).toBe("cheap");
+        expect(priceSignal(fair, fair)).toBe("fair");
+        expect(priceSignal(Math.round(fair * 1.3), fair)).toBe("expensive");
+    });
+});
+
+describe("foundCompany first success + refund", () => {
+    it("guarantees the first founding attempt", () => {
+        let state = {...playingState(501), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
+        state = foundCompany(state, "bubble_tea");
+        expect(state.companies.some(c => c.typeId === "bubble_tea")).toBe(true);
+        expect(state.companyFoundAttempts).toBe(1);
+        expect(state.milestonesUnlocked).toContain("first_company");
+    });
+});
+
 describe("seeDoctor", () => {
-    it("charges more when assets are higher", () => {
+    it("charges more when assets are higher but respects fee cap", () => {
         const poor = {...playingState(400), cash: 50_000, inventory: {...playingState(400).inventory}};
         const rich = {...playingState(401), cash: 5_000_000};
         expect(getDoctorFee(rich)).toBeGreaterThan(getDoctorFee(poor));
         expect(getDoctorFee(poor)).toBeGreaterThanOrEqual(DOCTOR_BASE_FEE);
-        expect(getDoctorFee(rich)).toBe(Math.round(DOCTOR_BASE_FEE + totalAssets(rich) * DOCTOR_WEALTH_RATE));
+        const uncapped = Math.round(DOCTOR_BASE_FEE + totalAssets(rich) * DOCTOR_WEALTH_RATE);
+        expect(getDoctorFee(rich)).toBe(Math.min(DOCTOR_FEE_CAP, Math.max(DOCTOR_BASE_FEE, uncapped)));
+        expect(getDoctorFee(rich)).toBeLessThanOrEqual(DOCTOR_FEE_CAP);
     });
 
     it("restores health and deducts fee", () => {

@@ -121,9 +121,7 @@ function foundAffordableCompanies(state: GameState, reserve: number, maxPerYear 
 
 function tryMarry(state: GameState, reserve: number): GameState {
     if (state.partnerId) return state;
-    const affordable = [...PARTNERS]
-        .filter(p => state.cash >= p.weddingCost + (p.requireCash ?? 0) + reserve)
-        .sort((a, b) => b.weddingCost - a.weddingCost);
+    const affordable = [...PARTNERS].filter(p => state.cash >= p.weddingCost + (p.requireCash ?? 0) + reserve).sort((a, b) => b.weddingCost - a.weddingCost);
     for (const partner of affordable) {
         const next = marry(state, partner.id);
         if (next.partnerId) return next;
@@ -254,7 +252,7 @@ export function summarize(results: SimResult[]) {
                 `age20 p50=${fmt(pct(a20, 0.5))}`,
                 `age40 p50=${fmt(pct(a40, 0.5))}`,
                 `age60 p50=${fmt(pct(a60, 0.5))}`,
-            ].join(" | "),
+            ].join(" | ")
         );
     }
     return lines.join("\n");

@@ -1,14 +1,30 @@
 import {create} from "zustand";
 import {persist} from "zustand/middleware";
-import {buyGood, commitSuicide, createInitialState, dismissBirthReveal, dismissEvent, endTurn, foundCompany, marry, seeDoctor, sellGood, startGame, upgradeWarehouse} from "@/game/engine";
+import {
+    buyGood,
+    commitSuicide,
+    createInitialState,
+    dismissBirthReveal,
+    dismissEvent,
+    dismissTurnSummary,
+    endTurn,
+    foundCompany,
+    marry,
+    normalizeGameState,
+    seeDoctor,
+    sellGood,
+    startGame,
+    upgradeWarehouse,
+} from "@/game/engine";
 import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 
 interface GameActions {
-    start: (seed?: number) => void;
+    start: (seed?: number, options?: {easyMode?: boolean}) => void;
     restart: () => void;
     suicide: () => void;
     dismissBirthReveal: () => void;
     dismissEvent: () => void;
+    dismissTurnSummary: () => void;
     buy: (goodId: GoodId, quantity: number) => void;
     sell: (goodId: GoodId, quantity: number) => void;
     upgradeWarehouse: () => void;
@@ -29,11 +45,12 @@ export const useGameStore = create<GameStore>()(
         set => ({
             game: createInitialState(),
 
-            start: seed => set(s => ({game: startGame(s.game, seed)})),
+            start: (seed, options) => set(s => ({game: startGame(s.game, seed, options)})),
             restart: () => set({game: createInitialState()}),
             suicide: () => set(s => ({game: commitSuicide(s.game)})),
             dismissBirthReveal: () => set(s => ({game: dismissBirthReveal(s.game)})),
             dismissEvent: () => set(s => ({game: dismissEvent(s.game)})),
+            dismissTurnSummary: () => set(s => ({game: dismissTurnSummary(s.game)})),
             buy: (goodId, quantity) => set(s => ({game: buyGood(s.game, goodId, quantity)})),
             sell: (goodId, quantity) => set(s => ({game: sellGood(s.game, goodId, quantity)})),
             upgradeWarehouse: () => set(s => ({game: upgradeWarehouse(s.game)})),
@@ -45,6 +62,15 @@ export const useGameStore = create<GameStore>()(
         {
             name: STORAGE_KEY,
             partialize: state => ({game: state.game}),
-        },
-    ),
+            merge: (persisted, current) => {
+                const p = persisted as Partial<GameStore> | undefined;
+                if (!p?.game) return current;
+                return {
+                    ...current,
+                    ...p,
+                    game: normalizeGameState(p.game as GameState),
+                };
+            },
+        }
+    )
 );

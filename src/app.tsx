@@ -13,6 +13,7 @@ export const App = () => {
     const suicide = useGameStore(s => s.suicide);
     const dismissBirthReveal = useGameStore(s => s.dismissBirthReveal);
     const dismissEvent = useGameStore(s => s.dismissEvent);
+    const dismissTurnSummary = useGameStore(s => s.dismissTurnSummary);
     const buy = useGameStore(s => s.buy);
     const sell = useGameStore(s => s.sell);
     const upgradeWarehouse = useGameStore(s => s.upgradeWarehouse);
@@ -30,7 +31,7 @@ export const App = () => {
     if (!hydrated) return null;
 
     if (game.phase === "title") {
-        return <TitleScreen onStart={() => start()} />;
+        return <TitleScreen onStart={({easyMode}) => start(undefined, {easyMode})} />;
     }
 
     if (game.phase === "dead" || game.phase === "retired") {
@@ -45,6 +46,7 @@ export const App = () => {
         <GameScreen
             state={game}
             onDismissEvent={() => dismissEvent()}
+            onDismissTurnSummary={() => dismissTurnSummary()}
             onBuy={buy}
             onSell={sell}
             onUpgradeWarehouse={() => upgradeWarehouse()}

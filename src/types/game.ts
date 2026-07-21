@@ -6,18 +6,7 @@ export type BirthFamilyId = "low_class" | "middle_class" | "high_class";
 
 export type GoodId = "chips" | "vitasoy" | "phone" | "sneakers" | "bitcoin" | "gold" | "ev" | "options";
 
-export type CompanyTypeId =
-    | "bubble_tea"
-    | "claw_arcade"
-    | "esports"
-    | "ghost_kitchen"
-    | "tutoring"
-    | "feng_shui"
-    | "live_commerce"
-    | "ai_startup"
-    | "crypto_exchange"
-    | "parking_empire"
-    | "property";
+export type CompanyTypeId = "bubble_tea" | "claw_arcade" | "esports" | "ghost_kitchen" | "tutoring" | "feng_shui" | "live_commerce" | "ai_startup" | "crypto_exchange" | "parking_empire" | "property";
 
 export type PartnerId = "mary" | "jenny" | "jessica";
 
@@ -79,6 +68,19 @@ export interface Rank {
     title: string;
     message: string;
 }
+
+/** One-screen highlight after endTurn settlement. */
+export interface TurnSummary {
+    age: number;
+    cashBefore: number;
+    cashAfter: number;
+    healthBefore: number;
+    healthAfter: number;
+    companyNet: number;
+    highlights: string[];
+}
+
+export type MilestoneId = "assets_1m" | "assets_10m" | "assets_50m" | "assets_100m" | "first_trade_profit" | "first_company" | "first_marriage" | "age_40";
 
 export interface GoodDef {
     id: GoodId;
@@ -160,4 +162,12 @@ export interface GameState {
     gameOverReason: GameOverReason | null;
     log: LogEntry[];
     seed?: number;
+    /** Softer health drain + half negative cash events. */
+    easyMode: boolean;
+    /** Asset / life milestones already toasted. */
+    milestonesUnlocked: MilestoneId[];
+    /** First founding attempt is free success; later fails refund half. */
+    companyFoundAttempts: number;
+    /** Settlement highlight for the year just ended; UI dismisses. */
+    lastTurnSummary: TurnSummary | null;
 }

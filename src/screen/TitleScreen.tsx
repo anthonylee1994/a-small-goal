@@ -1,10 +1,13 @@
+import {useState} from "react";
 import {Button} from "@/components/Button";
 
 interface Props {
-    onStart: () => void;
+    onStart: (options: {easyMode: boolean}) => void;
 }
 
 export const TitleScreen = ({onStart}: Props) => {
+    const [easyMode, setEasyMode] = useState(false);
+
     return (
         <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center gap-7 overflow-x-hidden px-5 py-10 text-center sm:px-6">
             <div className="relative mx-auto max-w-[min(100%,11rem)]">
@@ -35,7 +38,15 @@ export const TitleScreen = ({onStart}: Props) => {
                 <p className="text-sm leading-relaxed text-(--muted) sm:text-base">20 歲起步，40 年內靠炒賣、創業同家庭選擇，目標喺 60 歲前累積至少一億。</p>
             </div>
 
-            <Button onClick={onStart}>開始遊戲</Button>
+            <label className="mx-auto flex w-full max-w-xs cursor-pointer items-start gap-3 rounded-2xl border-4 border-(--border) bg-white px-4 py-3 text-left shadow-[3px_3px_0_var(--border)]">
+                <input type="checkbox" className="mt-1 size-4 shrink-0 accent-(--coral)" checked={easyMode} onChange={e => setEasyMode(e.target.checked)} />
+                <span>
+                    <span className="block text-sm font-black">簡易模式</span>
+                    <span className="mt-0.5 block text-xs font-bold text-(--muted)">健康消耗減半、負面現金事件較溫和，適合第一次玩。</span>
+                </span>
+            </label>
+
+            <Button onClick={() => onStart({easyMode})}>開始遊戲</Button>
         </main>
     );
 };

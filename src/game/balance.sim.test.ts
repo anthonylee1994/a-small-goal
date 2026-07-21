@@ -29,7 +29,7 @@ describe("Phase 3 balance simulation", () => {
                         median: [...list.map(r => r.finalAssets)].sort((a, b) => a - b)[Math.floor(list.length / 2)] ?? 0,
                     },
                 ];
-            }),
+            })
         ) as Record<string, {wins: number; almost: number; median: number}>;
 
         // eslint-disable-next-line no-console
