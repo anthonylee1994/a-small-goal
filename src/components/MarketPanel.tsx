@@ -96,8 +96,12 @@ const GoodRow = ({goodId, name, tier, price, owned, cash, freeSpace, space, lock
     const [qty, setQty] = useState(0);
     const cost = price * qty;
     const needSpace = space * qty;
+    const maxBuy = price > 0 ? Math.min(Math.floor(cash / price), Math.floor(freeSpace / Math.max(1, space)), 999) : 0;
+    const maxSell = Math.min(owned, 999);
     const canBuy = !locked && qty > 0 && price > 0 && cash >= cost && needSpace <= freeSpace;
     const canSell = !locked && qty > 0 && owned >= qty;
+    const canBuyAll = !locked && maxBuy > 0;
+    const canSellAll = !locked && maxSell > 0;
     const Icon = GOOD_ICONS[goodId];
 
     const handleBuy = () => {
@@ -110,9 +114,19 @@ const GoodRow = ({goodId, name, tier, price, owned, cash, freeSpace, space, lock
         setQty(0);
     };
 
+    const handleBuyAll = () => {
+        onBuy(goodId, maxBuy);
+        setQty(0);
+    };
+
+    const handleSellAll = () => {
+        onSell(goodId, maxSell);
+        setQty(0);
+    };
+
     return (
         <li className="rounded-2xl border-2 border-(--border) bg-[#fffdf8] p-3">
-            <div className="mb-2 flex items-start gap-3">
+            <div className="mb-3 flex items-start gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-(--border) bg-(--accent) shadow-[2px_2px_0_var(--border)]" aria-hidden="true">
                     <Icon className="size-6" strokeWidth={2.25} />
                 </div>
@@ -128,15 +142,25 @@ const GoodRow = ({goodId, name, tier, price, owned, cash, freeSpace, space, lock
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="space-y-2">
                 <QuantityInput id={`qty-${goodId}`} label={`${name} 數量`} value={qty} onChange={setQty} min={0} max={999} disabled={locked} />
-                <Button size="sm" variant="secondary" disabled={!canBuy} className="min-w-16" onClick={handleBuy}>
-                    買
-                </Button>
-                <Button size="sm" variant="ghost" disabled={!canSell} className="min-w-16" onClick={handleSell}>
-                    賣
-                </Button>
+
+                <div className="grid grid-cols-2 gap-2">
+                    <Button size="sm" variant="secondary" disabled={!canBuy} onClick={handleBuy}>
+                        買
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={!canSell} onClick={handleSell}>
+                        賣
+                    </Button>
+                    <Button size="sm" variant="secondary" disabled={!canBuyAll} onClick={handleBuyAll}>
+                        買入所有
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={!canSellAll} onClick={handleSellAll}>
+                        賣出所有
+                    </Button>
+                </div>
             </div>
+
             {!locked && qty > 0 ? (
                 <p className="mt-2 text-[11px] font-bold text-(--muted)">
                     買入約 {formatMoney(cost)}

@@ -17,7 +17,7 @@ export const QuantityInput = ({value, onChange, min = 1, max = 999, disabled = f
     };
 
     return (
-        <div className="inline-flex h-8 items-stretch overflow-hidden rounded-lg border-2 border-(--border) bg-white flex-1">
+        <div className="inline-flex h-9 w-full items-stretch overflow-hidden rounded-xl border-2 border-(--border) bg-white">
             {label ? (
                 <label htmlFor={id} className="sr-only">
                     {label}
@@ -27,7 +27,7 @@ export const QuantityInput = ({value, onChange, min = 1, max = 999, disabled = f
                 type="button"
                 disabled={disabled || value <= min}
                 aria-label="減少"
-                className="flex w-7 shrink-0 items-center justify-center bg-white disabled:opacity-40"
+                className="flex w-9 shrink-0 items-center justify-center bg-white disabled:opacity-40"
                 onClick={() => onChange(clampValue(value - 1))}
             >
                 <Minus className="size-3.5" strokeWidth={2.75} aria-hidden="true" />
@@ -41,13 +41,13 @@ export const QuantityInput = ({value, onChange, min = 1, max = 999, disabled = f
                 disabled={disabled}
                 value={value}
                 onChange={e => onChange(clampValue(Number(e.target.value)))}
-                className="w-10 border-x-2 border-(--border) bg-(--bg) text-center text-xs font-black tabular-nums outline-none disabled:opacity-40 flex-1"
+                className="min-w-0 flex-1 border-x-2 border-(--border) bg-(--bg) text-center text-sm font-black tabular-nums outline-none disabled:opacity-40"
             />
             <button
                 type="button"
                 disabled={disabled || value >= max}
                 aria-label="增加"
-                className="flex w-7 shrink-0 items-center justify-center bg-white disabled:opacity-40"
+                className="flex w-9 shrink-0 items-center justify-center bg-white disabled:opacity-40"
                 onClick={() => onChange(clampValue(value + 1))}
             >
                 <Plus className="size-3.5" strokeWidth={2.75} aria-hidden="true" />
