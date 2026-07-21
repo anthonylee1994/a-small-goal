@@ -95,7 +95,7 @@ export function getRank(assets: number): Rank {
 
     if (assets >= 100_000_000) {
         tier = "winner";
-        title = "小目標達成！";
+        title = "一億小目標達成！";
         message = "人生贏家，可以隨便開香檳。";
     } else if (assets >= 10_000_000) {
         tier = "almost";
@@ -107,7 +107,7 @@ export function getRank(assets: number): Rank {
         message = "叫做好過人，勉強買到個兩房單位。";
     } else {
         tier = "bottom";
-        title = "底層黎生";
+        title = "底層貪撚";
         message = "你呢一生人都係幫老細供樓。";
     }
 
