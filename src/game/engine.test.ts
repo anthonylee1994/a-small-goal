@@ -14,7 +14,7 @@ import {
     totalAssets,
     upgradeWarehouse,
 } from "./engine";
-import {START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST} from "./constants";
+import {START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
 import type {GameState} from "../types/game";
 
 function playingState(seed = 42): GameState {
@@ -189,12 +189,12 @@ describe("endTurn / assets", () => {
         expect(state.totalAssets).not.toBeNull();
     });
 
-    it("retires at 60 with totalAssets", () => {
+    it("retires at END_AGE with totalAssets", () => {
         let state = playingState(202);
-        state = {...state, age: 59, health: 100, companies: [], children: [], partnerId: null};
+        state = {...state, age: END_AGE - 1, health: 100, companies: [], children: [], partnerId: null};
         state = endTurn(state);
         expect(state.phase).toBe("retired");
-        expect(state.age).toBe(60);
+        expect(state.age).toBe(END_AGE);
         expect(state.gameOverReason).toBe("retirement");
         expect(state.totalAssets).toBe(totalAssets(state));
     });

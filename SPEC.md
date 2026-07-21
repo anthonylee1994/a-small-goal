@@ -295,7 +295,7 @@ getRank(totalAssets: number): Rank
 
 ### Phase 0：盤點與基線
 
-- 讀 `SPEC.md`、`src/types/game.ts`、`src/game/engine.ts`、`src/hooks/useGame.ts`。
+- 讀 `SPEC.md`、`src/types/game.ts`、`src/game/engine.ts`、`src/store/gameStore.ts`。
 - 跑 `pnpm typecheck`、`pnpm build`。
 - 列出現有實作同本 spec 不一致嘅地方，唔好先改 code。
 
@@ -379,7 +379,7 @@ getRank(totalAssets: number): Rank
 
 以下項目未定案，AI 唔可以自行當成規則加入；要由產品決定後先更新本文件：
 
-- 是否需要真正安裝 `zustand`，定係沿用現有 hook。
+- Zustand 已用作 UI state layer（`src/store/gameStore.ts`）；規則仍只喺 engine。
 - 清盤係同一個回合立即發生，定係下一回合開始前發生（本版暫定年結算後立即發生）。
 - 子女出生機率、成年年齡及每一間公司嘅具體數值。
 - 是否允許公司同一類型持有多間。

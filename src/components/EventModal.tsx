@@ -1,8 +1,8 @@
-import type {EventDef} from "../types/game";
-import {GOOD_MAP} from "../data/goods";
-import {formatMoney} from "../game/format";
-import {Button} from "./Button";
-import {Modal} from "./Modal";
+import type {EventDef} from "@/types/game";
+import {GOOD_MAP} from "@/data/goods";
+import {formatMoney} from "@/game/format";
+import {Button} from "@/components/Button";
+import {Modal} from "@/components/Modal";
 
 interface Props {
     event: EventDef;

@@ -60,7 +60,8 @@ src/
   components/   UI（標題頁、面板、modal…）
   data/         商品 / 公司 / 伴侶 / 事件定義
   game/         純函式 engine、RNG、constants、format
-  hooks/        useGame（UI state）
+  store/        Zustand game store（UI state）
+  hooks/        （如有）React hooks
   types/        領域型別
 public/         favicon、manifest、靜態 asset
 SPEC.md         產品／實作規格（唯一真相來源）
