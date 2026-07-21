@@ -187,6 +187,24 @@ describe("endTurn / assets", () => {
         expect(state.totalAssets).not.toBeNull();
     });
 
+    it("goes bankrupt when cash stays negative after liquidation", () => {
+        let state = playingState(205);
+        state = {
+            ...state,
+            cash: -50_000,
+            health: 100,
+            inventory: Object.fromEntries(Object.keys(state.inventory).map(id => [id, 0])) as typeof state.inventory,
+            companies: [],
+            children: [],
+            partnerId: null,
+        };
+        state = endTurn(state);
+        expect(state.phase).toBe("dead");
+        expect(state.gameOverReason).toBe("bankruptcy");
+        expect(state.cash).toBeLessThan(0);
+        expect(state.totalAssets).not.toBeNull();
+    });
+
     it("retires at END_AGE with totalAssets", () => {
         let state = playingState(202);
         state = {...state, age: END_AGE - 1, health: 100, companies: [], children: [], partnerId: null};

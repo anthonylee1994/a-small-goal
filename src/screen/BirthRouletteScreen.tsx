@@ -84,7 +84,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                 setSpinning(false);
                 setPhase("done");
             },
-            reduceMotion ? 0 : SPIN_MS + 40,
+            reduceMotion ? 0 : SPIN_MS + 40
         );
         return () => window.clearTimeout(timer);
     }, [phase, reduceMotion, rotation]);
@@ -207,7 +207,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
 
             {phase !== "done" ? (
                 <Button disabled onClick={() => undefined}>
-                    轉緊……
+                    刷緊首抽
                 </Button>
             ) : (
                 <div className="space-y-3">

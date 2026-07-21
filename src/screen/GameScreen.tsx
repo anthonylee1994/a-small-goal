@@ -59,7 +59,7 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
 
                 <section className="grid grid-cols-2 gap-2 text-sm">
                     <Stat label="年齡" value={`${state.age} 歲`} />
-                    <Stat label="現金" value={formatMoney(state.cash)} tone={cashTone} hint={state.debtTurns > 0 ? `負債 ${state.debtTurns} 年` : undefined} />
+                    <Stat label="現金" value={formatMoney(state.cash)} tone={cashTone} />
                     <Stat
                         label="健康"
                         value={`${state.health}`}
@@ -74,7 +74,7 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
 
                 {state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD ? (
                     <div className="rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-2 text-sm font-black text-(--danger) shadow-[3px_3px_0_var(--border)]" role="status">
-                        {state.cash < 0 ? "現金見紅！年結會觸發清盤。" : null}
+                        {state.cash < 0 ? "現金見紅！年結清盤後仍負債就破產。" : null}
                         {state.cash < 0 && state.health < ILLNESS_HEALTH_THRESHOLD ? " " : null}
                         {state.health < ILLNESS_HEALTH_THRESHOLD ? "健康危險，小心猝死。" : null}
                     </div>

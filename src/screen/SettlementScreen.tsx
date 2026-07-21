@@ -8,11 +8,12 @@ import {DeathIcon, RANK_ICONS, RetireIcon} from "@/ui/icons";
 
 interface Props {
     state: GameState;
-    onRestart: () => void;
+    onBackToTitle: () => void;
 }
 
-export const SettlementScreen = ({state, onRestart}: Props) => {
+export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const isSuicide = state.gameOverReason === "suicide";
+    const isBankruptcy = state.gameOverReason === "bankruptcy";
     const isDead = state.phase === "dead";
     const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
     const cash = state.cash;
@@ -23,9 +24,9 @@ export const SettlementScreen = ({state, onRestart}: Props) => {
     const StatusIcon = isDead ? DeathIcon : RetireIcon;
     const RankIcon = RANK_ICONS[rank.tier];
 
-    const title = isSuicide ? "投胎結算" : isDead ? "猝死結算" : "退休結算";
-    const ageHint = isSuicide ? " · 主動結束今世" : isDead ? " · 未活到退休" : null;
-    const restartLabel = isSuicide ? "重新投胎" : "重新開始";
+    const title = isSuicide ? "投胎結算" : isBankruptcy ? "破產結算" : isDead ? "猝死結算" : "退休結算";
+    const ageHint = isSuicide ? " · 主動結束今世" : isBankruptcy ? " · 負債出局" : isDead ? " · 未活到退休" : null;
+    const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : "WIN?";
 
     return (
         <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
@@ -42,7 +43,7 @@ export const SettlementScreen = ({state, onRestart}: Props) => {
                     className="absolute -top-2 right-0 rotate-12 rounded-lg border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black shadow-[2px_2px_0_var(--border)]"
                     aria-hidden="true"
                 >
-                    {isSuicide ? "再嚟" : isDead ? "GG" : "WIN?"}
+                    {badge}
                 </span>
             </div>
 
@@ -75,7 +76,7 @@ export const SettlementScreen = ({state, onRestart}: Props) => {
                 <p className="mt-4 text-center text-xl font-black">總資產 {formatMoney(assets)}</p>
             </section>
 
-            <Button onClick={onRestart}>{restartLabel}</Button>
+            <Button onClick={onBackToTitle}>結束遊戲</Button>
         </main>
     );
 };

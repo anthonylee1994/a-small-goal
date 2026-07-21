@@ -180,7 +180,6 @@ export function createInitialState(seed?: number): GameState {
         children: [],
         currentEventId: null,
         eventDismissed: false,
-        debtTurns: 0,
         totalAssets: null,
         gameOverReason: null,
         log: [],
@@ -568,6 +567,17 @@ function finishDeath(state: GameState): GameState {
     return pushLog(next, `健康歸零，你猝死街頭。總資產 ${formatMoney(assets)}（未活到 60 歲）`, "bad");
 }
 
+function finishBankruptcy(state: GameState): GameState {
+    const assets = totalAssets(state);
+    let next: GameState = {
+        ...state,
+        phase: "dead",
+        gameOverReason: "bankruptcy",
+        totalAssets: assets,
+    };
+    return pushLog(next, `清盤後仍然負債，你破產出局。總資產 ${formatMoney(assets)}`, "bad");
+}
+
 /** 玩家主動結束今世，進入結算後可重新投胎。 */
 export function commitSuicide(state: GameState): GameState {
     if (state.phase === "dead" || state.phase === "retired" || state.phase === "title") return state;
@@ -621,27 +631,21 @@ export function endTurn(state: GameState): GameState {
     }
 
     if (next.cash < 0) {
-        const debtTurns = next.debtTurns + 1;
-        next = {...next, debtTurns};
-        messages.push(`現金見紅（連續 ${debtTurns} 年）`);
+        messages.push("現金見紅，強制清盤");
         const liq = forceLiquidate(next);
-        next = {
-            ...liq.state,
-            debtTurns: liq.state.cash >= 0 ? 0 : debtTurns,
-        };
+        next = liq.state;
         messages.push(...liq.messages);
         if (next.cash < 0) {
-            messages.push("清盤後仍然負資產…下年再嚟。");
+            messages.push("清盤後仍然負債，破產出局");
         }
-    } else {
-        next = {...next, debtTurns: 0};
     }
 
     for (const msg of messages) {
-        next = pushLog(next, msg, msg.includes("倒閉") || msg.includes("見紅") ? "bad" : "info");
+        next = pushLog(next, msg, msg.includes("倒閉") || msg.includes("見紅") || msg.includes("破產") ? "bad" : "info");
     }
 
     if (next.health <= 0) return finishDeath(next);
+    if (next.cash < 0) return finishBankruptcy(next);
 
     const nextAge = next.age + 1;
     if (nextAge >= END_AGE) {

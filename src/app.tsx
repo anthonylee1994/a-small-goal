@@ -34,7 +34,7 @@ export const App = () => {
     }
 
     if (game.phase === "dead" || game.phase === "retired") {
-        return <SettlementScreen state={game} onRestart={() => restart()} />;
+        return <SettlementScreen state={game} onBackToTitle={() => restart()} />;
     }
 
     if (!game.birthRevealed && game.birthFamilyId) {

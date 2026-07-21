@@ -1,7 +1,7 @@
 /** MVP domain types — aligned with SPEC.md §6 / §14 */
 
 export type Phase = "title" | "event" | "playing" | "dead" | "retired";
-export type GameOverReason = "death" | "retirement" | "suicide";
+export type GameOverReason = "death" | "retirement" | "suicide" | "bankruptcy";
 export type BirthFamilyId = "low_class" | "middle_class" | "high_class";
 
 export type GoodId = "chips" | "vitasoy" | "phone" | "sneakers" | "bitcoin" | "gold" | "ev" | "options";
@@ -156,7 +156,6 @@ export interface GameState {
     children: Child[];
     currentEventId: EventId | null;
     eventDismissed: boolean;
-    debtTurns: number;
     totalAssets: number | null;
     gameOverReason: GameOverReason | null;
     log: LogEntry[];

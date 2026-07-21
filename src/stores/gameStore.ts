@@ -5,7 +5,7 @@ import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 
 interface GameActions {
     start: (seed?: number) => void;
-    restart: (seed?: number) => void;
+    restart: () => void;
     suicide: () => void;
     dismissBirthReveal: () => void;
     dismissEvent: () => void;
@@ -30,7 +30,7 @@ export const useGameStore = create<GameStore>()(
             game: createInitialState(),
 
             start: seed => set(s => ({game: startGame(s.game, seed)})),
-            restart: seed => set({game: startGame(createInitialState(), seed)}),
+            restart: () => set({game: createInitialState()}),
             suicide: () => set(s => ({game: commitSuicide(s.game)})),
             dismissBirthReveal: () => set(s => ({game: dismissBirthReveal(s.game)})),
             dismissEvent: () => set(s => ({game: dismissEvent(s.game)})),
