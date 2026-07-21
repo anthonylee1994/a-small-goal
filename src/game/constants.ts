@@ -21,6 +21,11 @@ export const ILLNESS_HEALTH_THRESHOLD = 30;
 export const ILLNESS_FEE = 20_000;
 export const ILLNESS_HEALTH_RESTORE = 15;
 
+/** 睇醫生：基價 + 總資產抽成，有錢就收貴啲。 */
+export const DOCTOR_BASE_FEE = 5_000;
+export const DOCTOR_WEALTH_RATE = 0.02;
+export const DOCTOR_HEALTH_RESTORE = 25;
+
 export const BASE_CHILD_CHANCE = 0.18;
 export const CHILD_MATURE_YEARS = 18;
 export const CHILD_TUITION = 30_000;

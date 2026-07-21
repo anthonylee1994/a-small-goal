@@ -1,6 +1,6 @@
 import {create} from "zustand";
 import {persist} from "zustand/middleware";
-import {buyGood, commitSuicide, createInitialState, dismissBirthReveal, dismissEvent, endTurn, foundCompany, marry, sellGood, startGame, upgradeWarehouse} from "@/game/engine";
+import {buyGood, commitSuicide, createInitialState, dismissBirthReveal, dismissEvent, endTurn, foundCompany, marry, seeDoctor, sellGood, startGame, upgradeWarehouse} from "@/game/engine";
 import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 
 interface GameActions {
@@ -14,6 +14,7 @@ interface GameActions {
     upgradeWarehouse: () => void;
     foundCompany: (companyId: CompanyTypeId) => void;
     marry: (partnerId: PartnerId) => void;
+    seeDoctor: () => void;
     endTurn: () => void;
 }
 
@@ -38,6 +39,7 @@ export const useGameStore = create<GameStore>()(
             upgradeWarehouse: () => set(s => ({game: upgradeWarehouse(s.game)})),
             foundCompany: companyId => set(s => ({game: foundCompany(s.game, companyId)})),
             marry: partnerId => set(s => ({game: marry(s.game, partnerId)})),
+            seeDoctor: () => set(s => ({game: seeDoctor(s.game)})),
             endTurn: () => set(s => ({game: endTurn(s.game)})),
         }),
         {

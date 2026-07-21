@@ -8,6 +8,9 @@ import {
     BASE_CHILD_CHANCE,
     CHILD_MATURE_YEARS,
     CHILD_TUITION,
+    DOCTOR_BASE_FEE,
+    DOCTOR_HEALTH_RESTORE,
+    DOCTOR_WEALTH_RATE,
     END_AGE,
     HEALTH_DRAIN_PER_TURN,
     ILLNESS_FEE,
@@ -237,6 +240,28 @@ export function beginTurn(state: GameState): GameState {
 export function dismissEvent(state: GameState): GameState {
     if (state.phase !== "event") return state;
     return {...state, phase: "playing", eventDismissed: true};
+}
+
+/** 睇醫生收費：基價 + 總資產抽成（有錢就收貴啲）。 */
+export function getDoctorFee(state: GameState): number {
+    const assets = Math.max(0, totalAssets(state));
+    return Math.max(DOCTOR_BASE_FEE, Math.round(DOCTOR_BASE_FEE + assets * DOCTOR_WEALTH_RATE));
+}
+
+export function seeDoctor(state: GameState): GameState {
+    if (state.phase !== "playing") return state;
+    if (state.health >= 100) return state;
+
+    const fee = getDoctorFee(state);
+    if (state.cash < fee) return state;
+
+    const before = state.health;
+    let next: GameState = {
+        ...state,
+        cash: state.cash - fee,
+        health: clamp(state.health + DOCTOR_HEALTH_RESTORE, 0, 100),
+    };
+    return pushLog(next, `睇完醫生，花咗 ${formatMoney(fee)}，健康 ${before} → ${next.health}。`, "good");
 }
 
 export function buyGood(state: GameState, goodId: GoodId, quantity: number): GameState {

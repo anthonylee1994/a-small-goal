@@ -18,6 +18,7 @@ export const App = () => {
     const upgradeWarehouse = useGameStore(s => s.upgradeWarehouse);
     const foundCompany = useGameStore(s => s.foundCompany);
     const marry = useGameStore(s => s.marry);
+    const seeDoctor = useGameStore(s => s.seeDoctor);
     const endTurn = useGameStore(s => s.endTurn);
 
     useEffect(() => {
@@ -49,6 +50,7 @@ export const App = () => {
             onUpgradeWarehouse={() => upgradeWarehouse()}
             onFoundCompany={foundCompany}
             onMarry={marry}
+            onSeeDoctor={() => seeDoctor()}
             onEndTurn={() => endTurn()}
             onSuicide={() => suicide()}
         />

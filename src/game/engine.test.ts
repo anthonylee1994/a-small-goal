@@ -1,8 +1,8 @@
 import {describe, expect, it} from "vitest";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {EVENT_MAP} from "../data/events";
-import {beginTurn, buyGood, createInitialState, dismissBirthReveal, dismissEvent, endTurn, getRank, inventoryValue, sellGood, startGame, totalAssets, upgradeWarehouse} from "./engine";
-import {START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
+import {beginTurn, buyGood, createInitialState, dismissBirthReveal, dismissEvent, endTurn, getDoctorFee, getRank, inventoryValue, seeDoctor, sellGood, startGame, totalAssets, upgradeWarehouse} from "./engine";
+import {DOCTOR_BASE_FEE, DOCTOR_HEALTH_RESTORE, DOCTOR_WEALTH_RATE, START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
 import type {GameState} from "../types/game";
 
 function playingState(seed = 42): GameState {
@@ -236,5 +236,40 @@ describe("beginTurn immutability", () => {
         const snapshot = structuredClone(state);
         beginTurn({...state, phase: "playing"});
         expect(state).toEqual(snapshot);
+    });
+});
+
+describe("seeDoctor", () => {
+    it("charges more when assets are higher", () => {
+        const poor = {...playingState(400), cash: 50_000, inventory: {...playingState(400).inventory}};
+        const rich = {...playingState(401), cash: 5_000_000};
+        expect(getDoctorFee(rich)).toBeGreaterThan(getDoctorFee(poor));
+        expect(getDoctorFee(poor)).toBeGreaterThanOrEqual(DOCTOR_BASE_FEE);
+        expect(getDoctorFee(rich)).toBe(Math.round(DOCTOR_BASE_FEE + totalAssets(rich) * DOCTOR_WEALTH_RATE));
+    });
+
+    it("restores health and deducts fee", () => {
+        let state = {...playingState(402), health: 40, cash: 1_000_000};
+        const fee = getDoctorFee(state);
+        const before = state.health;
+        state = seeDoctor(state);
+        expect(state.cash).toBe(1_000_000 - fee);
+        expect(state.health).toBe(Math.min(100, before + DOCTOR_HEALTH_RESTORE));
+    });
+
+    it("does nothing when already full health", () => {
+        const state = {...playingState(403), health: 100, cash: 1_000_000};
+        const next = seeDoctor(state);
+        expect(next).toBe(state);
+        expect(next.cash).toBe(state.cash);
+        expect(next.health).toBe(100);
+    });
+
+    it("does not charge or log when cash is insufficient", () => {
+        const state = {...playingState(404), health: 40, cash: 100};
+        const next = seeDoctor(state);
+        expect(next).toBe(state);
+        expect(next.cash).toBe(100);
+        expect(next.health).toBe(40);
     });
 });

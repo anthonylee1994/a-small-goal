@@ -6,7 +6,8 @@ interface Props {
     title: string;
     message: string;
     confirmLabel?: string;
-    cancelLabel?: string;
+    /** 傳 `null` 就淨係顯示確認掣（用嚟做提示 popup） */
+    cancelLabel?: string | null;
     danger?: boolean;
     onConfirm: () => void;
     onCancel: () => void;
@@ -14,9 +15,10 @@ interface Props {
 
 export const ConfirmModal = ({title, message, confirmLabel = "確定", cancelLabel = "取消", danger = false, onConfirm, onCancel}: Props) => {
     const Icon = danger ? ConfirmDangerIcon : ConfirmHelpIcon;
+    const showCancel = cancelLabel != null;
 
     return (
-        <Modal onClose={onCancel} labelledBy="confirm-modal-title" closeLabel={cancelLabel}>
+        <Modal onClose={onCancel} labelledBy="confirm-modal-title" closeLabel={showCancel ? cancelLabel : confirmLabel}>
             <div className="mb-3 flex items-center gap-3">
                 <div
                     className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-4 border-(--border) shadow-[3px_3px_0_var(--border)] ${
@@ -33,10 +35,12 @@ export const ConfirmModal = ({title, message, confirmLabel = "確定", cancelLab
 
             <p className="text-sm leading-relaxed text-(--muted)">{message}</p>
 
-            <div className="mt-5 grid grid-cols-2 gap-2">
-                <Button variant="ghost" onClick={onCancel}>
-                    {cancelLabel}
-                </Button>
+            <div className={`mt-5 gap-2 ${showCancel ? "grid grid-cols-2" : ""}`}>
+                {showCancel ? (
+                    <Button variant="ghost" onClick={onCancel}>
+                        {cancelLabel}
+                    </Button>
+                ) : null}
                 <Button variant={danger ? "danger" : "primary"} onClick={onConfirm}>
                     {confirmLabel}
                 </Button>
