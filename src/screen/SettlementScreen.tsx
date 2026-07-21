@@ -2,8 +2,8 @@ import type {GameState} from "../types/game";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {companyValue, getRank, inventoryValue} from "../game/engine";
 import {formatMoney} from "../game/format";
-import {Button} from "./Button";
-import {Stat} from "./Stat";
+import {Button} from "../components/Button";
+import {Stat} from "../components/Stat";
 
 interface Props {
     state: GameState;

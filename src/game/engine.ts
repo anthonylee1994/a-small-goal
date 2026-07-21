@@ -107,7 +107,7 @@ export function getRank(assets: number): Rank {
         message = "叫做好過人，勉強買到個兩房單位。";
     } else {
         tier = "bottom";
-        title = "底層黎生";
+        title = "社會畜生";
         message = "你呢一生人都係幫老細供樓。";
     }
 

@@ -1,8 +1,9 @@
-import {TitleScreen} from "./components/TitleScreen";
+import {TitleScreen} from "./screen/TitleScreen";
 import {Stat} from "./components/Stat";
 import {Button} from "./components/Button";
 import {EventModal} from "./components/EventModal";
-import {SettlementScreen} from "./components/SettlementScreen";
+import {SettlementScreen} from "./screen/SettlementScreen";
+import {LogPanel} from "./components/LogPanel";
 import {useGame} from "./hooks/useGame";
 import {formatMoney} from "./game/format";
 import {BIRTH_FAMILY_MAP} from "./data/birthFamilies";
@@ -43,16 +44,7 @@ export const App = () => {
 
             {state.phase === "playing" ? <Button onClick={() => endTurn()}>下一年</Button> : null}
 
-            <section className="text-left text-xs text-(--muted)">
-                <h3 className="mb-2 font-bold text-(--ink)">最近 log</h3>
-                <ul className="space-y-1">
-                    {state.log.slice(0, 8).map(entry => (
-                        <li key={entry.id}>
-                            [{entry.age}歲] {entry.text}
-                        </li>
-                    ))}
-                </ul>
-            </section>
+            <LogPanel entries={state.log} />
 
             {state.phase === "event" && event ? <EventModal event={event} onDismiss={() => dismissEvent()} /> : null}
         </main>
