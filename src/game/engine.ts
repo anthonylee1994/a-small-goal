@@ -543,6 +543,21 @@ function finishDeath(state: GameState): GameState {
     return pushLog(next, `健康歸零，你猝死街頭。總資產 ${formatMoney(assets)}（未活到 60 歲）`, "bad");
 }
 
+/** 玩家主動結束今世，進入結算後可重新投胎。 */
+export function commitSuicide(state: GameState): GameState {
+    if (state.phase === "dead" || state.phase === "retired" || state.phase === "title") return state;
+
+    const assets = totalAssets(state);
+    let next: GameState = {
+        ...state,
+        phase: "dead",
+        gameOverReason: "suicide",
+        health: 0,
+        totalAssets: assets,
+    };
+    return pushLog(next, `你選擇結束今世，準備重新投胎。總資產 ${formatMoney(assets)}`, "bad");
+}
+
 function finishRetire(state: GameState): GameState {
     const assets = totalAssets(state);
     const rank = getRank(assets);

@@ -1,10 +1,8 @@
 /** MVP domain types — aligned with SPEC.md §6 / §14 */
 
 export type Phase = "title" | "event" | "playing" | "dead" | "retired";
-export type GameOverReason = "death" | "retirement";
+export type GameOverReason = "death" | "retirement" | "suicide";
 export type BirthFamilyId = "low_class" | "middle_class" | "high_class";
-
-export type GoodTier = "low" | "mid" | "high";
 
 export type GoodId = "chips" | "vitasoy" | "phone" | "sneakers" | "bitcoin" | "gold" | "ev" | "options";
 
@@ -85,7 +83,6 @@ export interface Rank {
 export interface GoodDef {
     id: GoodId;
     name: string;
-    tier: GoodTier;
     basePrice: number;
     /** Warehouse slots per unit. */
     space: number;

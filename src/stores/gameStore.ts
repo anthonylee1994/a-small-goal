@@ -1,10 +1,12 @@
 import {create} from "zustand";
-import {buyGood, createInitialState, dismissBirthReveal, dismissEvent, endTurn, foundCompany, marry, sellGood, startGame, upgradeWarehouse} from "@/game/engine";
+import {persist} from "zustand/middleware";
+import {buyGood, commitSuicide, createInitialState, dismissBirthReveal, dismissEvent, endTurn, foundCompany, marry, sellGood, startGame, upgradeWarehouse} from "@/game/engine";
 import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 
 interface GameActions {
     start: (seed?: number) => void;
     restart: (seed?: number) => void;
+    suicide: () => void;
     dismissBirthReveal: () => void;
     dismissEvent: () => void;
     buy: (goodId: GoodId, quantity: number) => void;
@@ -19,17 +21,28 @@ export type GameStore = {
     game: GameState;
 } & GameActions;
 
-export const useGameStore = create<GameStore>(set => ({
-    game: createInitialState(),
+const STORAGE_KEY = "a-small-goal-game";
 
-    start: seed => set(s => ({game: startGame(s.game, seed)})),
-    restart: seed => set(s => ({game: startGame(s.game, seed)})),
-    dismissBirthReveal: () => set(s => ({game: dismissBirthReveal(s.game)})),
-    dismissEvent: () => set(s => ({game: dismissEvent(s.game)})),
-    buy: (goodId, quantity) => set(s => ({game: buyGood(s.game, goodId, quantity)})),
-    sell: (goodId, quantity) => set(s => ({game: sellGood(s.game, goodId, quantity)})),
-    upgradeWarehouse: () => set(s => ({game: upgradeWarehouse(s.game)})),
-    foundCompany: companyId => set(s => ({game: foundCompany(s.game, companyId)})),
-    marry: partnerId => set(s => ({game: marry(s.game, partnerId)})),
-    endTurn: () => set(s => ({game: endTurn(s.game)})),
-}));
+export const useGameStore = create<GameStore>()(
+    persist(
+        set => ({
+            game: createInitialState(),
+
+            start: seed => set(s => ({game: startGame(s.game, seed)})),
+            restart: seed => set({game: startGame(createInitialState(), seed)}),
+            suicide: () => set(s => ({game: commitSuicide(s.game)})),
+            dismissBirthReveal: () => set(s => ({game: dismissBirthReveal(s.game)})),
+            dismissEvent: () => set(s => ({game: dismissEvent(s.game)})),
+            buy: (goodId, quantity) => set(s => ({game: buyGood(s.game, goodId, quantity)})),
+            sell: (goodId, quantity) => set(s => ({game: sellGood(s.game, goodId, quantity)})),
+            upgradeWarehouse: () => set(s => ({game: upgradeWarehouse(s.game)})),
+            foundCompany: companyId => set(s => ({game: foundCompany(s.game, companyId)})),
+            marry: partnerId => set(s => ({game: marry(s.game, partnerId)})),
+            endTurn: () => set(s => ({game: endTurn(s.game)})),
+        }),
+        {
+            name: STORAGE_KEY,
+            partialize: state => ({game: state.game}),
+        },
+    ),
+);

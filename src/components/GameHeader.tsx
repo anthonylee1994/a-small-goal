@@ -1,10 +1,14 @@
+import {useState} from "react";
+import {Button} from "@/components/Button";
+import {ConfirmModal} from "@/components/ConfirmModal";
 import {START_AGE, END_AGE} from "@/game/constants";
 import {BIRTH_FAMILY_MAP} from "@/data/birthFamilies";
 import type {GameState} from "@/types/game";
-import {BrandIcon} from "@/ui/icons";
+import {BrandIcon, DeathIcon} from "@/ui/icons";
 
 interface Props {
     state: GameState;
+    onSuicide: () => void;
 }
 
 const PHASE_LABEL: Record<GameState["phase"], string> = {
@@ -15,47 +19,72 @@ const PHASE_LABEL: Record<GameState["phase"], string> = {
     retired: "退休",
 };
 
-export const GameHeader = ({state}: Props) => {
+export const GameHeader = ({state, onSuicide}: Props) => {
+    const [confirmSuicide, setConfirmSuicide] = useState(false);
     const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
     const progress = Math.min(1, Math.max(0, (state.age - START_AGE) / Math.max(1, END_AGE - START_AGE)));
 
     return (
-        <header className="rounded-2xl border-4 border-(--border) bg-(--panel) p-4 shadow-[4px_4px_0_var(--border)]">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <h1 className="text-xl font-black leading-none sm:text-2xl" style={{fontFamily: "var(--font-display)"}}>
-                        一億小目標
-                    </h1>
-                    <p className="mt-1 text-xs font-bold text-(--muted)">
-                        {family ? `出身：${family.name}` : "人生進行中"}
-                        {" · "}
-                        {PHASE_LABEL[state.phase]}
-                    </p>
+        <>
+            <header className="rounded-2xl border-4 border-(--border) bg-(--panel) p-4 shadow-[4px_4px_0_var(--border)]">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <h1 className="text-xl font-black leading-none sm:text-2xl" style={{fontFamily: "var(--font-display)"}}>
+                            一億小目標
+                        </h1>
+                        <p className="mt-1 text-xs font-bold text-(--muted)">
+                            {family ? `出身：${family.name}` : "人生進行中"}
+                            {" · "}
+                            {PHASE_LABEL[state.phase]}
+                        </p>
+                    </div>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-4 border-(--border) bg-(--accent) shadow-[3px_3px_0_var(--border)]" aria-hidden="true">
+                        <BrandIcon className="size-7" strokeWidth={2.5} />
+                    </div>
                 </div>
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-4 border-(--border) bg-(--accent) shadow-[3px_3px_0_var(--border)]" aria-hidden="true">
-                    <BrandIcon className="size-7" strokeWidth={2.5} />
-                </div>
-            </div>
 
-            <div className="mt-4">
-                <div className="mb-1 flex items-center justify-between text-[11px] font-black">
-                    <span>
-                        {state.age} 歲 / {END_AGE} 歲退休
-                    </span>
-                    <span>{Math.round(progress * 100)}%</span>
+                <div className="mt-4">
+                    <div className="mb-1 flex items-center justify-between text-[11px] font-black">
+                        <span>
+                            {state.age} 歲 / {END_AGE} 歲退休
+                        </span>
+                        <span>{Math.round(progress * 100)}%</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full border-2 border-(--border) bg-white">
+                        <div
+                            className="h-full bg-(--coral) transition-[width] duration-300"
+                            style={{width: `${progress * 100}%`}}
+                            role="progressbar"
+                            aria-valuenow={state.age}
+                            aria-valuemin={START_AGE}
+                            aria-valuemax={END_AGE}
+                            aria-label="年齡進度"
+                        />
+                    </div>
                 </div>
-                <div className="h-3 overflow-hidden rounded-full border-2 border-(--border) bg-white">
-                    <div
-                        className="h-full bg-(--coral) transition-[width] duration-300"
-                        style={{width: `${progress * 100}%`}}
-                        role="progressbar"
-                        aria-valuenow={state.age}
-                        aria-valuemin={START_AGE}
-                        aria-valuemax={END_AGE}
-                        aria-label="年齡進度"
-                    />
+
+                <div className="mt-3">
+                    <Button variant="ghost" size="sm" className="w-full gap-1.5 text-(--danger)" onClick={() => setConfirmSuicide(true)}>
+                        <DeathIcon className="size-4" strokeWidth={2.5} aria-hidden="true" />
+                        重生投胎
+                    </Button>
                 </div>
-            </div>
-        </header>
+            </header>
+
+            {confirmSuicide ? (
+                <ConfirmModal
+                    title="確定重生投胎？"
+                    message="呢一世就此結束，會先睇結算，之後先可以重新投胎。"
+                    confirmLabel="結束今世"
+                    cancelLabel="再忍忍"
+                    danger
+                    onCancel={() => setConfirmSuicide(false)}
+                    onConfirm={() => {
+                        setConfirmSuicide(false);
+                        onSuicide();
+                    }}
+                />
+            ) : null}
+        </>
     );
 };

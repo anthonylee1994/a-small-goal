@@ -12,6 +12,7 @@ interface Props {
 }
 
 export const SettlementScreen = ({state, onRestart}: Props) => {
+    const isSuicide = state.gameOverReason === "suicide";
     const isDead = state.phase === "dead";
     const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
     const cash = state.cash;
@@ -21,6 +22,10 @@ export const SettlementScreen = ({state, onRestart}: Props) => {
     const rank = getRank(assets);
     const StatusIcon = isDead ? DeathIcon : RetireIcon;
     const RankIcon = RANK_ICONS[rank.tier];
+
+    const title = isSuicide ? "投胎結算" : isDead ? "猝死結算" : "退休結算";
+    const ageHint = isSuicide ? " · 主動結束今世" : isDead ? " · 未活到退休" : null;
+    const restartLabel = isSuicide ? "重新投胎" : "重新開始";
 
     return (
         <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
@@ -37,18 +42,18 @@ export const SettlementScreen = ({state, onRestart}: Props) => {
                     className="absolute -top-2 right-0 rotate-12 rounded-lg border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black shadow-[2px_2px_0_var(--border)]"
                     aria-hidden="true"
                 >
-                    {isDead ? "GG" : "WIN?"}
+                    {isSuicide ? "再嚟" : isDead ? "GG" : "WIN?"}
                 </span>
             </div>
 
             <div className="my-4 space-y-2">
                 <h1 className="text-3xl font-black" style={{fontFamily: "var(--font-display)"}}>
-                    {isDead ? "猝死結算" : "退休結算"}
+                    {title}
                 </h1>
                 <p className="text-sm font-bold text-(--muted)">
                     {family ? `出身：${family.name}` : null}
                     {family ? " · " : null}
-                    {state.age} 歲{isDead ? " · 未活到退休" : null}
+                    {state.age} 歲{ageHint}
                 </p>
             </div>
 
@@ -70,7 +75,7 @@ export const SettlementScreen = ({state, onRestart}: Props) => {
                 <p className="mt-4 text-center text-xl font-black">總資產 {formatMoney(assets)}</p>
             </section>
 
-            <Button onClick={onRestart}>重新開始</Button>
+            <Button onClick={onRestart}>{restartLabel}</Button>
         </main>
     );
 };

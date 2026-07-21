@@ -131,9 +131,9 @@ function tryMarry(state: GameState, reserve: number): GameState {
     return state;
 }
 
-const LOW_TIER: GoodId[] = ["chips", "vitasoy"];
-const MID_TIER: GoodId[] = ["phone", "sneakers"];
-const HIGH_TIER: GoodId[] = ["bitcoin", "gold", "ev", "options"];
+const CHEAP_GOODS: GoodId[] = ["chips", "vitasoy"];
+const MID_GOODS: GoodId[] = ["phone", "sneakers"];
+const EXPENSIVE_GOODS: GoodId[] = ["bitcoin", "gold", "ev", "options"];
 const ALL_GOODS: GoodId[] = GOODS.map(g => g.id);
 
 function playTurn(state: GameState, strategy: StrategyId): GameState {
@@ -148,7 +148,7 @@ function playTurn(state: GameState, strategy: StrategyId): GameState {
         case "company_rush":
             next = sellExpensiveGoods(next, 1.15);
             // Keep a small trading float so early shops can bootstrap without pure cash luck.
-            next = buyCheapGoods(next, [...MID_TIER, ...HIGH_TIER], 0.85, 40_000);
+            next = buyCheapGoods(next, [...MID_GOODS, ...EXPENSIVE_GOODS], 0.85, 40_000);
             next = foundAffordableCompanies(next, 20_000, 2);
             next = tryMarry(next, 40_000);
             next = sellExpensiveGoods(next, 1.25);
@@ -159,18 +159,18 @@ function playTurn(state: GameState, strategy: StrategyId): GameState {
             next = foundAffordableCompanies(next, 80_000, 1);
             next = tryMarry(next, 100_000);
             next = tryUpgradeWarehouse(next, 50_000);
-            next = buyCheapGoods(next, [...MID_TIER, ...HIGH_TIER, ...LOW_TIER], 0.9, 40_000);
+            next = buyCheapGoods(next, [...MID_GOODS, ...EXPENSIVE_GOODS, ...CHEAP_GOODS], 0.9, 40_000);
             break;
         case "high_tier_yolo":
             next = sellExpensiveGoods(next, 1.15);
             next = tryUpgradeWarehouse(next, 100_000);
-            next = buyCheapGoods(next, HIGH_TIER, 0.95, 20_000);
+            next = buyCheapGoods(next, EXPENSIVE_GOODS, 0.95, 20_000);
             next = foundAffordableCompanies(next, 200_000, 1);
             break;
         case "low_tier_scalp":
             next = sellExpensiveGoods(next, 1.2);
             next = tryUpgradeWarehouse(next, 5_000);
-            next = buyCheapGoods(next, LOW_TIER, 0.9, 2_000);
+            next = buyCheapGoods(next, CHEAP_GOODS, 0.9, 2_000);
             next = foundAffordableCompanies(next, 20_000, 1);
             break;
     }

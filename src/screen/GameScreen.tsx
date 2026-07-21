@@ -24,9 +24,10 @@ interface Props {
     onFoundCompany: (companyId: CompanyTypeId) => void;
     onMarry: (partnerId: PartnerId) => void;
     onEndTurn: () => void;
+    onSuicide: () => void;
 }
 
-export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onEndTurn}: Props) => {
+export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onEndTurn, onSuicide}: Props) => {
     const [confirmEndTurn, setConfirmEndTurn] = useState(false);
     const [eventPreviewOpen, setEventPreviewOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<GameTab>("market");
@@ -52,7 +53,7 @@ export const GameScreen = ({state, onDismissEvent, onBuy, onSell, onUpgradeWareh
             <ActionToast latest={state.log[0]} />
 
             <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-44 sm:px-4 sm:pt-4">
-                <GameHeader state={state} />
+                <GameHeader state={state} onSuicide={onSuicide} />
 
                 <section className="grid grid-cols-2 gap-2 text-sm">
                     <Stat label="年齡" value={`${state.age} 歲`} />

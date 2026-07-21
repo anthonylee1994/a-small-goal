@@ -8,7 +8,7 @@ import {Button} from "@/components/Button";
 import {ConfirmModal} from "@/components/ConfirmModal";
 import {QuantityInput} from "@/components/QuantityInput";
 import {Section} from "@/components/Section";
-import {GOOD_ICONS, MarketSectionIcon, TIER_LABEL} from "@/ui/icons";
+import {GOOD_ICONS, MarketSectionIcon} from "@/ui/icons";
 
 interface Props {
     state: GameState;
@@ -48,7 +48,6 @@ export const MarketPanel = ({state, locked, onBuy, onSell, onUpgradeWarehouse}: 
                         key={good.id}
                         goodId={good.id}
                         name={good.name}
-                        tier={good.tier}
                         price={state.prices[good.id] ?? 0}
                         owned={state.inventory[good.id] ?? 0}
                         cash={state.cash}
@@ -81,7 +80,6 @@ export const MarketPanel = ({state, locked, onBuy, onSell, onUpgradeWarehouse}: 
 interface GoodRowProps {
     goodId: GoodId;
     name: string;
-    tier: (typeof GOODS)[number]["tier"];
     price: number;
     owned: number;
     cash: number;
@@ -92,7 +90,7 @@ interface GoodRowProps {
     onSell: (goodId: GoodId, quantity: number) => void;
 }
 
-const GoodRow = ({goodId, name, tier, price, owned, cash, freeSpace, space, locked, onBuy, onSell}: GoodRowProps) => {
+const GoodRow = ({goodId, name, price, owned, cash, freeSpace, space, locked, onBuy, onSell}: GoodRowProps) => {
     const [qty, setQty] = useState(0);
     const cost = price * qty;
     const needSpace = space * qty;
@@ -131,12 +129,9 @@ const GoodRow = ({goodId, name, tier, price, owned, cash, freeSpace, space, lock
                     <Icon className="size-6" strokeWidth={2.25} />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        <h4 className="text-base font-black" style={{fontFamily: "var(--font-display)"}}>
-                            {name}
-                        </h4>
-                        <span className="rounded-md border border-(--border) bg-white px-1.5 py-0.5 text-[10px] font-black text-(--muted)">{TIER_LABEL[tier]}</span>
-                    </div>
+                    <h4 className="text-base font-black" style={{fontFamily: "var(--font-display)"}}>
+                        {name}
+                    </h4>
                     <p className="mt-0.5 text-sm font-black tabular-nums">{formatMoney(price)}</p>
                     <p className="text-xs font-bold text-(--muted)">持倉 {owned}</p>
                 </div>

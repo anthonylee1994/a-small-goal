@@ -52,7 +52,7 @@ import {
     Zap,
     type LucideIcon,
 } from "lucide-react";
-import type {BirthFamilyId, CompanyTypeId, EventId, GoodId, GoodTier, PartnerId, RankTier} from "@/types/game";
+import type {BirthFamilyId, CompanyTypeId, EventId, GoodId, PartnerId, RankTier} from "@/types/game";
 
 export const GOOD_ICONS: Record<GoodId, LucideIcon> = {
     chips: Cookie,
@@ -63,12 +63,6 @@ export const GOOD_ICONS: Record<GoodId, LucideIcon> = {
     gold: Medal,
     ev: Car,
     options: ChartLine,
-};
-
-export const TIER_LABEL: Record<GoodTier, string> = {
-    low: "低階",
-    mid: "中階",
-    high: "高階",
 };
 
 export const COMPANY_ICONS: Record<CompanyTypeId, LucideIcon> = {
