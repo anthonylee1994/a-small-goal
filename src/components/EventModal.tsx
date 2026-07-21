@@ -77,5 +77,7 @@ function effectLabel(effect: EventDef["effects"][number]): string {
             return effect.amount >= 0 ? `現金 +${formatMoney(effect.amount)}` : `現金 ${formatMoney(effect.amount)}`;
         case "health":
             return `健康 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`;
+        case "reputation":
+            return `名聲 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`;
     }
 }

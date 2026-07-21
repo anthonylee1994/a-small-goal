@@ -77,7 +77,19 @@ export type EventId =
     | "double_eleven_sale"
     | "hospital_bill"
     | "ferry_cancel"
-    | "wet_market_auntie";
+    | "wet_market_auntie"
+    | "blood_donate"
+    | "flag_day"
+    | "food_bank_shift"
+    | "elderly_visit"
+    | "scholarship_fund"
+    | "stray_rescue"
+    | "community_chest"
+    | "typhoon_shelter_help"
+    | "corporate_donation"
+    | "anonymous_kindness"
+    | "organ_donor_card"
+    | "park_cleanup";
 
 export type RankTier = "bottom" | "middle" | "almost" | "winner";
 
@@ -176,7 +188,7 @@ export interface PartnerDef {
     yearly: PartnerYearlyEffect;
 }
 
-export type EventEffect = {type: "price_mult"; goodId: GoodId; mult: number} | {type: "cash"; amount: number} | {type: "health"; amount: number};
+export type EventEffect = {type: "price_mult"; goodId: GoodId; mult: number} | {type: "cash"; amount: number} | {type: "health"; amount: number} | {type: "reputation"; amount: number};
 
 export interface EventDef {
     id: EventId;

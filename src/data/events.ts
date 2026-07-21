@@ -552,6 +552,125 @@ export const EVENTS: readonly EventDef[] = [
             {type: "health", amount: 4},
         ],
     },
+    {
+        id: "blood_donate",
+        title: "捐血一袋",
+        message: "紅十字會設站，你瞓低捐咗一袋。離開時畀塊餅同杯維他奶，良心比血糖飽。",
+        weight: 1.05,
+        effects: [
+            {type: "reputation", amount: 4},
+            {type: "health", amount: -6},
+        ],
+    },
+    {
+        id: "flag_day",
+        title: "賣旗日當義工",
+        message: "天光就企喺路口，笑到面肌抽筋。籌到唔多錢，但阿婆誇你「後生仔有心」。",
+        weight: 1.1,
+        effects: [
+            {type: "reputation", amount: 3},
+            {type: "health", amount: -3},
+        ],
+    },
+    {
+        id: "food_bank_shift",
+        title: "食物銀行執貨",
+        message: "週末喺貨倉執米同罐頭，腰骨抗議，但有人今晚有飯開。你亦順手捐咗一筆。",
+        weight: 1,
+        effects: [
+            {type: "cash", amount: -8_000},
+            {type: "reputation", amount: 6},
+            {type: "health", amount: -4},
+        ],
+    },
+    {
+        id: "elderly_visit",
+        title: "探訪獨居長者",
+        message: "帶住水果上樓探伯伯，聽佢講舊時光講足兩個鐘。銀包冇大失血，名聲有進帳。",
+        weight: 1.05,
+        effects: [
+            {type: "cash", amount: -500},
+            {type: "reputation", amount: 5},
+            {type: "health", amount: 2},
+        ],
+    },
+    {
+        id: "scholarship_fund",
+        title: "資助清貧學生",
+        message: "社工轉介咗個個案，你咬牙簽咗張支票。學生多謝卡寫到你眼濕濕。",
+        weight: 0.85,
+        effects: [
+            {type: "cash", amount: -50_000},
+            {type: "reputation", amount: 12},
+        ],
+    },
+    {
+        id: "stray_rescue",
+        title: "拯救街貓手術費",
+        message: "後巷發現受傷貓，獸醫報價一出你差啲比貓更慘。不過救到一命，街坊開始認得你。",
+        weight: 0.95,
+        effects: [
+            {type: "cash", amount: -15_000},
+            {type: "reputation", amount: 7},
+        ],
+    },
+    {
+        id: "community_chest",
+        title: "公益金捐款",
+        message: "公司群組發起配對捐款，你撳咗個「有心」金額。月結單會痛，名片會光。",
+        weight: 1,
+        effects: [
+            {type: "cash", amount: -25_000},
+            {type: "reputation", amount: 9},
+        ],
+    },
+    {
+        id: "typhoon_shelter_help",
+        title: "避風中心派飯",
+        message: "十號波掛起，你去避風中心派飯盒。濕透咗，但換嚟一句「多謝靚仔／靚女」。",
+        weight: 1,
+        effects: [
+            {type: "reputation", amount: 5},
+            {type: "health", amount: -5},
+        ],
+    },
+    {
+        id: "corporate_donation",
+        title: "冠名慈善晚會",
+        message: "晚宴上舉牌認捐，鎂光燈一閃，慈善機構同你 LinkedIn 一齊更新。",
+        weight: 0.75,
+        effects: [
+            {type: "cash", amount: -120_000},
+            {type: "reputation", amount: 18},
+        ],
+    },
+    {
+        id: "anonymous_kindness",
+        title: "低調做好事",
+        message: "你幫鄰居搬貨、幫阿婆擔袋，冇人拍片，但屋苑 WhatsApp 群已經傳開「幾好人」。",
+        weight: 1.15,
+        effects: [{type: "reputation", amount: 2}],
+    },
+    {
+        id: "organ_donor_card",
+        title: "簽署器官捐贈卡",
+        message: "填咗張卡，職員話「好人有好報」。即時報應係：你覺得自己冇咁廢。",
+        weight: 1.05,
+        effects: [
+            {type: "reputation", amount: 3},
+            {type: "health", amount: 3},
+        ],
+    },
+    {
+        id: "park_cleanup",
+        title: "公園清潔日",
+        message: "手套一戴就執垃圾，執到懷疑人生，不過小朋友鼓掌，街坊豎起拇指。",
+        weight: 1.1,
+        effects: [
+            {type: "reputation", amount: 4},
+            {type: "health", amount: -2},
+        ],
+    },
 ] as const;
 
 export const EVENT_MAP: Record<EventId, EventDef> = Object.fromEntries(EVENTS.map(e => [e.id, e])) as Record<EventId, EventDef>;

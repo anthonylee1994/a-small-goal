@@ -228,6 +228,19 @@ describe("events", () => {
         }
         expect(found).not.toBeNull();
     });
+
+    it("charity event raises reputation", () => {
+        let found: GameState | null = null;
+        for (let seed = 1; seed < 800; seed++) {
+            const s = startGame(createInitialState(), seed);
+            if (s.currentEventId === "anonymous_kindness") {
+                found = s;
+                expect(s.reputation).toBe(2);
+                break;
+            }
+        }
+        expect(found).not.toBeNull();
+    });
 });
 
 describe("endTurn / assets", () => {

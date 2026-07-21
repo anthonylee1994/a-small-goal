@@ -284,6 +284,13 @@ function applyEventNonPriceEffects(state: GameState, event: EventDef): {state: G
                 next = {...next, health: clamp(next.health + effect.amount, 0, 100)};
                 messages.push(`健康 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`);
                 break;
+            case "reputation": {
+                const before = next.reputation;
+                next = {...next, reputation: clamp(next.reputation + effect.amount, 0, 100)};
+                const delta = next.reputation - before;
+                messages.push(`名聲 ${delta >= 0 ? "+" : ""}${delta}`);
+                break;
+            }
             case "price_mult": {
                 const name = GOOD_MAP[effect.goodId]?.name ?? effect.goodId;
                 messages.push(`${name} 價格 ×${effect.mult}`);
