@@ -1,0 +1,33 @@
+{
+    "name": "a-small-goal",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "typecheck": "tsc -b --pretty false",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "lint": "oxlint",
+        "preview": "vite preview",
+        "format": "prettier --write ."
+    },
+    "dependencies": {
+        "@tailwindcss/vite": "^4.3.3",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+        "tailwindcss": "^4.3.3"
+    },
+    "devDependencies": {
+        "@types/node": "^26.1.1",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.3",
+        "oxlint": "^1.74.0",
+        "prettier": "^3.9.5",
+        "typescript": "~7.0.2",
+        "vite": "^8.1.5",
+        "vitest": "^4.1.10"
+    }
+}

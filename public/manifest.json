@@ -1,0 +1,28 @@
+{
+    "name": "一億小目標",
+    "short_name": "一億小目標",
+    "description": "20 歲起步，60 歲前賺夠 HK$100,000,000 嘅惡搞 Cartoon 模擬經營遊戲。",
+    "lang": "zh-Hant-HK",
+    "dir": "ltr",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#fff8e7",
+    "theme_color": "#fff8e7",
+    "categories": ["games", "entertainment"],
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        }
+    ]
+}
