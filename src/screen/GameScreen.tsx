@@ -25,13 +25,29 @@ interface Props {
     onSell: (goodId: GoodId, quantity: number) => void;
     onUpgradeWarehouse: () => void;
     onFoundCompany: (companyId: CompanyTypeId) => void;
+    onBuyCompanyShares: (companyId: CompanyTypeId, shares: number) => void;
+    onSellCompanyShares: (companyId: CompanyTypeId, shares: number) => void;
     onMarry: (partnerId: PartnerId) => void;
     onSeeDoctor: () => void;
     onEndTurn: () => void;
     onSuicide: () => void;
 }
 
-export const GameScreen = ({state, onDismissEvent, onDismissTurnSummary, onBuy, onSell, onUpgradeWarehouse, onFoundCompany, onMarry, onSeeDoctor, onEndTurn, onSuicide}: Props) => {
+export const GameScreen = ({
+    state,
+    onDismissEvent,
+    onDismissTurnSummary,
+    onBuy,
+    onSell,
+    onUpgradeWarehouse,
+    onFoundCompany,
+    onBuyCompanyShares,
+    onSellCompanyShares,
+    onMarry,
+    onSeeDoctor,
+    onEndTurn,
+    onSuicide,
+}: Props) => {
     const [confirmEndTurn, setConfirmEndTurn] = useState(false);
     const [eventPreviewOpen, setEventPreviewOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<GameTab>("market");
@@ -110,7 +126,7 @@ export const GameScreen = ({state, onDismissEvent, onDismissTurnSummary, onBuy, 
                     {activeTab === "market" ? (
                         <MarketPanel state={state} locked={locked} highlightGoodId={highlightGoodId} onBuy={onBuy} onSell={onSell} onUpgradeWarehouse={onUpgradeWarehouse} />
                     ) : null}
-                    {activeTab === "company" ? <CompanyPanel state={state} locked={locked} onFound={onFoundCompany} /> : null}
+                    {activeTab === "company" ? <CompanyPanel state={state} locked={locked} onFound={onFoundCompany} onBuyShares={onBuyCompanyShares} onSellShares={onSellCompanyShares} /> : null}
                     {activeTab === "family" ? <FamilyPanel state={state} locked={locked} onMarry={onMarry} /> : null}
                     {activeTab === "log" ? <LogPanel entries={state.log} limit={20} /> : null}
                 </div>

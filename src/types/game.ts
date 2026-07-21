@@ -98,6 +98,10 @@ export interface Child {
 export interface OwnedCompany {
     typeId: CompanyTypeId;
     foundedAge: number;
+    /** Shares held out of COMPANY_TOTAL_SHARES (full stake when founding). */
+    shares: number;
+    /** Total cost basis for current shares (founding cost + buybacks − sell cost). */
+    costBasis: number;
 }
 
 export interface Rank {
@@ -193,6 +197,8 @@ export interface GameState {
     inventoryCost: Record<GoodId, number>;
     prices: Record<GoodId, number>;
     companies: OwnedCompany[];
+    /** Per-share market price this year for each company type. */
+    companySharePrices: Record<CompanyTypeId, number>;
     partnerId: PartnerId | null;
     children: Child[];
     currentEventId: EventId | null;

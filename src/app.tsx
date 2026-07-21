@@ -18,6 +18,8 @@ export const App = () => {
     const sell = useGameStore(s => s.sell);
     const upgradeWarehouse = useGameStore(s => s.upgradeWarehouse);
     const foundCompany = useGameStore(s => s.foundCompany);
+    const buyCompanyShares = useGameStore(s => s.buyCompanyShares);
+    const sellCompanyShares = useGameStore(s => s.sellCompanyShares);
     const marry = useGameStore(s => s.marry);
     const seeDoctor = useGameStore(s => s.seeDoctor);
     const endTurn = useGameStore(s => s.endTurn);
@@ -51,6 +53,8 @@ export const App = () => {
             onSell={sell}
             onUpgradeWarehouse={() => upgradeWarehouse()}
             onFoundCompany={foundCompany}
+            onBuyCompanyShares={buyCompanyShares}
+            onSellCompanyShares={sellCompanyShares}
             onMarry={marry}
             onSeeDoctor={() => seeDoctor()}
             onEndTurn={() => endTurn()}

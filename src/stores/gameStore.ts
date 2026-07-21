@@ -1,6 +1,7 @@
 import {create} from "zustand";
 import {persist} from "zustand/middleware";
 import {
+    buyCompanyShares,
     buyGood,
     commitSuicide,
     createInitialState,
@@ -12,6 +13,7 @@ import {
     marry,
     normalizeGameState,
     seeDoctor,
+    sellCompanyShares,
     sellGood,
     startGame,
     upgradeWarehouse,
@@ -29,6 +31,8 @@ interface GameActions {
     sell: (goodId: GoodId, quantity: number) => void;
     upgradeWarehouse: () => void;
     foundCompany: (companyId: CompanyTypeId) => void;
+    buyCompanyShares: (companyId: CompanyTypeId, shares: number) => void;
+    sellCompanyShares: (companyId: CompanyTypeId, shares: number) => void;
     marry: (partnerId: PartnerId) => void;
     seeDoctor: () => void;
     endTurn: () => void;
@@ -55,6 +59,8 @@ export const useGameStore = create<GameStore>()(
             sell: (goodId, quantity) => set(s => ({game: sellGood(s.game, goodId, quantity)})),
             upgradeWarehouse: () => set(s => ({game: upgradeWarehouse(s.game)})),
             foundCompany: companyId => set(s => ({game: foundCompany(s.game, companyId)})),
+            buyCompanyShares: (companyId, shares) => set(s => ({game: buyCompanyShares(s.game, companyId, shares)})),
+            sellCompanyShares: (companyId, shares) => set(s => ({game: sellCompanyShares(s.game, companyId, shares)})),
             marry: partnerId => set(s => ({game: marry(s.game, partnerId)})),
             seeDoctor: () => set(s => ({game: seeDoctor(s.game)})),
             endTurn: () => set(s => ({game: endTurn(s.game)})),

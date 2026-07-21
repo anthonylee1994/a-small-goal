@@ -3,6 +3,7 @@ import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {EVENT_MAP} from "../data/events";
 import {
     beginTurn,
+    buyCompanyShares,
     buyGood,
     createInitialState,
     dismissBirthReveal,
@@ -10,6 +11,7 @@ import {
     endTurn,
     fairUnitPrice,
     foundCompany,
+    getCompanySharePrice,
     getDoctorFee,
     getRank,
     holdingCostTotal,
@@ -17,13 +19,14 @@ import {
     inventoryValue,
     priceSignal,
     seeDoctor,
+    sellCompanyShares,
     sellGood,
     softenCashLoss,
     startGame,
     totalAssets,
     upgradeWarehouse,
 } from "./engine";
-import {DOCTOR_BASE_FEE, DOCTOR_FEE_CAP, DOCTOR_HEALTH_RESTORE, DOCTOR_WEALTH_RATE, START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
+import {COMPANY_TOTAL_SHARES, DOCTOR_BASE_FEE, DOCTOR_FEE_CAP, DOCTOR_HEALTH_RESTORE, DOCTOR_WEALTH_RATE, START_AGE, START_HEALTH, START_WAREHOUSE, WAREHOUSE_UPGRADE_COST, END_AGE} from "./constants";
 import type {GameState} from "../types/game";
 
 function playingState(seed = 42): GameState {
@@ -261,18 +264,19 @@ describe("endTurn / assets", () => {
         expect(state.totalAssets).toBe(totalAssets(state));
     });
 
-    it("computes totalAssets as cash + inventory + company valuation", () => {
+    it("computes totalAssets as cash + inventory + company stake market value", () => {
         let state = playingState(203);
+        const sharePrice = 1_400; // 100 shares → market cap 140_000
         state = {
             ...state,
             cash: 1_000,
             inventory: {...state.inventory, chips: 2},
             prices: {...state.prices, chips: 100},
-            companies: [{typeId: "bubble_tea", foundedAge: 20}],
+            companySharePrices: {...state.companySharePrices, bubble_tea: sharePrice},
+            companies: [{typeId: "bubble_tea", foundedAge: 20, shares: COMPANY_TOTAL_SHARES, costBasis: 80_000}],
         };
-        // bubble_tea valuation = 140_000 (Phase 3)
         expect(inventoryValue(state)).toBe(200);
-        expect(totalAssets(state)).toBe(1_000 + 200 + 140_000);
+        expect(totalAssets(state)).toBe(1_000 + 200 + sharePrice * COMPANY_TOTAL_SHARES);
     });
 
     it("upgradeWarehouse expands capacity when affordable", () => {
@@ -325,8 +329,21 @@ describe("foundCompany first success + refund", () => {
         let state = {...playingState(501), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
         state = foundCompany(state, "bubble_tea");
         expect(state.companies.some(c => c.typeId === "bubble_tea")).toBe(true);
+        expect(state.companies[0]?.shares).toBe(COMPANY_TOTAL_SHARES);
         expect(state.companyFoundAttempts).toBe(1);
         expect(state.milestonesUnlocked).toContain("first_company");
+    });
+
+    it("re-rolls founding RNG on each attempt instead of replaying the same seed", () => {
+        // Same seed/age, different companyFoundAttempts must not freeze on one outcome forever.
+        const base = {...playingState(777), cash: 50_000_000, reputation: 50, companies: []};
+        const results: boolean[] = [];
+        for (let attempt = 1; attempt <= 40; attempt += 1) {
+            const next = foundCompany({...base, companyFoundAttempts: attempt}, "crypto_exchange");
+            results.push(next.companies.some(c => c.typeId === "crypto_exchange"));
+        }
+        expect(results.some(Boolean)).toBe(true);
+        expect(results.some(r => !r)).toBe(true);
     });
 
     it("keeps newly founded companies through grace period endTurns", () => {
@@ -342,6 +359,37 @@ describe("foundCompany first success + refund", () => {
         if (state.phase === "event") state = dismissEvent(state);
         expect(state.companies.some(c => c.typeId === "bubble_tea")).toBe(true);
         expect(state.age).toBe(foundedAge + 2);
+    });
+});
+
+describe("company shares buy / sell", () => {
+    it("sells part of stake and scales remaining ownership", () => {
+        let state = {...playingState(601), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
+        state = foundCompany(state, "bubble_tea");
+        const price = getCompanySharePrice(state, "bubble_tea");
+        const cashBefore = state.cash;
+        state = sellCompanyShares(state, "bubble_tea", 40);
+        expect(state.companies[0]?.shares).toBe(60);
+        expect(state.cash).toBe(cashBefore + price * 40);
+    });
+
+    it("buys back shares up to 100% and rejects when full", () => {
+        let state = {...playingState(602), cash: 5_000_000, companyFoundAttempts: 0, reputation: 0};
+        state = foundCompany(state, "bubble_tea");
+        state = sellCompanyShares(state, "bubble_tea", 50);
+        expect(state.companies[0]?.shares).toBe(50);
+        state = buyCompanyShares(state, "bubble_tea", 50);
+        expect(state.companies[0]?.shares).toBe(100);
+        const blocked = buyCompanyShares(state, "bubble_tea", 1);
+        expect(blocked.companies[0]?.shares).toBe(100);
+        expect(blocked.log[0]?.text).toContain("100%");
+    });
+
+    it("selling all shares removes the company", () => {
+        let state = {...playingState(603), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
+        state = foundCompany(state, "bubble_tea");
+        state = sellCompanyShares(state, "bubble_tea", COMPANY_TOTAL_SHARES);
+        expect(state.companies).toHaveLength(0);
     });
 });
 

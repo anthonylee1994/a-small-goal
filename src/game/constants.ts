@@ -44,6 +44,11 @@ export const CASH_LOSS_MIN_RESERVE = 1_000;
 export const COMPANY_FAIL_REFUND_RATE = 0.5;
 /** Years after founding before annual collapse rolls apply (0 = founding year endTurn only). */
 export const COMPANY_COLLAPSE_GRACE_YEARS = 2;
+/** Each company is split into this many tradable shares (100% = full stake). */
+export const COMPANY_TOTAL_SHARES = 100;
+/** Share price = (valuation × inflation × roll) / TOTAL_SHARES. */
+export const COMPANY_SHARE_PRICE_MIN = 0.75;
+export const COMPANY_SHARE_PRICE_MAX = 1.4;
 
 export const BASE_CHILD_CHANCE = 0.18;
 export const CHILD_MATURE_YEARS = 18;

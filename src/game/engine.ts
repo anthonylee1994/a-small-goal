@@ -3,7 +3,7 @@ import {COMPANIES, COMPANY_MAP} from "../data/companies";
 import {EVENT_MAP, EVENTS} from "../data/events";
 import {GOOD_MAP, GOODS} from "../data/goods";
 import {PARTNER_MAP, PARTNERS} from "../data/partners";
-import type {Child, CompanyTypeId, EventDef, GameState, GoodId, LogEntry, MilestoneId, PartnerId, Rank, RankTier, TurnSummary} from "../types/game";
+import type {Child, CompanyTypeId, EventDef, GameState, GoodId, LogEntry, MilestoneId, OwnedCompany, PartnerId, Rank, RankTier, TurnSummary} from "../types/game";
 import {
     BASE_CHILD_CHANCE,
     CASH_LOSS_MAX_FRACTION,
@@ -12,6 +12,9 @@ import {
     CHILD_TUITION,
     COMPANY_COLLAPSE_GRACE_YEARS,
     COMPANY_FAIL_REFUND_RATE,
+    COMPANY_SHARE_PRICE_MAX,
+    COMPANY_SHARE_PRICE_MIN,
+    COMPANY_TOTAL_SHARES,
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
     DOCTOR_HEALTH_RESTORE,
@@ -57,6 +60,47 @@ function emptyPrices(): Record<GoodId, number> {
     return Object.fromEntries(GOODS.map(g => [g.id, 0])) as Record<GoodId, number>;
 }
 
+function emptyCompanySharePrices(): Record<CompanyTypeId, number> {
+    return Object.fromEntries(COMPANIES.map(c => [c.id, 0])) as Record<CompanyTypeId, number>;
+}
+
+function generateCompanySharePrices(age: number, rng: Rng): Record<CompanyTypeId, number> {
+    const infl = inflationFactor(age);
+    const prices = emptyCompanySharePrices();
+    for (const company of COMPANIES) {
+        const roll = randomBetween(rng, COMPANY_SHARE_PRICE_MIN, COMPANY_SHARE_PRICE_MAX);
+        const marketCap = company.valuation * infl * roll;
+        prices[company.id] = Math.max(1, Math.round(marketCap / COMPANY_TOTAL_SHARES));
+    }
+    return prices;
+}
+
+/** Ownership fraction 0–1. */
+export function companyOwnership(company: OwnedCompany): number {
+    const shares = Math.max(0, Math.min(COMPANY_TOTAL_SHARES, company.shares ?? 0));
+    return shares / COMPANY_TOTAL_SHARES;
+}
+
+export function getCompanySharePrice(state: GameState, typeId: CompanyTypeId): number {
+    const live = state.companySharePrices?.[typeId];
+    if (live != null && live > 0) return live;
+    const def = COMPANY_MAP[typeId];
+    if (!def) return 0;
+    return Math.max(1, Math.round((def.valuation * inflationFactor(state.age)) / COMPANY_TOTAL_SHARES));
+}
+
+export function normalizeOwnedCompany(raw: Partial<OwnedCompany> & {typeId: CompanyTypeId; foundedAge: number}): OwnedCompany {
+    const def = COMPANY_MAP[raw.typeId];
+    const shares = raw.shares ?? COMPANY_TOTAL_SHARES;
+    const costBasis = raw.costBasis ?? def?.cost ?? 0;
+    return {
+        typeId: raw.typeId,
+        foundedAge: raw.foundedAge,
+        shares: clamp(Math.round(shares), 0, COMPANY_TOTAL_SHARES),
+        costBasis: Math.max(0, costBasis),
+    };
+}
+
 function makeLog(state: GameState, text: string, tone: LogEntry["tone"]): LogEntry {
     return {
         id: `${state.seed ?? 0}-${state.age}-${state.log.length}`,
@@ -77,6 +121,16 @@ function isPositiveInt(n: number): boolean {
 
 function turnRng(state: GameState, salt: number): Rng {
     return createRng((state.seed ?? 0) + state.age * 9973 + salt);
+}
+
+/** Stable non-cryptographic hash so company ids get distinct RNG salts. */
+function hashString(input: string): number {
+    let h = 2166136261;
+    for (let i = 0; i < input.length; i += 1) {
+        h ^= input.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
 }
 
 export function inflationFactor(age: number): number {
@@ -122,7 +176,26 @@ export function holdingUnrealizedPnl(state: GameState, goodId: GoodId): number {
 }
 
 export function companyValue(state: GameState): number {
-    return state.companies.reduce((sum, c) => sum + (COMPANY_MAP[c.typeId]?.valuation ?? 0), 0);
+    return state.companies.reduce((sum, c) => {
+        const price = getCompanySharePrice(state, c.typeId);
+        const shares = c.shares ?? COMPANY_TOTAL_SHARES;
+        return sum + price * shares;
+    }, 0);
+}
+
+export function companySharesHeld(state: GameState, typeId: CompanyTypeId): number {
+    return state.companies.find(c => c.typeId === typeId)?.shares ?? 0;
+}
+
+export function companyStockCostBasis(state: GameState, typeId: CompanyTypeId): number {
+    return state.companies.find(c => c.typeId === typeId)?.costBasis ?? 0;
+}
+
+export function companyStockUnrealizedPnl(state: GameState, typeId: CompanyTypeId): number {
+    const company = state.companies.find(c => c.typeId === typeId);
+    if (!company || company.shares <= 0) return 0;
+    const market = getCompanySharePrice(state, typeId) * company.shares;
+    return market - company.costBasis;
 }
 
 export function totalAssets(state: GameState): number {
@@ -284,7 +357,8 @@ export function normalizeGameState(raw: GameState): GameState {
         inventory: {...emptyInventory(), ...raw.inventory},
         inventoryCost: {...emptyInventory(), ...(raw.inventoryCost ?? {})},
         prices: {...emptyPrices(), ...raw.prices},
-        companies: raw.companies ?? [],
+        companySharePrices: {...emptyCompanySharePrices(), ...(raw.companySharePrices ?? {})},
+        companies: (raw.companies ?? []).map(c => normalizeOwnedCompany(c)),
         children: raw.children ?? [],
         log: raw.log ?? [],
     };
@@ -304,6 +378,7 @@ export function createInitialState(seed?: number): GameState {
         inventoryCost: emptyInventory(),
         prices: emptyPrices(),
         companies: [],
+        companySharePrices: emptyCompanySharePrices(),
         partnerId: null,
         children: [],
         currentEventId: null,
@@ -359,12 +434,14 @@ export function beginTurn(state: GameState): GameState {
     const rng = turnRng(state, 1);
     const event = pickWeighted(rng, EVENTS);
     const prices = generatePrices(state.age, rng, eventPriceMults(event));
-    const applied = applyEventNonPriceEffects({...state, prices}, event);
+    const companySharePrices = generateCompanySharePrices(state.age, rng);
+    const applied = applyEventNonPriceEffects({...state, prices, companySharePrices}, event);
 
     let next: GameState = {
         ...applied.state,
         phase: "event",
         prices,
+        companySharePrices,
         currentEventId: event.id,
         eventDismissed: false,
     };
@@ -517,10 +594,12 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
     }
 
     const successChance = clamp(0.55 + state.reputation / 200 - def.failChance, 0.35, 0.95);
-    const rng = turnRng(state, 100 + companyId.length);
-    const roll = rng();
     const firstAttempt = state.companyFoundAttempts === 0;
     const guaranteed = firstAttempt;
+    // Mix attempt count + company id so retries in the same year re-roll instead of replaying the same seed.
+    const attemptSalt = 100 + hashString(companyId) + state.companyFoundAttempts * 7919;
+    const rng = turnRng(state, attemptSalt);
+    const roll = rng();
 
     let next: GameState = {
         ...state,
@@ -539,14 +618,99 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
         return next;
     }
 
+    const founded: OwnedCompany = {
+        typeId: companyId,
+        foundedAge: next.age,
+        shares: COMPANY_TOTAL_SHARES,
+        costBasis: def.cost,
+    };
     next = {
         ...next,
-        companies: [...next.companies, {typeId: companyId, foundedAge: next.age}],
+        companies: [...next.companies, founded],
         reputation: clamp(next.reputation + 5, 0, 100),
     };
+    const sharePrice = getCompanySharePrice(next, companyId);
     const bonus = guaranteed ? "（第一次創業保底成功！）" : "";
-    next = pushLog(next, `成功創立${def.name}！${bonus}`, "good");
+    next = pushLog(next, `成功創立${def.name}！持有 ${COMPANY_TOTAL_SHARES} 股（100%），現價約 ${formatMoney(sharePrice)}/股。${bonus}`, "good");
     next = unlockMilestone(next, "first_company", "【老闆上身】成功開舖，開始食公司紅利。");
+    return checkAssetMilestones(next);
+}
+
+/** Buy back shares of a company you already founded (max 100%). */
+export function buyCompanyShares(state: GameState, companyId: CompanyTypeId, shares: number): GameState {
+    if (state.phase !== "playing") return state;
+    if (!isPositiveInt(shares)) return state;
+
+    const def = COMPANY_MAP[companyId];
+    if (!def) return state;
+
+    const idx = state.companies.findIndex(c => c.typeId === companyId);
+    if (idx < 0) {
+        return pushLog(state, `你未開過${def.name}，唔可以買佢嘅股票。`, "bad");
+    }
+
+    const company = normalizeOwnedCompany(state.companies[idx]!);
+    const room = COMPANY_TOTAL_SHARES - company.shares;
+    if (room <= 0) {
+        return pushLog(state, `${def.name} 你已經持有 100% 股份。`, "bad");
+    }
+    if (shares > room) {
+        return pushLog(state, `最多只可以再買入 ${room} 股（而家持有 ${company.shares}%）。`, "bad");
+    }
+
+    const price = getCompanySharePrice(state, companyId);
+    const cost = price * shares;
+    if (state.cash < cost) {
+        return pushLog(state, `錢唔夠！買入 ${shares} 股要 ${formatMoney(cost)}。`, "bad");
+    }
+
+    const updated: OwnedCompany = {
+        ...company,
+        shares: company.shares + shares,
+        costBasis: company.costBasis + cost,
+    };
+    const companies = state.companies.map((c, i) => (i === idx ? updated : c));
+    let next: GameState = {...state, cash: state.cash - cost, companies};
+    next = pushLog(next, `增持${def.name} ${shares} 股，花費 ${formatMoney(cost)}（${formatMoney(price)}/股）。現持 ${updated.shares}%。`, "info");
+    return checkAssetMilestones(next);
+}
+
+/** Sell shares of your company. Selling all shares closes the company listing. */
+export function sellCompanyShares(state: GameState, companyId: CompanyTypeId, shares: number): GameState {
+    if (state.phase !== "playing") return state;
+    if (!isPositiveInt(shares)) return state;
+
+    const def = COMPANY_MAP[companyId];
+    if (!def) return state;
+
+    const idx = state.companies.findIndex(c => c.typeId === companyId);
+    if (idx < 0) {
+        return pushLog(state, `你未開過${def.name}。`, "bad");
+    }
+
+    const company = normalizeOwnedCompany(state.companies[idx]!);
+    if (shares > company.shares) {
+        return pushLog(state, `你只有 ${company.shares} 股${def.name}。`, "bad");
+    }
+
+    const price = getCompanySharePrice(state, companyId);
+    const revenue = price * shares;
+    const costSold = company.shares > 0 ? Math.round((company.costBasis * shares) / company.shares) : 0;
+    const remainShares = company.shares - shares;
+    const remainCost = remainShares <= 0 ? 0 : Math.max(0, company.costBasis - costSold);
+    const pnl = revenue - costSold;
+
+    let companies: OwnedCompany[];
+    if (remainShares <= 0) {
+        companies = state.companies.filter((_, i) => i !== idx);
+    } else {
+        companies = state.companies.map((c, i) => (i === idx ? {...company, shares: remainShares, costBasis: remainCost} : c));
+    }
+
+    let next: GameState = {...state, cash: state.cash + revenue, companies};
+    const pnlText = pnl === 0 ? "" : pnl > 0 ? `，帳面賺 ${formatMoney(pnl)}` : `，帳面蝕 ${formatMoney(Math.abs(pnl))}`;
+    const exitText = remainShares <= 0 ? " 已全部沽清，唔再持有呢間公司。" : ` 剩餘 ${remainShares}%。`;
+    next = pushLog(next, `沽出${def.name} ${shares} 股，收入 ${formatMoney(revenue)}（${formatMoney(price)}/股）${pnlText}。${exitText}`, pnl >= 0 ? "good" : "bad");
     return checkAssetMilestones(next);
 }
 
@@ -601,13 +765,17 @@ function settleCompanies(state: GameState, rng: Rng): {state: GameState; message
     const messages: string[] = [];
     const kept: typeof next.companies = [];
 
-    for (const company of next.companies) {
+    for (const raw of next.companies) {
+        const company = normalizeOwnedCompany(raw);
         const def = COMPANY_MAP[company.typeId];
-        if (!def) continue;
+        if (!def || company.shares <= 0) continue;
 
-        next = {...next, cash: next.cash + def.annualIncome};
-        next = {...next, cash: next.cash - def.maintenance};
-        messages.push(`${def.name}：收入 +${formatMoney(def.annualIncome)}，維護 -${formatMoney(def.maintenance)}`);
+        const stake = companyOwnership(company);
+        const income = Math.round(def.annualIncome * stake);
+        const maintenance = Math.round(def.maintenance * stake);
+        next = {...next, cash: next.cash + income};
+        next = {...next, cash: next.cash - maintenance};
+        messages.push(`${def.name}（${company.shares}%）：收入 +${formatMoney(income)}，維護 -${formatMoney(maintenance)}`);
 
         // New shops get a grace period so "just opened → gone next year" feels less BS.
         const yearsOpen = next.age - company.foundedAge;
@@ -619,7 +787,7 @@ function settleCompanies(state: GameState, rng: Rng): {state: GameState; message
 
         const failChance = companyCollapseChance(next, company.typeId);
         if (rng() < failChance) {
-            messages.push(`${def.name} 倒閉！估值歸 0。（今年倒閉率約 ${(failChance * 100).toFixed(0)}%）`);
+            messages.push(`${def.name} 倒閉！持股同估值歸 0。（今年倒閉率約 ${(failChance * 100).toFixed(0)}%）`);
             next = {...next, reputation: clamp(next.reputation - 8, 0, 100)};
         } else {
             kept.push(company);
@@ -747,15 +915,18 @@ function forceLiquidate(state: GameState): {state: GameState; messages: string[]
 
     if (next.cash < 0 && next.companies.length > 0) {
         const remaining: typeof next.companies = [];
-        for (const company of next.companies) {
+        for (const raw of next.companies) {
             if (next.cash >= 0) {
-                remaining.push(company);
+                remaining.push(normalizeOwnedCompany(raw));
                 continue;
             }
+            const company = normalizeOwnedCompany(raw);
             const def = COMPANY_MAP[company.typeId];
             if (!def) continue;
-            next = {...next, cash: next.cash + def.valuation};
-            messages.push(`清盤出售${def.name}，估值回收 ${formatMoney(def.valuation)}`);
+            const price = getCompanySharePrice(next, company.typeId);
+            const revenue = price * company.shares;
+            next = {...next, cash: next.cash + revenue};
+            messages.push(`清盤沽清${def.name} ${company.shares} 股，得返 ${formatMoney(revenue)}`);
         }
         next = {...next, companies: remaining};
     }
@@ -831,7 +1002,9 @@ export function endTurn(state: GameState): GameState {
         messages.push(...cos.messages);
         for (const company of state.companies) {
             const def = COMPANY_MAP[company.typeId];
-            if (def) companyNet += def.annualIncome - def.maintenance;
+            if (!def) continue;
+            const stake = companyOwnership(normalizeOwnedCompany(company));
+            companyNet += Math.round((def.annualIncome - def.maintenance) * stake);
         }
     }
     {
@@ -897,17 +1070,28 @@ export function getPartnerOptions(state: GameState) {
 
 export function getCompanyOptions(state: GameState) {
     return COMPANIES.map(c => {
-        const owned = state.companies.find(x => x.typeId === c.id);
+        const ownedRaw = state.companies.find(x => x.typeId === c.id);
+        const owned = ownedRaw ? normalizeOwnedCompany(ownedRaw) : null;
         const yearsOpen = owned ? state.age - owned.foundedAge : null;
         const inGrace = owned != null && yearsOpen != null && yearsOpen < COMPANY_COLLAPSE_GRACE_YEARS;
+        const sharePrice = getCompanySharePrice(state, c.id);
+        const fairShare = Math.max(1, Math.round((c.valuation * inflationFactor(state.age)) / COMPANY_TOTAL_SHARES));
         return {
             ...c,
             owned: owned != null,
+            ownedShares: owned?.shares ?? 0,
+            ownedCostBasis: owned?.costBasis ?? 0,
             canAfford: state.cash >= c.cost,
             repOk: state.reputation >= c.minReputation,
             annualCollapseChance: companyCollapseChance(state, c.id),
             inGrace,
             graceYearsLeft: owned != null && yearsOpen != null ? Math.max(0, COMPANY_COLLAPSE_GRACE_YEARS - yearsOpen) : null,
+            sharePrice,
+            fairSharePrice: fairShare,
+            marketCap: sharePrice * COMPANY_TOTAL_SHARES,
+            holdingValue: owned ? sharePrice * owned.shares : 0,
+            unrealizedPnl: owned ? sharePrice * owned.shares - owned.costBasis : 0,
+            roomToBuy: owned ? COMPANY_TOTAL_SHARES - owned.shares : 0,
         };
     });
 }
