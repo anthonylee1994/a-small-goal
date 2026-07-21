@@ -9,7 +9,7 @@ export const TitleScreen = ({onStart}: Props) => {
     const [easyMode, setEasyMode] = useState(false);
 
     return (
-        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center gap-7 overflow-x-hidden px-5 py-10 text-center sm:px-6">
+        <main className="mx-auto flex w-full max-w-md flex-col justify-center gap-7 overflow-x-hidden px-5 py-10 text-center sm:px-6">
             <div className="relative mx-auto max-w-[min(100%,11rem)]">
                 <div
                     className="mx-auto flex h-36 w-36 items-center justify-center rounded-4xl border-4 border-(--border) bg-(--accent) shadow-[8px_8px_0_var(--border)] sm:h-40 sm:w-40 text-8xl"

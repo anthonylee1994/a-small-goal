@@ -29,7 +29,7 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : "WIN?";
 
     return (
-        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
+        <main className="mx-auto flex w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
             <div className="relative mx-auto mb-2 max-w-36">
                 <div
                     className={`mx-auto flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-(--border) shadow-[5px_5px_0_var(--border)] ${

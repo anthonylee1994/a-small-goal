@@ -126,7 +126,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
     const totalWeight = families.reduce((sum, f) => sum + f.weight, 0);
 
     return (
-        <main className="mx-auto flex min-h-svh w-full max-w-md flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5">
+        <main className="mx-auto flex w-full max-w-md flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5">
             <div>
                 <p className="text-xs font-black tracking-wide text-(--coral)">首抽限定 · 人生開局</p>
                 <h1 className="mt-1 text-3xl font-black leading-none" style={{fontFamily: "var(--font-display)"}}>
