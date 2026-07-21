@@ -147,7 +147,7 @@ describe("events", () => {
         }
         expect(found).not.toBeNull();
         const event = EVENT_MAP.snack_boom;
-        expect(event.effects[0]).toMatchObject({type: "price_mult", goodId: "chips", mult: 5});
+        expect(event.effects[0]).toMatchObject({type: "price_mult", goodId: "chips", mult: 2.5});
         expect(found!.prices.chips).toBeGreaterThan(0);
     });
 
@@ -159,7 +159,7 @@ describe("events", () => {
             if (s.currentEventId === "windfall") {
                 found = s;
                 const familyCash = BIRTH_FAMILY_MAP[s.birthFamilyId!].startingCash;
-                expect(s.cash).toBe(familyCash + 100_000);
+                expect(s.cash).toBe(familyCash + 50_000);
                 break;
             }
         }
@@ -206,9 +206,9 @@ describe("endTurn / assets", () => {
             prices: {...state.prices, chips: 100},
             companies: [{typeId: "bubble_tea", foundedAge: 20}],
         };
-        // bubble_tea valuation = 120_000
+        // bubble_tea valuation = 140_000 (Phase 3)
         expect(inventoryValue(state)).toBe(200);
-        expect(totalAssets(state)).toBe(1_000 + 200 + 120_000);
+        expect(totalAssets(state)).toBe(1_000 + 200 + 140_000);
     });
 
     it("upgradeWarehouse expands capacity when affordable", () => {

@@ -7,7 +7,7 @@ export const GOODS: readonly GoodDef[] = [
     {id: "sneakers", name: "名牌波鞋", tier: "mid", basePrice: 3_000, space: 1},
     {id: "bitcoin", name: "比特幣", tier: "high", basePrice: 50_000, space: 1},
     {id: "gold", name: "黃金", tier: "high", basePrice: 20_000, space: 1},
-    {id: "ev", name: "電動車", tier: "high", basePrice: 300_000, space: 1},
+    {id: "ev", name: "電動車", tier: "high", basePrice: 300_000, space: 2},
     {id: "options", name: "美股期權", tier: "high", basePrice: 15_000, space: 1},
 ] as const;
 

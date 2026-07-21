@@ -9,8 +9,9 @@ export const START_WAREHOUSE = 100;
 export const TARGET_ASSETS = 100_000_000;
 
 export const INFLATION_PER_YEAR = 0.02;
-export const PRICE_RANDOM_MIN = 0.5;
-export const PRICE_RANDOM_MAX = 2.0;
+/** Tighter than the old 0.5–2.0 so pure flip-trading is strong but not the only path to $100M. */
+export const PRICE_RANDOM_MIN = 0.7;
+export const PRICE_RANDOM_MAX = 1.45;
 
 export const WAREHOUSE_UPGRADE_SIZE = 50;
 export const WAREHOUSE_UPGRADE_COST = 50_000;
