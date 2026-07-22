@@ -10,6 +10,7 @@ const STORAGE_KEY = "a-small-goal-sfx-muted";
 let ctx: AudioContext | null = null;
 let muted = readMuted();
 const listeners = new Set<() => void>();
+const readyListeners = new Set<() => void>();
 
 function readMuted(): boolean {
     try {
@@ -40,6 +41,10 @@ function ensureContext(): AudioContext | null {
     return ctx;
 }
 
+function emitReady(): void {
+    for (const listener of readyListeners) listener();
+}
+
 async function resume(): Promise<AudioContext | null> {
     const audio = ensureContext();
     if (!audio) return null;
@@ -49,6 +54,8 @@ async function resume(): Promise<AudioContext | null> {
         } catch {
             return null;
         }
+        // Context may now be running after user gesture unlock.
+        emitReady();
     }
     return audio;
 }
@@ -92,9 +99,22 @@ export function subscribeSfx(listener: () => void): () => void {
     };
 }
 
+/** Fires when AudioContext is running (after unlock / resume). Used by BGM. */
+export function onAudioReady(listener: () => void): () => void {
+    readyListeners.add(listener);
+    return () => {
+        readyListeners.delete(listener);
+    };
+}
+
 /** Unlock AudioContext from a user gesture (optional; also unlocked on first play). */
 export async function unlockSfx(): Promise<void> {
     await resume();
+}
+
+/** Shared resume for BGM / other audio modules. */
+export async function resumeAudio(): Promise<AudioContext | null> {
+    return resume();
 }
 
 /** Short chiptune-style UI click. `primary` = louder two-hit confirm blip. */

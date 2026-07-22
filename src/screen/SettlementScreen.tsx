@@ -1,5 +1,6 @@
 import React from "react";
 import type {GameState} from "../types/game";
+import {startSettlementBgm, stopSettlementBgm} from "@/audio/bgm";
 import {playSettlement} from "@/audio/sfx";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {companyValue, getRank, inventoryValue} from "../game/engine";
@@ -34,7 +35,10 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : isWin ? "WIN!" : "差啲";
 
     React.useEffect(() => {
-        playSettlement(isWin ? "win" : "lose");
+        const outcome = isWin ? "win" : "lose";
+        playSettlement(outcome);
+        startSettlementBgm(outcome);
+        return () => stopSettlementBgm();
     }, [isWin]);
 
     return (

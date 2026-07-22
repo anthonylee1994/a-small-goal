@@ -1,4 +1,5 @@
 import React from "react";
+import {startGameBgm, stopGameBgm} from "@/audio/bgm";
 import {playTitleEnter} from "@/audio/sfx";
 import {Button} from "@/components/Button";
 import {SoundEffectToggle} from "@/components/SoundEffectToggle";
@@ -12,6 +13,8 @@ export const TitleScreen = ({onStart}: Props) => {
 
     React.useEffect(() => {
         playTitleEnter();
+        startGameBgm();
+        return () => stopGameBgm();
     }, []);
 
     return (

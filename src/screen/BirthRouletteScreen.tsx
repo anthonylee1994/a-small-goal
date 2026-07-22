@@ -1,4 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
+import {startRouletteBgm, stopRouletteBgm} from "@/audio/bgm";
 import {scheduleRouletteSpinSfx} from "@/audio/sfx";
 import {BIRTH_FAMILIES} from "@/data/birthFamilies";
 import {formatMoney} from "@/game/format";
@@ -78,6 +79,11 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
 
     const ResultIcon = BIRTH_FAMILY_ICONS[result.id];
     const landMod = mod(-resultSegment.mid, 360);
+
+    useEffect(() => {
+        startRouletteBgm();
+        return () => stopRouletteBgm();
+    }, []);
 
     useEffect(() => {
         if (phase !== "spinning") return;

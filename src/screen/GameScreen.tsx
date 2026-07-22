@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {startGameBgm, stopGameBgm} from "@/audio/bgm";
 import {ILLNESS_HEALTH_THRESHOLD} from "@/game/constants";
 import {formatMoney} from "@/game/format";
 import {getCurrentEvent, getUsedWarehouse, totalAssets} from "@/game/engine";
@@ -69,6 +70,11 @@ export const GameScreen = ({
     const showEventModal = Boolean(event && !showingSummary && (state.phase === "event" || eventPreviewOpen));
     const gameModalOpen = confirmEndTurn || showClosureNotice || showTurnSummary || showEventModal;
     const endTurnRisky = state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD;
+
+    useEffect(() => {
+        startGameBgm();
+        return () => stopGameBgm();
+    }, []);
 
     useEffect(() => {
         // New year-end summary → re-show closure popup if any.
