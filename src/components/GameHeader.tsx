@@ -37,7 +37,7 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                             <SoundEffectToggle />
                         </div>
                         <p className="mt-2 text-xs font-bold text-(--muted)">
-                            {family ? `出身：${family.name}` : "人生進行中"}
+                            {family ? `出生：${family.name}` : "人生進行中"}
                             {" · "}
                             {PHASE_LABEL[state.phase]}
                         </p>

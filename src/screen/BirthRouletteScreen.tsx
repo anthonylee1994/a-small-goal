@@ -147,7 +147,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                 <h1 className="mt-1 text-3xl font-black leading-none" style={{fontFamily: "var(--font-display)"}}>
                     投胎轉盤
                 </h1>
-                <p className="mt-2 text-sm font-bold text-(--muted)">{phase === "done" ? "命運已定，睇清楚你嘅出身。" : "正在為你投胎……"}</p>
+                <p className="mt-2 text-sm font-bold text-(--muted)">{phase === "done" ? "命運已定，睇清楚你嘅出生。" : "正在為你投胎……"}</p>
             </div>
 
             <div className="relative mx-auto w-[min(100%,18.5rem)]">

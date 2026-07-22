@@ -68,7 +68,7 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
                     {title}
                 </h1>
                 <p className="text-sm font-bold text-(--muted)">
-                    {family ? `出身：${family.name}` : null}
+                    {family ? `出生：${family.name}` : null}
                     {family ? " · " : null}
                     {state.age} 歲{ageHint}
                 </p>
