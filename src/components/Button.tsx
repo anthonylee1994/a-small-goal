@@ -18,10 +18,10 @@ export const Button = ({children, onClick, type = "button", variant = "primary",
         sm: "min-h-10 rounded-xl px-3 py-2 text-sm md:text-base",
     };
     const variantClasses = {
-        primary: "bg-(--coral) text-white md:text-2xl!",
-        secondary: "bg-(--accent) text-(--ink)",
-        danger: "bg-(--danger) text-white",
-        ghost: "bg-white text-(--ink)",
+        primary: "bg-(--coral) text-white md:text-xl!",
+        secondary: "bg-(--accent) text-(--ink)  md:text-xl!",
+        danger: "bg-(--danger) text-white  md:text-xl!",
+        ghost: "bg-white text-(--ink)  md:text-xl!",
     };
     const classes = `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`;
 
