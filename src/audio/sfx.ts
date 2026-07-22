@@ -135,10 +135,13 @@ async function playRouletteTickAsync(pitch: number): Promise<void> {
     tone(audio, 420 * p, 280 * p, now, 0.035, 0.08, "triangle");
 }
 
-/** Fanfare when the wheel lands. */
-export function playRouletteLand(): void {
+/** Birth-family land stings (二世祖 / 死中產 / 死窮撚). */
+export type RouletteLandKind = "high_class" | "middle_class" | "low_class";
+
+/** Fanfare / sting when the wheel lands on a birth family. */
+export function playRouletteLand(kind: RouletteLandKind = "middle_class"): void {
     if (muted) return;
-    void playRouletteLandAsync();
+    void playRouletteLandAsync(kind);
 }
 
 /** Comic “啪！” stinger when the yearly event modal pops. */
@@ -158,23 +161,89 @@ async function playEventModalAsync(): Promise<void> {
     tone(audio, 1760, 2200, now + 0.16, 0.12, 0.14, "square");
 }
 
-async function playRouletteLandAsync(): Promise<void> {
+/** Title screen enter: short bright logo sting. */
+export function playTitleEnter(): void {
+    if (muted) return;
+    void playTitleEnterAsync();
+}
+
+async function playTitleEnterAsync(): Promise<void> {
     const audio = await resume();
     if (!audio || muted) return;
     const now = audio.currentTime;
-    tone(audio, 523.25, 659.25, now, 0.1, 0.16, "square");
-    tone(audio, 659.25, 783.99, now + 0.08, 0.12, 0.18, "square");
-    tone(audio, 783.99, 1046.5, now + 0.18, 0.2, 0.2, "square");
-    tone(audio, 261.63, 261.63, now, 0.28, 0.1, "triangle");
+    // Logo pop + sparkle.
+    tone(audio, 330, 440, now, 0.08, 0.14, "triangle");
+    tone(audio, 660, 880, now + 0.05, 0.09, 0.16, "square");
+    tone(audio, 990, 1320, now + 0.12, 0.12, 0.14, "square");
+    tone(audio, 1760, 2200, now + 0.18, 0.1, 0.1, "square");
+}
+
+/** Settlement enter: triumph fanfare (win) or sad descending sting (lose). */
+export function playSettlement(outcome: "win" | "lose"): void {
+    if (muted) return;
+    void playSettlementAsync(outcome);
+}
+
+async function playSettlementAsync(outcome: "win" | "lose"): Promise<void> {
+    const audio = await resume();
+    if (!audio || muted) return;
+    const now = audio.currentTime;
+
+    if (outcome === "win") {
+        // Bright major arpeggio + confetti blips.
+        tone(audio, 392, 392, now, 0.1, 0.14, "triangle");
+        tone(audio, 523.25, 523.25, now + 0.08, 0.1, 0.16, "square");
+        tone(audio, 659.25, 659.25, now + 0.16, 0.1, 0.18, "square");
+        tone(audio, 783.99, 1046.5, now + 0.26, 0.22, 0.2, "square");
+        tone(audio, 1046.5, 1318.5, now + 0.38, 0.28, 0.16, "square");
+        tone(audio, 196, 196, now, 0.45, 0.1, "triangle");
+        return;
+    }
+
+    // Descending minor-ish fail sting.
+    tone(audio, 392, 349.23, now, 0.14, 0.16, "square");
+    tone(audio, 349.23, 293.66, now + 0.12, 0.16, 0.15, "square");
+    tone(audio, 293.66, 220, now + 0.28, 0.28, 0.14, "square");
+    tone(audio, 110, 82, now + 0.2, 0.4, 0.12, "triangle");
+}
+
+async function playRouletteLandAsync(kind: RouletteLandKind): Promise<void> {
+    const audio = await resume();
+    if (!audio || muted) return;
+    const now = audio.currentTime;
+
+    if (kind === "high_class") {
+        // 二世祖：財大氣粗 triumph + cash sparkle.
+        tone(audio, 523.25, 659.25, now, 0.1, 0.16, "square");
+        tone(audio, 659.25, 783.99, now + 0.07, 0.1, 0.18, "square");
+        tone(audio, 783.99, 1046.5, now + 0.15, 0.16, 0.2, "square");
+        tone(audio, 1046.5, 1318.5, now + 0.28, 0.22, 0.16, "square");
+        tone(audio, 261.63, 330, now, 0.4, 0.12, "triangle");
+        return;
+    }
+
+    if (kind === "low_class") {
+        // 死窮撚：衰氣下降 fail sting.
+        tone(audio, 392, 330, now, 0.12, 0.16, "square");
+        tone(audio, 330, 247, now + 0.1, 0.14, 0.14, "square");
+        tone(audio, 247, 165, now + 0.24, 0.28, 0.13, "square");
+        tone(audio, 110, 82, now + 0.18, 0.38, 0.11, "triangle");
+        return;
+    }
+
+    // 死中產：平平無奇 bland ding.
+    tone(audio, 440, 440, now, 0.1, 0.14, "square");
+    tone(audio, 554.37, 523.25, now + 0.1, 0.16, 0.13, "square");
+    tone(audio, 220, 220, now, 0.28, 0.09, "triangle");
 }
 
 /**
  * Schedule tick SFX for a ease-out spin (matches cubic-bezier wheel feel).
  * Returns a disposer to cancel pending timeouts.
  */
-export function scheduleRouletteSpinSfx(durationMs: number, tickCount = 36): () => void {
+export function scheduleRouletteSpinSfx(durationMs: number, tickCount = 36, landKind: RouletteLandKind = "middle_class"): () => void {
     if (muted || durationMs <= 0 || tickCount < 2) {
-        const land = window.setTimeout(() => playRouletteLand(), Math.max(0, durationMs));
+        const land = window.setTimeout(() => playRouletteLand(landKind), Math.max(0, durationMs));
         return () => window.clearTimeout(land);
     }
 
@@ -186,7 +255,7 @@ export function scheduleRouletteSpinSfx(durationMs: number, tickCount = 36): () 
         const pitch = 1.15 - (i / tickCount) * 0.35;
         timers.push(window.setTimeout(() => playRouletteTick(pitch), t));
     }
-    timers.push(window.setTimeout(() => playRouletteLand(), durationMs + 30));
+    timers.push(window.setTimeout(() => playRouletteLand(landKind), durationMs + 30));
 
     return () => {
         for (const id of timers) window.clearTimeout(id);

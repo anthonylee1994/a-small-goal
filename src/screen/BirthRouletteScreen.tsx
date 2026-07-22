@@ -100,8 +100,8 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
         if (reduceMotion) {
             setRotation(landMod);
             setPhase("done");
-            // Still give a soft land ding when motion is reduced.
-            cancelSfx = scheduleRouletteSpinSfx(0, 0);
+            // Still give land sting when motion is reduced.
+            cancelSfx = scheduleRouletteSpinSfx(0, 0, result.id);
             return () => {
                 cancelSfx?.();
             };
@@ -120,7 +120,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
             raf2 = requestAnimationFrame(() => {
                 if (cancelled) return;
                 setRotation(delta);
-                cancelSfx = scheduleRouletteSpinSfx(SPIN_MS, 42);
+                cancelSfx = scheduleRouletteSpinSfx(SPIN_MS, 42, result.id);
             });
         });
 
@@ -130,7 +130,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
             cancelAnimationFrame(raf2);
             cancelSfx?.();
         };
-    }, [landMod, reduceMotion]);
+    }, [landMod, reduceMotion, result.id]);
 
     return (
         <main className="relative mx-auto flex w-full max-w-md flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5">

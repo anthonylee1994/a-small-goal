@@ -1,4 +1,5 @@
 import React from "react";
+import {playTitleEnter} from "@/audio/sfx";
 import {Button} from "@/components/Button";
 import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 
@@ -8,6 +9,10 @@ interface Props {
 
 export const TitleScreen = ({onStart}: Props) => {
     const [easyMode, setEasyMode] = React.useState(false);
+
+    React.useEffect(() => {
+        playTitleEnter();
+    }, []);
 
     return (
         <main className="relative mx-auto flex w-full max-w-md flex-col justify-center gap-7 overflow-x-hidden px-5 py-10 text-center sm:px-6">

@@ -1,5 +1,6 @@
 import React from "react";
 import type {GameState} from "../types/game";
+import {playSettlement} from "@/audio/sfx";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {companyValue, getRank, inventoryValue} from "../game/engine";
 import {formatMoney} from "../game/format";
@@ -25,10 +26,16 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const rank = getRank(assets);
     const StatusIcon = isDead ? DeathIcon : RetireIcon;
     const RankIcon = RANK_ICONS[rank.tier];
+    /** 達標一億小目標 = 贏；猝死／破產／自殺／未達標退休 = 輸。 */
+    const isWin = !isDead && rank.tier === "winner";
 
     const title = isSuicide ? "投胎結算" : isBankruptcy ? "破產結算" : isDead ? "猝死結算" : "退休結算";
     const ageHint = isSuicide ? " · 主動結束今世" : isBankruptcy ? " · 負債出局" : isDead ? " · 未活到退休" : null;
-    const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : "WIN?";
+    const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : isWin ? "WIN!" : "差啲";
+
+    React.useEffect(() => {
+        playSettlement(isWin ? "win" : "lose");
+    }, [isWin]);
 
     return (
         <main className="relative mx-auto flex w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
