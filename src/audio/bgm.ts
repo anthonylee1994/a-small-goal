@@ -1,6 +1,9 @@
 /**
  * Looping background music (Web Audio, no asset files).
  * Shares mute + AudioContext unlock with sfx.
+ *
+ * Step sequencer with proper sustain envelopes, run-length held notes,
+ * and a soft pad so loops don't sound like broken staccato blips.
  */
 
 import {isSfxMuted, onAudioReady, resumeAudio, subscribeSfx} from "@/audio/sfx";
@@ -13,41 +16,44 @@ interface TrackDef {
     steps: number;
     lead: readonly number[];
     bass: readonly number[];
+    /** Soft triangle pad root per 8-step bar (length = steps/8). */
+    pad: readonly number[];
     hatSteps: ReadonlySet<number>;
 }
 
-const LOOKAHEAD_S = 0.12;
-const SCHEDULE_MS = 25;
+const LOOKAHEAD_S = 0.25;
+const SCHEDULE_MS = 40;
 
 const OFFBEAT_HATS = new Set([1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31]);
 const SPARSE_HATS = new Set([3, 7, 11, 15, 19, 23, 27, 31]);
 
-/** C major / A minor hustle loop — light chiptune grind. */
+// --- Game: continuous C major hustle -----------------------------------------
+
 const GAME_LEAD: readonly number[] = [
     523.25,
-    0,
+    523.25,
     659.25,
     783.99,
     659.25,
-    0,
+    659.25,
     587.33,
-    523.25, // C5 · E5 G5 E5 · D5 C5
+    523.25, // C5–E5–G5
     440,
-    0,
+    440,
     523.25,
     659.25,
     587.33,
     523.25,
     493.88,
-    440, // A4 · C5 E5 D5 C5 B4 A4
+    440, // A4 arc
     392,
-    0,
+    392,
     493.88,
     587.33,
     523.25,
-    0,
+    523.25,
     659.25,
-    587.33, // G4 · B4 D5 C5 · E5 D5
+    587.33, // G4 arc
     440,
     523.25,
     659.25,
@@ -55,289 +61,123 @@ const GAME_LEAD: readonly number[] = [
     523.25,
     493.88,
     440,
-    392, // A4 C5 E5 D5 C5 B4 A4 G4
+    392, // walk down
 ];
 
+/** Held bass (same value = one long note). */
 const GAME_BASS: readonly number[] = [
     130.81,
-    0,
     130.81,
-    0,
     130.81,
-    0,
+    130.81,
+    130.81,
+    130.81,
     196.0,
-    0, // C3 · C3 · C3 · G3
+    196.0, // C3 → G3
     174.61,
-    0,
     174.61,
-    0,
     174.61,
-    0,
+    174.61,
+    174.61,
+    174.61,
     220.0,
-    0, // F3 · F3 · F3 · A3
+    220.0, // F3 → A3
     196.0,
-    0,
     196.0,
-    0,
     196.0,
-    0,
+    196.0,
+    196.0,
+    196.0,
     246.94,
-    0, // G3 · G3 · G3 · B3
+    246.94, // G3 → B3
     220.0,
-    0,
     220.0,
-    0,
+    220.0,
     196.0,
-    0,
+    196.0,
     174.61,
-    130.81, // A3 · A3 · G3 · F3 C3
+    174.61,
+    130.81, // A3 → G3 → F3 → C3
 ];
 
-/** Win: bright major victory loop (C → F → G → C). */
+const GAME_PAD: readonly number[] = [130.81, 174.61, 196.0, 220.0];
+
+// --- Settlement win: bright major --------------------------------------------
+
 const WIN_LEAD: readonly number[] = [
-    523.25,
-    659.25,
-    783.99,
-    1046.5,
-    783.99,
-    659.25,
-    587.33,
-    523.25, // C5 E5 G5 C6 G5 E5 D5 C5
-    698.46,
-    880,
-    1046.5,
-    880,
-    698.46,
-    659.25,
-    587.33,
-    523.25, // F5 A5 C6 A5 F5 E5 D5 C5
-    783.99,
-    987.77,
-    1174.66,
-    987.77,
-    783.99,
-    659.25,
-    783.99,
-    880, // G5 B5 D6 B5 G5 E5 G5 A5
-    1046.5,
-    783.99,
-    659.25,
-    523.25,
-    659.25,
-    783.99,
-    1046.5,
-    1318.5, // C6 G5 E5 C5 E5 G5 C6 E6
+    523.25, 659.25, 783.99, 1046.5, 783.99, 659.25, 587.33, 523.25, 698.46, 880, 1046.5, 880, 698.46, 659.25, 587.33, 523.25, 783.99, 987.77, 1174.66, 987.77, 783.99, 659.25, 783.99, 880, 1046.5,
+    783.99, 659.25, 523.25, 659.25, 783.99, 1046.5, 1318.5,
 ];
 
 const WIN_BASS: readonly number[] = [
-    130.81,
-    0,
-    196.0,
-    0,
-    261.63,
-    0,
-    196.0,
-    0, // C3 G3 C4 G3
-    174.61,
-    0,
-    220.0,
-    0,
-    261.63,
-    0,
-    220.0,
-    0, // F3 A3 C4 A3
-    196.0,
-    0,
-    246.94,
-    0,
-    293.66,
-    0,
-    246.94,
-    0, // G3 B3 D4 B3
-    130.81,
-    0,
-    164.81,
-    0,
-    196.0,
-    0,
-    261.63,
-    0, // C3 E3 G3 C4
+    130.81, 130.81, 196.0, 196.0, 261.63, 261.63, 196.0, 196.0, 174.61, 174.61, 220.0, 220.0, 261.63, 261.63, 220.0, 220.0, 196.0, 196.0, 246.94, 246.94, 293.66, 293.66, 246.94, 246.94, 130.81,
+    130.81, 164.81, 164.81, 196.0, 196.0, 261.63, 261.63,
 ];
 
-/** Casino floor swagger — A minor bluesy, slot-machine bounce. */
+const WIN_PAD: readonly number[] = [130.81, 174.61, 196.0, 130.81];
+
+// --- Roulette: casino A minor swagger ----------------------------------------
+
 const ROULETTE_LEAD: readonly number[] = [
-    440,
-    523.25,
-    587.33,
-    0,
-    698.46,
-    659.25,
-    587.33,
-    523.25, // A C D · F E D C
-    466.16,
-    440,
-    392,
-    0,
-    440,
-    523.25,
-    587.33,
-    698.46, // Bb A G · A C D F
-    783.99,
-    0,
-    698.46,
-    659.25,
-    587.33,
-    523.25,
-    493.88,
-    440, // G · F E D C B A
-    523.25,
-    587.33,
-    698.46,
-    0,
-    659.25,
-    587.33,
-    523.25,
-    440, // C D F · E D C A
+    440, 523.25, 587.33, 587.33, 698.46, 659.25, 587.33, 523.25, 466.16, 440, 392, 392, 440, 523.25, 587.33, 698.46, 783.99, 783.99, 698.46, 659.25, 587.33, 523.25, 493.88, 440, 523.25, 587.33,
+    698.46, 698.46, 659.25, 587.33, 523.25, 440,
 ];
 
 const ROULETTE_BASS: readonly number[] = [
-    110,
-    0,
-    110,
-    0,
-    130.81,
-    0,
-    146.83,
-    0, // A2 · A2 · C3 · D3
-    174.61,
-    0,
-    174.61,
-    0,
-    146.83,
-    0,
-    130.81,
-    0, // F3 · F3 · D3 · C3
-    98,
-    0,
-    98,
-    0,
-    110,
-    0,
-    123.47,
-    0, // G2 · G2 · A2 · B2
-    110,
-    0,
-    146.83,
-    0,
-    174.61,
-    0,
-    220,
-    0, // A2 · D3 · F3 · A3
+    110, 110, 110, 110, 130.81, 130.81, 146.83, 146.83, 174.61, 174.61, 174.61, 174.61, 146.83, 146.83, 130.81, 130.81, 98, 98, 98, 98, 110, 110, 123.47, 123.47, 110, 110, 146.83, 146.83, 174.61,
+    174.61, 220, 220,
 ];
 
-/** Lose: slow minor dirge (A minor → F → G → Am). */
+const ROULETTE_PAD: readonly number[] = [110, 174.61, 98, 110];
+
+// --- Settlement lose: slow minor dirge ---------------------------------------
+
 const LOSE_LEAD: readonly number[] = [
-    440,
-    0,
-    392,
-    0,
-    349.23,
-    0,
-    329.63,
-    0, // A4 · G4 · F4 · E4
-    349.23,
-    0,
-    329.63,
-    0,
-    293.66,
-    0,
-    261.63,
-    0, // F4 · E4 · D4 · C4
-    293.66,
-    0,
-    261.63,
-    0,
-    246.94,
-    0,
-    220,
-    0, // D4 · C4 · B3 · A3
-    246.94,
-    220,
-    196,
-    0,
-    220,
-    0,
-    174.61,
-    0, // B3 A3 G3 · A3 · F3
+    440, 440, 392, 392, 349.23, 349.23, 329.63, 329.63, 349.23, 349.23, 329.63, 329.63, 293.66, 293.66, 261.63, 261.63, 293.66, 293.66, 261.63, 261.63, 246.94, 246.94, 220, 220, 246.94, 220, 196, 196,
+    220, 220, 174.61, 174.61,
 ];
 
 const LOSE_BASS: readonly number[] = [
-    110,
-    0,
-    0,
-    0,
-    110,
-    0,
-    164.81,
-    0, // A2 · · · A2 · E3
-    87.31,
-    0,
-    0,
-    0,
-    87.31,
-    0,
-    130.81,
-    0, // F2 · · · F2 · C3
-    98,
-    0,
-    0,
-    0,
-    98,
-    0,
-    146.83,
-    0, // G2 · · · G2 · D3
-    110,
-    0,
-    0,
-    0,
-    98,
-    0,
-    87.31,
-    110, // A2 · · · G2 · F2 A2
+    110, 110, 110, 110, 110, 110, 164.81, 164.81, 87.31, 87.31, 87.31, 87.31, 87.31, 87.31, 130.81, 130.81, 98, 98, 98, 98, 98, 98, 146.83, 146.83, 110, 110, 110, 98, 98, 87.31, 87.31, 110,
 ];
+
+const LOSE_PAD: readonly number[] = [110, 87.31, 98, 110];
 
 const TRACKS: Record<BgmTrack, TrackDef> = {
     game: {
         bpm: 112,
-        gain: 0.045,
+        gain: 0.042,
         steps: 32,
         lead: GAME_LEAD,
         bass: GAME_BASS,
+        pad: GAME_PAD,
         hatSteps: OFFBEAT_HATS,
     },
     roulette: {
         bpm: 144,
-        gain: 0.048,
+        gain: 0.045,
         steps: 32,
         lead: ROULETTE_LEAD,
         bass: ROULETTE_BASS,
-        // Off-beat hats only — leave headroom for spin tick SFX.
+        pad: ROULETTE_PAD,
         hatSteps: OFFBEAT_HATS,
     },
     settlement_win: {
         bpm: 128,
-        gain: 0.05,
+        gain: 0.048,
         steps: 32,
         lead: WIN_LEAD,
         bass: WIN_BASS,
+        pad: WIN_PAD,
         hatSteps: OFFBEAT_HATS,
     },
     settlement_lose: {
         bpm: 78,
-        gain: 0.04,
+        gain: 0.038,
         steps: 32,
         lead: LOSE_LEAD,
         bass: LOSE_BASS,
+        pad: LOSE_PAD,
         hatSteps: SPARSE_HATS,
     },
 };
@@ -362,63 +202,100 @@ function ensureHooks(): void {
             void beginPlayback(wantTrack);
         }
     });
-    // Mid-session refresh: AudioContext may still be suspended until first gesture.
     onAudioReady(() => {
         if (wantTrack && !isSfxMuted() && !playing) void beginPlayback(wantTrack);
     });
 }
 
+/**
+ * ADSR-ish envelope with a real sustain plateau.
+ * Old code ramped straight to silence after attack → choppy blips.
+ */
 function note(audio: AudioContext, dest: AudioNode, freq: number, when: number, duration: number, peak: number, type: OscillatorType): void {
-    if (freq <= 0 || peak <= 0) return;
+    if (freq <= 0 || peak <= 0 || duration <= 0.01) return;
+
     const osc = audio.createOscillator();
     const gain = audio.createGain();
     osc.type = type;
     osc.frequency.setValueAtTime(freq, when);
 
-    const attack = Math.min(0.012, duration * 0.15);
-    const release = Math.min(0.06, duration * 0.35);
+    const attack = Math.min(0.02, duration * 0.08);
+    const release = Math.min(0.1, duration * 0.22);
+    const sustainEnd = Math.max(when + attack + 0.005, when + duration - release);
+
     gain.gain.setValueAtTime(0.0001, when);
     gain.gain.exponentialRampToValueAtTime(peak, when + attack);
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + duration - release * 0.2);
+    gain.gain.setValueAtTime(peak, sustainEnd);
     gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
 
     osc.connect(gain);
     gain.connect(dest);
     osc.start(when);
-    osc.stop(when + duration + 0.02);
+    osc.stop(when + duration + 0.03);
 }
 
-function hat(audio: AudioContext, dest: AudioNode, when: number, peak = 0.012): void {
+function hat(audio: AudioContext, dest: AudioNode, when: number, peak = 0.01): void {
     const osc = audio.createOscillator();
     const gain = audio.createGain();
     osc.type = "square";
     osc.frequency.setValueAtTime(8800, when);
     gain.gain.setValueAtTime(0.0001, when);
     gain.gain.exponentialRampToValueAtTime(peak, when + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.035);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.03);
     osc.connect(gain);
     gain.connect(dest);
     osc.start(when);
-    osc.stop(when + 0.045);
+    osc.stop(when + 0.04);
+}
+
+/** Count consecutive identical non-zero steps starting at `index` (no wrap). */
+function holdLength(pattern: readonly number[], index: number, steps: number): number {
+    const freq = pattern[index] ?? 0;
+    if (freq <= 0) return 0;
+    let n = 1;
+    while (index + n < steps && (pattern[index + n] ?? 0) === freq) n += 1;
+    return n;
+}
+
+function isRunStart(pattern: readonly number[], index: number): boolean {
+    const freq = pattern[index] ?? 0;
+    if (freq <= 0) return false;
+    if (index === 0) return true;
+    return (pattern[index - 1] ?? 0) !== freq;
 }
 
 function scheduleStep(audio: AudioContext, dest: AudioNode, track: TrackDef, index: number, when: number, stepDuration: number): void {
     const i = index % track.steps;
-    const lead = track.lead[i] ?? 0;
-    const bass = track.bass[i] ?? 0;
 
-    if (lead > 0) {
-        note(audio, dest, lead, when, stepDuration * 0.85, 0.55, "square");
+    // Lead: run-length holds + slight overlap so steps blend.
+    const lead = track.lead[i] ?? 0;
+    if (lead > 0 && isRunStart(track.lead, i)) {
+        const leadHold = holdLength(track.lead, i, track.steps);
+        note(audio, dest, lead, when, stepDuration * leadHold * 1.05, 0.42, "square");
         if (i % 8 === 0) {
-            note(audio, dest, lead * 2, when, stepDuration * 0.4, 0.18, "triangle");
+            note(audio, dest, lead * 2, when, stepDuration * Math.min(4, leadHold) * 0.95, 0.12, "triangle");
         }
     }
-    if (bass > 0) {
-        note(audio, dest, bass, when, stepDuration * 1.05, 0.7, "triangle");
-        note(audio, dest, bass * 2, when, stepDuration * 0.9, 0.22, "square");
+
+    // Bass: long held notes (run-length).
+    const bass = track.bass[i] ?? 0;
+    if (bass > 0 && isRunStart(track.bass, i)) {
+        const bassHold = holdLength(track.bass, i, track.steps);
+        note(audio, dest, bass, when, stepDuration * bassHold * 1.02, 0.55, "triangle");
+        note(audio, dest, bass * 2, when, stepDuration * bassHold * 0.98, 0.16, "square");
     }
+
+    // Pad: one soft drone per bar (8 steps) — fills the bed under melody.
+    if (i % 8 === 0) {
+        const padRoot = track.pad[Math.floor(i / 8) % track.pad.length] ?? 0;
+        if (padRoot > 0) {
+            note(audio, dest, padRoot, when, stepDuration * 8.15, 0.22, "triangle");
+            note(audio, dest, padRoot * 1.5, when, stepDuration * 8.1, 0.08, "sine"); // soft fifth-ish
+        }
+    }
+
     if (track.hatSteps.has(i)) {
-        const hatPeak = activeTrack === "settlement_lose" ? 0.008 : activeTrack === "roulette" ? 0.01 : 0.012;
+        const hatPeak = activeTrack === "settlement_lose" ? 0.006 : activeTrack === "roulette" ? 0.008 : 0.009;
         hat(audio, dest, when, hatPeak);
     }
 }
@@ -427,6 +304,12 @@ function tick(audio: AudioContext, dest: GainNode, trackId: BgmTrack): void {
     if (!playing || activeTrack !== trackId) return;
     const track = TRACKS[trackId];
     const stepDuration = 60 / track.bpm / 2;
+
+    // If we fell behind (tab throttle), jump forward instead of stacking late clicks.
+    if (nextStepTime < audio.currentTime - 0.08) {
+        nextStepTime = audio.currentTime + 0.02;
+    }
+
     const horizon = audio.currentTime + LOOKAHEAD_S;
     while (nextStepTime < horizon) {
         scheduleStep(audio, dest, track, step, nextStepTime, stepDuration);
@@ -441,7 +324,6 @@ async function beginPlayback(trackId: BgmTrack): Promise<void> {
     if (playing && activeTrack === trackId) return;
     if (starting) return;
 
-    // Switching track: stop current first.
     if (playing && activeTrack !== trackId) {
         haltPlayback(false);
     }
@@ -458,14 +340,14 @@ async function beginPlayback(trackId: BgmTrack): Promise<void> {
         const gain = audio.createGain();
         const now = audio.currentTime;
         gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(track.gain, now + 0.7);
+        gain.gain.exponentialRampToValueAtTime(track.gain, now + 0.55);
         gain.connect(audio.destination);
 
         master = gain;
         playing = true;
         activeTrack = trackId;
         step = 0;
-        nextStepTime = now + 0.05;
+        nextStepTime = now + 0.04;
         tick(audio, gain, trackId);
     } finally {
         starting = false;

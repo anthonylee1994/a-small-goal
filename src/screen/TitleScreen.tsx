@@ -1,6 +1,6 @@
 import React from "react";
 import {startGameBgm, stopGameBgm} from "@/audio/bgm";
-import {playTitleEnter} from "@/audio/sfx";
+import {playClick, playTitleEnter} from "@/audio/sfx";
 import {Button} from "@/components/Button";
 import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 
@@ -52,7 +52,15 @@ export const TitleScreen = ({onStart}: Props) => {
             </div>
 
             <label className="screen-enter screen-enter-delay-3 mx-auto flex w-full max-w-xs cursor-pointer items-start gap-3 rounded-2xl border-4 border-(--border) bg-white px-4 py-3 text-left shadow-[3px_3px_0_var(--border)]">
-                <input type="checkbox" className="mt-1 size-4 shrink-0 accent-(--coral)" checked={easyMode} onChange={e => setEasyMode(e.target.checked)} />
+                <input
+                    type="checkbox"
+                    className="mt-1 size-4 shrink-0 accent-(--coral)"
+                    checked={easyMode}
+                    onChange={e => {
+                        playClick("ui");
+                        setEasyMode(e.target.checked);
+                    }}
+                />
                 <span>
                     <span className="block text-sm font-black">簡易模式</span>
                     <span className="mt-0.5 block text-xs font-bold text-(--muted)">健康消耗減半、負面現金事件較溫和，適合第一次玩。</span>
