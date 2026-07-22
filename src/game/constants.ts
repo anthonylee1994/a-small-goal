@@ -9,9 +9,13 @@ export const START_WAREHOUSE = 100;
 export const TARGET_ASSETS = 100_000_000;
 
 export const INFLATION_PER_YEAR = 0.02;
-/** Tighter than the old 0.5–2.0 so pure flip-trading is strong but not the only path to $100M. */
-export const PRICE_RANDOM_MIN = 0.7;
-export const PRICE_RANDOM_MAX = 1.45;
+/**
+ * Goods price vs fair (base × inflation).
+ * Slightly wider than 0.7–1.45 so pure trading can reach late-game wealth,
+ * without returning to the old 0.5–2.0 flip lottery.
+ */
+export const PRICE_RANDOM_MIN = 0.62;
+export const PRICE_RANDOM_MAX = 1.55;
 
 /** Relative to fair (base × inflation): below = cheap, above = expensive. */
 export const PRICE_CHEAP_RATIO = 0.9;
@@ -19,9 +23,9 @@ export const PRICE_EXPENSIVE_RATIO = 1.15;
 
 export const WAREHOUSE_UPGRADE_SIZE = 50;
 /** First upgrade cost (capacity 100 → 150). Later upgrades grow exponentially. */
-export const WAREHOUSE_UPGRADE_COST_BASE = 50_000;
-/** cost = BASE × GROWTH^upgradeLevel */
-export const WAREHOUSE_UPGRADE_COST_GROWTH = 1.85;
+export const WAREHOUSE_UPGRADE_COST_BASE = 45_000;
+/** cost = BASE × GROWTH^upgradeLevel — traders can scale mid-game without EV-only snowball. */
+export const WAREHOUSE_UPGRADE_COST_GROWTH = 1.75;
 /** @deprecated use getWarehouseUpgradeCost — kept as first-tier alias */
 export const WAREHOUSE_UPGRADE_COST = WAREHOUSE_UPGRADE_COST_BASE;
 
@@ -62,9 +66,9 @@ export const COMPANY_FAIL_REFUND_RATE = 0.5;
 export const COMPANY_COLLAPSE_GRACE_YEARS = 2;
 /** Each company is split into this many tradable shares (100% = full stake). */
 export const COMPANY_TOTAL_SHARES = 100;
-/** Share price = (valuation × inflation × roll) / TOTAL_SHARES. */
-export const COMPANY_SHARE_PRICE_MIN = 0.75;
-export const COMPANY_SHARE_PRICE_MAX = 1.4;
+/** Share price = (valuation × inflation × roll) / TOTAL_SHARES. Tighter band after founding IPO. */
+export const COMPANY_SHARE_PRICE_MIN = 0.82;
+export const COMPANY_SHARE_PRICE_MAX = 1.28;
 
 export const BASE_CHILD_CHANCE = 0.18;
 export const CHILD_MATURE_YEARS = 18;

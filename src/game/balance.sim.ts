@@ -166,16 +166,18 @@ function playTurn(state: GameState, strategy: StrategyId): GameState {
             next = foundAffordableCompanies(next, 20_000, 2);
             break;
         case "hybrid":
-            next = sellExpensiveGoods(next, 1.3);
-            next = foundAffordableCompanies(next, 80_000, 1);
+            next = trySeeDoctor(next, 25_000);
+            next = sellExpensiveGoods(next, 1.2);
+            next = tryUpgradeWarehouse(next, 40_000);
+            next = buyCheapGoods(next, [...MID_GOODS, ...EXPENSIVE_GOODS, ...CHEAP_GOODS], 0.88, 40_000);
+            next = foundAffordableCompanies(next, 60_000, 1);
             next = tryMarry(next, 100_000);
-            next = tryUpgradeWarehouse(next, 50_000);
-            next = buyCheapGoods(next, [...MID_GOODS, ...EXPENSIVE_GOODS, ...CHEAP_GOODS], 0.9, 40_000);
+            next = sellExpensiveGoods(next, 1.25);
             break;
         case "high_tier_yolo":
             next = sellExpensiveGoods(next, 1.15);
             next = tryUpgradeWarehouse(next, 100_000);
-            next = buyCheapGoods(next, EXPENSIVE_GOODS, 0.95, 20_000);
+            next = buyCheapGoods(next, EXPENSIVE_GOODS, 0.88, 30_000);
             next = foundAffordableCompanies(next, 200_000, 1);
             break;
         case "low_tier_scalp":

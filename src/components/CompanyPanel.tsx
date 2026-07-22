@@ -110,10 +110,12 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
                     const reasons: string[] = [];
                     if (!company.canAfford) reasons.push(`要 ${formatMoney(company.cost)}`);
                     if (!company.repOk) reasons.push(`名聲 ≥ ${company.minReputation}`);
+                    // Founding IPO: market cap = investment (no instant flip).
+                    const foundingSharePrice = Math.max(1, Math.round(company.cost / COMPANY_TOTAL_SHARES));
 
                     return (
-                        <li key={company.id} className="rounded-2xl border-2 border-(--border) bg-[#f4fff9] p-3">
-                            <div className="mb-2 flex items-start gap-3">
+                        <li key={company.id} className="flex flex-col rounded-2xl border-2 border-(--border) bg-[#f4fff9] p-3 md:p-4">
+                            <div className="flex items-start gap-3">
                                 <div
                                     className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-(--border) bg-white shadow-[2px_2px_0_var(--border)]"
                                     aria-hidden="true"
@@ -121,23 +123,44 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
                                     <Icon className="size-6" strokeWidth={2.25} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <h4 className="text-base md:text-lg font-black" style={{fontFamily: "var(--font-display)"}}>
+                                    <h4 className="truncate text-base font-black leading-tight md:text-lg" style={{fontFamily: "var(--font-display)"}}>
                                         {company.name}
                                     </h4>
-                                    <p className="mt-0.5 text-sm md:text-base font-black tabular-nums">{formatMoney(company.cost)}</p>
-                                    <p className="text-[11px] md:text-base font-bold leading-snug text-(--muted)">
-                                        年收 {formatMoney(company.annualIncome)} · 維護 {formatMoney(company.maintenance)} · 估值 {formatMoney(company.valuation)}
+                                    <p className="mt-1 text-lg font-black leading-none tabular-nums" style={{fontFamily: "var(--font-display)"}}>
+                                        {formatMoney(company.cost)}
+                                        <span className="ml-1 text-[10px] font-bold text-(--muted) md:text-sm">投資</span>
                                     </p>
-                                    <p className="mt-1 text-[11px] md:text-base font-bold text-(--muted)">
-                                        開業得 {COMPANY_TOTAL_SHARES} 股 · 現價約 {formatMoney(company.sharePrice)}/股 · 倒閉率約 {collapsePct}%
-                                    </p>
+                                </div>
+                                <span className="shrink-0 rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-(--ink) md:text-sm">
+                                    倒閉 {collapsePct}%
+                                </span>
+                            </div>
+
+                            <div className="mt-3 grid grid-cols-3 gap-1.5 md:gap-2">
+                                <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-2 py-2">
+                                    <p className="text-[10px] font-black tracking-wide text-(--muted) md:text-xs">年收</p>
+                                    <p className="mt-0.5 text-xs font-black leading-tight tabular-nums md:text-sm">{formatMoney(company.annualIncome)}</p>
+                                </div>
+                                <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-2 py-2">
+                                    <p className="text-[10px] font-black tracking-wide text-(--muted) md:text-xs">維護</p>
+                                    <p className="mt-0.5 text-xs font-black leading-tight tabular-nums md:text-sm">{formatMoney(company.maintenance)}</p>
+                                </div>
+                                <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-2 py-2">
+                                    <p className="text-[10px] font-black tracking-wide text-(--muted) md:text-xs">目標估值</p>
+                                    <p className="mt-0.5 text-xs font-black leading-tight tabular-nums md:text-sm">{formatMoney(company.valuation)}</p>
                                 </div>
                             </div>
 
-                            <Button size="sm" variant="secondary" disabled={blocked} onClick={() => setPendingCompanyId(company.id)}>
-                                創業
-                            </Button>
-                            {reasons.length > 0 ? <p className="mt-2 text-[11px] md:text-base font-bold text-(--muted)">{reasons.join(" · ")}</p> : null}
+                            <p className="mt-4 mb-1 text-center text-[11px] font-bold leading-snug text-(--muted) md:text-sm">
+                                開業 {COMPANY_TOTAL_SHARES} 股 · 開業股價 {formatMoney(foundingSharePrice)}/股
+                            </p>
+
+                            <div className="mt-3 flex flex-1 flex-col justify-end gap-2">
+                                <Button size="sm" variant="secondary" disabled={blocked} className="w-full!" onClick={() => setPendingCompanyId(company.id)}>
+                                    創業
+                                </Button>
+                                {reasons.length > 0 ? <p className="text-center text-[11px] font-bold text-(--muted) md:text-sm">{reasons.join(" · ")}</p> : null}
+                            </div>
                         </li>
                     );
                 })}
@@ -146,7 +169,7 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
             {pending ? (
                 <ConfirmModal
                     title={`開「${pending.name}」？`}
-                    message={`投資 ${formatMoney(pending.cost)}，開業後持有 100% 股份（${COMPANY_TOTAL_SHARES} 股）。第一次創業保底成功；之後失敗退一半。開業後 ${COMPANY_COLLAPSE_GRACE_YEARS} 年內唔會倒閉。`}
+                    message={`投資 ${formatMoney(pending.cost)}，開業後持有 100% 股份（${COMPANY_TOTAL_SHARES} 股），當刻市值等於投資額。股價年結先會浮動。第一次創業保底成功；之後失敗退一半。開業後 ${COMPANY_COLLAPSE_GRACE_YEARS} 年內唔會倒閉。`}
                     confirmLabel="創業"
                     cancelLabel="取消"
                     danger

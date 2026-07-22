@@ -1,10 +1,12 @@
 import {describe, expect, it} from "vitest";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
+import {COMPANY_MAP} from "../data/companies";
 import {EVENT_MAP} from "../data/events";
 import {
     beginTurn,
     buyCompanyShares,
     buyGood,
+    companyValue,
     createInitialState,
     dismissBirthReveal,
     dismissEvent,
@@ -418,6 +420,24 @@ describe("foundCompany first success + refund", () => {
 });
 
 describe("company shares buy / sell", () => {
+    it("sets founding share price so market cap equals investment (no instant flip)", () => {
+        let state = {...playingState(600), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
+        const cashBefore = state.cash;
+        state = foundCompany(state, "bubble_tea");
+        const def = COMPANY_MAP.bubble_tea;
+        const price = getCompanySharePrice(state, "bubble_tea");
+        expect(state.companies[0]?.costBasis).toBe(def.cost);
+        expect(price * COMPANY_TOTAL_SHARES).toBe(def.cost);
+        expect(companyValue(state)).toBe(def.cost);
+        // Selling 100% immediately only recovers the founding investment.
+        const afterFoundCash = state.cash;
+        expect(afterFoundCash).toBe(cashBefore - def.cost);
+        state = sellCompanyShares(state, "bubble_tea", COMPANY_TOTAL_SHARES);
+        expect(state.companies).toHaveLength(0);
+        expect(state.cash).toBe(afterFoundCash + def.cost);
+        expect(state.cash).toBe(cashBefore);
+    });
+
     it("sells part of stake and scales remaining ownership", () => {
         let state = {...playingState(601), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
         state = foundCompany(state, "bubble_tea");

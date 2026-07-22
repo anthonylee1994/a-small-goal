@@ -687,6 +687,7 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
         return next;
     }
 
+    const foundingSharePrice = Math.max(1, Math.round(def.cost / COMPANY_TOTAL_SHARES));
     const founded: OwnedCompany = {
         typeId: companyId,
         foundedAge: next.age,
@@ -697,10 +698,18 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
         ...next,
         companies: [...next.companies, founded],
         reputation: clamp(next.reputation + 5, 0, 100),
+        companySharePrices: {
+            ...next.companySharePrices,
+            [companyId]: foundingSharePrice,
+        },
     };
     const sharePrice = getCompanySharePrice(next, companyId);
     const bonus = guaranteed ? "（第一次創業保底成功！）" : "";
-    next = pushLog(next, `成功創立${def.name}！持有 ${COMPANY_TOTAL_SHARES} 股（100%），現價約 ${formatMoney(sharePrice)}/股。${bonus}`, "good");
+    next = pushLog(
+        next,
+        `成功創立${def.name}！持有 ${COMPANY_TOTAL_SHARES} 股（100%），開業市值 ${formatMoney(sharePrice * COMPANY_TOTAL_SHARES)}（= 投資額），現價 ${formatMoney(sharePrice)}/股。${bonus}`,
+        "good"
+    );
     next = unlockMilestone(next, "first_company", "【老闆上身】成功開舖，開始食公司紅利。");
     return checkAssetMilestones(next);
 }
