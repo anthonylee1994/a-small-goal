@@ -1,5 +1,6 @@
 import {useEffect, type ReactNode} from "react";
 import {createPortal} from "react-dom";
+import {registerModalOpen} from "@/ui/modalPresence";
 import {lockBodyScroll, unlockBodyScroll} from "@/ui/scrollLock";
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
  * Locks background scroll while open (nested modals supported).
  */
 export const Modal = ({children, onClose, labelledBy, closeLabel = "關閉", className = ""}: Props) => {
+    useEffect(() => registerModalOpen(), []);
+
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") onClose();

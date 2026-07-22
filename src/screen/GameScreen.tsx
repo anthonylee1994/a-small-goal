@@ -64,6 +64,7 @@ export const GameScreen = ({
     const showClosureNotice = showingSummary && yearClosures.length > 0 && !closuresAcknowledged;
     const showTurnSummary = showingSummary && (!yearClosures.length || closuresAcknowledged);
     const showEventModal = Boolean(event && !showingSummary && (state.phase === "event" || eventPreviewOpen));
+    const gameModalOpen = confirmEndTurn || showClosureNotice || showTurnSummary || showEventModal;
     const endTurnRisky = state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD;
 
     useEffect(() => {
@@ -95,7 +96,7 @@ export const GameScreen = ({
 
     return (
         <main className="mx-auto flex w-full max-w-md flex-col overflow-x-hidden">
-            <ActionToast latest={state.log[0]} />
+            <ActionToast latest={state.log[0]} suppressed={gameModalOpen} />
 
             <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-44 sm:px-4 sm:pt-4">
                 <GameHeader state={state} onSuicide={onSuicide} />
