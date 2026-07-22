@@ -26,7 +26,7 @@ export const Button = ({children, onClick, type = "button", variant = "primary",
     const classes = `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`;
 
     return (
-        <button type={type} onClick={onClick} disabled={disabled} className={classes}>
+        <button type={type} onClick={onClick} disabled={disabled} className={classes} data-sfx={variant === "primary" ? "primary" : "ui"}>
             {children}
         </button>
     );

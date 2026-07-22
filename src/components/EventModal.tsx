@@ -1,4 +1,6 @@
+import React from "react";
 import type {EventDef, GoodId} from "@/types/game";
+import {playEventModal} from "@/audio/sfx";
 import {GOOD_MAP} from "@/data/goods";
 import {formatMoney} from "@/game/format";
 import {Button} from "@/components/Button";
@@ -14,6 +16,10 @@ interface Props {
 export const EventModal = ({event, onDismiss, onJumpToMarket}: Props) => {
     const Icon = EVENT_ICONS[event.id];
     const priceGoods = event.effects.filter((e): e is Extract<EventDef["effects"][number], {type: "price_mult"}> => e.type === "price_mult");
+
+    React.useEffect(() => {
+        playEventModal();
+    }, [event.id]);
 
     const handleJump = (goodId: GoodId) => {
         onJumpToMarket?.(goodId);

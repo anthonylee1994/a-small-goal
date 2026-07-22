@@ -1,8 +1,10 @@
+import React from "react";
 import type {GameState} from "../types/game";
 import {BIRTH_FAMILY_MAP} from "../data/birthFamilies";
 import {companyValue, getRank, inventoryValue} from "../game/engine";
 import {formatMoney} from "../game/format";
 import {Button} from "../components/Button";
+import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 import {Stat} from "../components/Stat";
 import {DeathIcon, RANK_ICONS, RetireIcon} from "@/ui/icons";
 
@@ -29,8 +31,10 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : "WIN?";
 
     return (
-        <main className="mx-auto flex w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
-            <div className="relative mx-auto mb-2 max-w-36">
+        <main className="relative mx-auto flex w-full max-w-md flex-col justify-center overflow-x-hidden px-4 py-8 text-center sm:px-5">
+            <SoundEffectToggle className="absolute top-3 right-3 z-10 sm:top-4 sm:right-4" />
+
+            <div className="screen-enter-hero relative mx-auto mb-2 max-w-36">
                 <div
                     className={`mx-auto flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-(--border) shadow-[5px_5px_0_var(--border)] ${
                         isDead ? "bg-[#ffe4e6]" : "bg-(--accent)"
@@ -40,14 +44,15 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
                     <StatusIcon className="size-12" strokeWidth={2.25} />
                 </div>
                 <span
-                    className="absolute -top-2 right-0 rotate-12 rounded-lg border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black shadow-[2px_2px_0_var(--border)]"
+                    className="screen-enter-badge screen-enter-delay-1 absolute -top-2 right-0 rounded-lg border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black shadow-[2px_2px_0_var(--border)]"
+                    style={{"--badge-tilt": "12deg"} as React.CSSProperties}
                     aria-hidden="true"
                 >
                     {badge}
                 </span>
             </div>
 
-            <div className="my-4 space-y-2">
+            <div className="screen-enter screen-enter-delay-2 my-4 space-y-2">
                 <h1 className="text-3xl font-black" style={{fontFamily: "var(--font-display)"}}>
                     {title}
                 </h1>
@@ -58,7 +63,7 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
                 </p>
             </div>
 
-            <section className="mb-5 rounded-2xl border-4 border-(--border) bg-white p-4 text-left shadow-[4px_4px_0_var(--border)]">
+            <section className="screen-enter screen-enter-delay-3 mb-5 rounded-2xl border-4 border-(--border) bg-white p-4 text-left shadow-[4px_4px_0_var(--border)]">
                 <div className="mb-3 flex items-center gap-2">
                     <RankIcon className="size-6 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                     <h2 className="text-lg font-black" style={{fontFamily: "var(--font-display)"}}>
@@ -76,7 +81,9 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
                 <p className="mt-4 text-center text-xl font-black">總資產 {formatMoney(assets)}</p>
             </section>
 
-            <Button onClick={onBackToTitle}>結束遊戲</Button>
+            <div className="screen-enter screen-enter-delay-4">
+                <Button onClick={onBackToTitle}>結束遊戲</Button>
+            </div>
         </main>
     );
 };

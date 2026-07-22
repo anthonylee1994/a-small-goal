@@ -45,7 +45,7 @@ export const LogPanel = ({entries, limit = 8}: Props) => {
             {visible.length === 0 ? (
                 <p className="px-4 py-6 text-center text-sm text-(--muted)">暫時未有紀錄。開始玩啦！</p>
             ) : (
-                <ul className="max-h-64 divide-y-2 divide-(--border) overflow-y-auto">
+                <ul className="divide-y-2 divide-(--border)">
                     {visible.map((entry, index) => {
                         const tone = TONE_STYLES[entry.tone];
                         return (

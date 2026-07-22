@@ -165,12 +165,108 @@ body.modal-scroll-locked [data-modal-panel] {
     animation: roulette-pop 480ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
+/* Title / Settlement screen entrance */
+@keyframes screen-fade-up {
+    0% {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes screen-hero-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.28) rotate(-8deg);
+    }
+    45% {
+        opacity: 1;
+        transform: scale(1.14) rotate(3deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes screen-badge-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.2) rotate(-12deg);
+    }
+    55% {
+        opacity: 1;
+        transform: scale(1.15) rotate(8deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(var(--badge-tilt, 6deg));
+    }
+}
+
+.screen-enter {
+    animation: screen-fade-up 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.screen-enter-hero {
+    animation: screen-hero-pop 620ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-origin: center center;
+}
+
+.screen-enter-badge {
+    animation: screen-badge-pop 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-origin: center center;
+}
+
+.screen-enter-delay-1 {
+    animation-delay: 90ms;
+}
+
+.screen-enter-delay-2 {
+    animation-delay: 170ms;
+}
+
+.screen-enter-delay-3 {
+    animation-delay: 250ms;
+}
+
+.screen-enter-delay-4 {
+    animation-delay: 330ms;
+}
+
+.screen-enter-delay-5 {
+    animation-delay: 410ms;
+}
+
+@keyframes screen-dock-up {
+    0% {
+        opacity: 0;
+        transform: translateY(110%);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.screen-enter-dock {
+    animation: screen-dock-up 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 200ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .modal-dimmer,
     .modal-panel,
     .action-toast,
     .action-toast-out,
-    .roulette-landed {
+    .roulette-landed,
+    .screen-enter,
+    .screen-enter-hero,
+    .screen-enter-badge,
+    .screen-enter-dock {
         animation: none;
     }
 }

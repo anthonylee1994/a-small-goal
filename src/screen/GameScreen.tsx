@@ -102,15 +102,17 @@ export const GameScreen = ({
             <ActionToast latest={state.log[0]} suppressed={gameModalOpen} />
 
             <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-44 sm:px-4 sm:pt-4">
-                <GameHeader state={state} onSuicide={onSuicide} />
+                <div className="screen-enter">
+                    <GameHeader state={state} onSuicide={onSuicide} />
+                </div>
 
                 {state.easyMode ? (
-                    <div className="rounded-xl border-2 border-(--border) bg-(--mint) px-3 py-1.5 text-center text-[11px] font-black" role="status">
+                    <div className="screen-enter screen-enter-delay-1 rounded-xl border-2 border-(--border) bg-(--mint) px-3 py-1.5 text-center text-[11px] font-black" role="status">
                         簡易模式 · 健康／扣款較溫和
                     </div>
                 ) : null}
 
-                <section className="grid grid-cols-2 gap-2 text-sm">
+                <section className="screen-enter screen-enter-delay-1 grid grid-cols-2 gap-2 text-sm">
                     <Stat label="年齡" value={`${state.age} 歲`} />
                     <Stat label="現金" value={formatMoney(state.cash)} tone={cashTone} />
                     <Stat
@@ -126,16 +128,21 @@ export const GameScreen = ({
                 </section>
 
                 {state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD ? (
-                    <div className="rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-2 text-sm font-black text-(--danger) shadow-[3px_3px_0_var(--border)]" role="status">
+                    <div
+                        className="screen-enter screen-enter-delay-2 rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-2 text-sm font-black text-(--danger) shadow-[3px_3px_0_var(--border)]"
+                        role="status"
+                    >
                         {state.cash < 0 ? "現金見紅！年結清盤後仍負債就破產。" : null}
                         {state.cash < 0 && state.health < ILLNESS_HEALTH_THRESHOLD ? " " : null}
                         {state.health < ILLNESS_HEALTH_THRESHOLD ? "健康危險，小心猝死。" : null}
                     </div>
                 ) : null}
 
-                <EventPanel state={state} onOpen={() => setEventPreviewOpen(true)} />
+                <div className="screen-enter screen-enter-delay-2">
+                    <EventPanel state={state} onOpen={() => setEventPreviewOpen(true)} />
+                </div>
 
-                <div role="tabpanel">
+                <div className="screen-enter screen-enter-delay-3" role="tabpanel">
                     {activeTab === "market" ? (
                         <MarketPanel state={state} locked={locked} highlightGoodId={highlightGoodId} onBuy={onBuy} onSell={onSell} onUpgradeWarehouse={onUpgradeWarehouse} />
                     ) : null}
@@ -145,7 +152,7 @@ export const GameScreen = ({
                 </div>
             </div>
 
-            <div className="fixed inset-x-0 bottom-0 z-30">
+            <div className="screen-enter-dock fixed inset-x-0 bottom-0 z-30">
                 <div className="mx-auto w-full max-w-md">
                     <BottomPanel activeTab={activeTab} onTabChange={setActiveTab} endTurnDisabled={locked} onEndTurn={() => setConfirmEndTurn(true)} />
                 </div>

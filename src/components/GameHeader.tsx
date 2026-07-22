@@ -1,6 +1,7 @@
 import {useState} from "react";
 import {Button} from "@/components/Button";
 import {ConfirmModal} from "@/components/ConfirmModal";
+import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 import {START_AGE, END_AGE} from "@/game/constants";
 import {BIRTH_FAMILY_MAP} from "@/data/birthFamilies";
 import type {GameState} from "@/types/game";
@@ -28,11 +29,14 @@ export const GameHeader = ({state, onSuicide}: Props) => {
         <>
             <header className="rounded-2xl border-4 border-(--border) bg-(--panel) p-4 shadow-[4px_4px_0_var(--border)]">
                 <div className="flex items-start justify-between gap-3">
-                    <div>
-                        <h1 className="text-xl font-black leading-none sm:text-2xl" style={{fontFamily: "var(--font-display)"}}>
-                            一億小目標
-                        </h1>
-                        <p className="mt-1 text-xs font-bold text-(--muted)">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-xl font-black leading-none sm:text-2xl" style={{fontFamily: "var(--font-display)"}}>
+                                一億小目標
+                            </h1>
+                            <SoundEffectToggle />
+                        </div>
+                        <p className="mt-2 text-xs font-bold text-(--muted)">
                             {family ? `出身：${family.name}` : "人生進行中"}
                             {" · "}
                             {PHASE_LABEL[state.phase]}

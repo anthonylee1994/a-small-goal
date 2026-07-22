@@ -1,8 +1,10 @@
 import {useEffect, useMemo, useState} from "react";
+import {scheduleRouletteSpinSfx} from "@/audio/sfx";
 import {BIRTH_FAMILIES} from "@/data/birthFamilies";
 import {formatMoney} from "@/game/format";
 import type {BirthFamilyId, GameState} from "@/types/game";
 import {Button} from "@/components/Button";
+import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 import {BIRTH_FAMILY_ICONS} from "@/ui/icons";
 
 interface Props {
@@ -93,11 +95,16 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
         let cancelled = false;
         let raf1 = 0;
         let raf2 = 0;
+        let cancelSfx: (() => void) | null = null;
 
         if (reduceMotion) {
             setRotation(landMod);
             setPhase("done");
-            return;
+            // Still give a soft land ding when motion is reduced.
+            cancelSfx = scheduleRouletteSpinSfx(0, 0);
+            return () => {
+                cancelSfx?.();
+            };
         }
 
         let delta = landMod;
@@ -113,6 +120,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
             raf2 = requestAnimationFrame(() => {
                 if (cancelled) return;
                 setRotation(delta);
+                cancelSfx = scheduleRouletteSpinSfx(SPIN_MS, 42);
             });
         });
 
@@ -120,11 +128,14 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
             cancelled = true;
             cancelAnimationFrame(raf1);
             cancelAnimationFrame(raf2);
+            cancelSfx?.();
         };
     }, [landMod, reduceMotion]);
 
     return (
-        <main className="mx-auto flex w-full max-w-md flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5">
+        <main className="relative mx-auto flex w-full max-w-md flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5">
+            <SoundEffectToggle className="absolute top-3 right-3 z-10 sm:top-4 sm:right-4" />
+
             <div>
                 <p className="text-xs font-black tracking-wide text-(--coral)">首抽限定 · 人生開局</p>
                 <h1 className="mt-1 text-3xl font-black leading-none" style={{fontFamily: "var(--font-display)"}}>
