@@ -31,7 +31,6 @@ import {
     COMPANY_TOTAL_SHARES,
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
-    DOCTOR_HEALTH_RESTORE,
     DOCTOR_WEALTH_RATE,
     END_AGE,
     START_AGE,
@@ -444,27 +443,38 @@ describe("company shares buy / sell", () => {
 });
 
 describe("seeDoctor", () => {
-    it("charges more when assets are higher but respects fee cap", () => {
-        const poor = {...playingState(400), cash: 50_000, inventory: {...playingState(400).inventory}};
-        const rich = {...playingState(401), cash: 5_000_000};
-        expect(getDoctorFee(rich)).toBeGreaterThan(getDoctorFee(poor));
-        expect(getDoctorFee(poor)).toBeGreaterThanOrEqual(DOCTOR_BASE_FEE);
-        const uncapped = Math.round(DOCTOR_BASE_FEE + totalAssets(rich) * DOCTOR_WEALTH_RATE);
-        expect(getDoctorFee(rich)).toBe(Math.min(DOCTOR_FEE_CAP, Math.max(DOCTOR_BASE_FEE, uncapped)));
-        expect(getDoctorFee(rich)).toBeLessThanOrEqual(DOCTOR_FEE_CAP);
+    it("scales fee with inflation and assets, respects inflated cap", () => {
+        const emptyInv = playingState(400).inventory;
+        const bare = {
+            companies: [] as GameState["companies"],
+            inventory: Object.fromEntries(Object.keys(emptyInv).map(k => [k, 0])) as GameState["inventory"],
+            inventoryCost: Object.fromEntries(Object.keys(emptyInv).map(k => [k, 0])) as GameState["inventoryCost"],
+        };
+        const youngPoor = {...playingState(400), ...bare, age: START_AGE, cash: 50_000};
+        const olderPoor = {...playingState(401), ...bare, age: START_AGE + 20, cash: 50_000};
+        const youngRich = {...playingState(402), ...bare, age: START_AGE, cash: 10_000_000};
+
+        expect(totalAssets(youngPoor)).toBe(50_000);
+        expect(getDoctorFee(youngPoor)).toBe(Math.round(DOCTOR_BASE_FEE + 50_000 * DOCTOR_WEALTH_RATE));
+        expect(getDoctorFee(olderPoor)).toBeGreaterThan(getDoctorFee(youngPoor));
+        expect(getDoctorFee(olderPoor)).toBe(Math.round(DOCTOR_BASE_FEE * (1 + 20 * 0.02) + 50_000 * DOCTOR_WEALTH_RATE));
+        expect(getDoctorFee(youngRich)).toBeGreaterThan(getDoctorFee(youngPoor));
+
+        const uncapped = Math.round(DOCTOR_BASE_FEE + totalAssets(youngRich) * DOCTOR_WEALTH_RATE);
+        expect(getDoctorFee(youngRich)).toBe(Math.min(DOCTOR_FEE_CAP, Math.max(DOCTOR_BASE_FEE, uncapped)));
+        expect(getDoctorFee(youngRich)).toBeLessThanOrEqual(DOCTOR_FEE_CAP);
     });
 
-    it("restores health and deducts fee", () => {
-        let state = {...playingState(402), health: 40, cash: 1_000_000};
+    it("fully restores health and deducts fee", () => {
+        let state = {...playingState(403), health: 40, cash: 1_000_000};
         const fee = getDoctorFee(state);
-        const before = state.health;
         state = seeDoctor(state);
         expect(state.cash).toBe(1_000_000 - fee);
-        expect(state.health).toBe(Math.min(100, before + DOCTOR_HEALTH_RESTORE));
+        expect(state.health).toBe(100);
     });
 
     it("does nothing when already full health", () => {
-        const state = {...playingState(403), health: 100, cash: 1_000_000};
+        const state = {...playingState(404), health: 100, cash: 1_000_000};
         const next = seeDoctor(state);
         expect(next).toBe(state);
         expect(next.cash).toBe(state.cash);
@@ -472,7 +482,7 @@ describe("seeDoctor", () => {
     });
 
     it("does not charge or log when cash is insufficient", () => {
-        const state = {...playingState(404), health: 40, cash: 100};
+        const state = {...playingState(405), health: 40, cash: 100};
         const next = seeDoctor(state);
         expect(next).toBe(state);
         expect(next.cash).toBe(100);

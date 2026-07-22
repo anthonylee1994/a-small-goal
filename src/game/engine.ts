@@ -17,7 +17,6 @@ import {
     COMPANY_TOTAL_SHARES,
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
-    DOCTOR_HEALTH_RESTORE,
     DOCTOR_WEALTH_RATE,
     END_AGE,
     FREE_CHECKUP_AGE_STEP,
@@ -474,11 +473,14 @@ export function dismissEvent(state: GameState): GameState {
     return {...state, phase: "playing", eventDismissed: true};
 }
 
-/** 睇醫生收費：基價 + 總資產抽成（有 cap）。 */
+/** 睇醫生收費：基價×通脹 + 資產抽成，上限跟通脹。 */
 export function getDoctorFee(state: GameState): number {
+    const infl = inflationFactor(state.age);
+    const base = DOCTOR_BASE_FEE * infl;
     const assets = Math.max(0, totalAssets(state));
-    const raw = Math.round(DOCTOR_BASE_FEE + assets * DOCTOR_WEALTH_RATE);
-    return Math.min(DOCTOR_FEE_CAP, Math.max(DOCTOR_BASE_FEE, raw));
+    const raw = Math.round(base + assets * DOCTOR_WEALTH_RATE);
+    const cap = Math.round(DOCTOR_FEE_CAP * infl);
+    return Math.min(cap, Math.max(Math.round(base), raw));
 }
 
 export function seeDoctor(state: GameState): GameState {
@@ -492,9 +494,9 @@ export function seeDoctor(state: GameState): GameState {
     let next: GameState = {
         ...state,
         cash: state.cash - fee,
-        health: clamp(state.health + DOCTOR_HEALTH_RESTORE, 0, 100),
+        health: 100,
     };
-    return pushLog(next, `睇完醫生，花咗 ${formatMoney(fee)}，健康 ${before} → ${next.health}。`, "good");
+    return pushLog(next, `睇完醫生，花咗 ${formatMoney(fee)}，健康 ${before} → 100（一次過回滿）。`, "good");
 }
 
 export function buyGood(state: GameState, goodId: GoodId, quantity: number): GameState {

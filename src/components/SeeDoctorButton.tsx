@@ -1,5 +1,4 @@
 import {useState} from "react";
-import {DOCTOR_HEALTH_RESTORE} from "@/game/constants";
 import {formatMoney} from "@/game/format";
 import {getDoctorFee} from "@/game/engine";
 import type {GameState} from "@/types/game";
@@ -46,7 +45,7 @@ export const SeeDoctorButton = ({state, locked, onSeeDoctor}: Props) => {
             {confirmDoctor ? (
                 <ConfirmModal
                     title="睇醫生？"
-                    message={`診所睇中你荷包，今次收 ${formatMoney(doctorFee)}，恢復 ${DOCTOR_HEALTH_RESTORE} 點健康（上限 100）。`}
+                    message={`診所睇中你荷包，今次收 ${formatMoney(doctorFee)}。`}
                     confirmLabel="求診"
                     cancelLabel="下次先"
                     onCancel={() => setConfirmDoctor(false)}

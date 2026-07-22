@@ -6,6 +6,7 @@ import {COMPANIES} from "../data/companies";
 import {GOODS} from "../data/goods";
 import {PARTNERS} from "../data/partners";
 import type {GameState, GoodId} from "../types/game";
+import {ILLNESS_HEALTH_THRESHOLD} from "./constants";
 import {
     buyGood,
     createInitialState,
@@ -13,10 +14,12 @@ import {
     dismissEvent,
     endTurn,
     foundCompany,
+    getDoctorFee,
     getUsedWarehouse,
     getWarehouseUpgradeCost,
     inflationFactor,
     marry,
+    seeDoctor,
     sellGood,
     startGame,
     totalAssets,
@@ -134,8 +137,18 @@ const MID_GOODS: GoodId[] = ["phone", "sneakers"];
 const EXPENSIVE_GOODS: GoodId[] = ["bitcoin", "gold", "ev", "options"];
 const ALL_GOODS: GoodId[] = GOODS.map(g => g.id);
 
+/** Heal when near illness threshold if affordable; keep a cash reserve for trading. */
+function trySeeDoctor(state: GameState, reserve: number): GameState {
+    if (state.health >= ILLNESS_HEALTH_THRESHOLD + 10) return state;
+    const fee = getDoctorFee(state);
+    if (state.cash < fee + reserve) return state;
+    return seeDoctor(state);
+}
+
 function playTurn(state: GameState, strategy: StrategyId): GameState {
     let next = state;
+    // Pay for full heal before risking year-end illness / death (fee is a real cost now).
+    next = trySeeDoctor(next, strategy === "low_tier_scalp" ? 2_000 : 15_000);
 
     switch (strategy) {
         case "trade_only":

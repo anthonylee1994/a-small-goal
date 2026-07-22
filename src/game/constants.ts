@@ -35,11 +35,13 @@ export const ILLNESS_HEALTH_RESTORE = 15;
 export const FREE_CHECKUP_AGE_STEP = 5;
 export const FREE_CHECKUP_HEALTH = 10;
 
-/** 睇醫生：基價 + 總資產抽成，有 cap 避免中後期被抽乾。 */
-export const DOCTOR_BASE_FEE = 5_000;
-export const DOCTOR_WEALTH_RATE = 0.02;
-export const DOCTOR_FEE_CAP = 50_000;
-export const DOCTOR_HEALTH_RESTORE = 25;
+/**
+ * 睇醫生：一次過回滿健康。
+ * 收費 = 基價×通脹 + 總資產抽成，另有通脹後 cap（全滿血要夠貴先有 trade-off）。
+ */
+export const DOCTOR_BASE_FEE = 40_000;
+export const DOCTOR_WEALTH_RATE = 0.012;
+export const DOCTOR_FEE_CAP = 180_000;
 
 /** Negative cash events: never wipe a poor run in one hit. */
 export const CASH_LOSS_MAX_FRACTION = 0.5;
