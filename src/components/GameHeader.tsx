@@ -70,14 +70,14 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                 <div className="mt-3">
                     <Button variant="ghost" size="sm" className="w-full gap-1.5 text-(--danger)" onClick={() => setConfirmSuicide(true)}>
                         <DeathIcon className="size-4" strokeWidth={2.5} aria-hidden="true" />
-                        重生投胎
+                        重新投胎
                     </Button>
                 </div>
             </header>
 
             {confirmSuicide ? (
                 <ConfirmModal
-                    title="確定重生投胎？"
+                    title="確定重新投胎？"
                     message="呢一世就此結束，會先睇結算，之後先可以重新投胎。"
                     confirmLabel="立即自殺"
                     cancelLabel="再忍忍"
