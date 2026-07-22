@@ -204,6 +204,7 @@ export const MarketSectionIcon = ShoppingCart;
 export const CompanySectionIcon = Factory;
 export const FamilySectionIcon = HeartHandshake;
 export const HeartIcon = Heart;
+export const DonateIcon = HandCoins;
 export const ConfirmDangerIcon = TriangleAlert;
 export const ConfirmHelpIcon = CircleHelp;
 export const DeathIcon = Skull;

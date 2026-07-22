@@ -13,6 +13,7 @@ import {FamilyPanel} from "@/components/FamilyPanel";
 import {GameHeader} from "@/components/GameHeader";
 import {LogPanel} from "@/components/LogPanel";
 import {MarketPanel} from "@/components/MarketPanel";
+import {DonateButton} from "@/components/DonateButton";
 import {SeeDoctorButton} from "@/components/SeeDoctorButton";
 import {Stat} from "@/components/Stat";
 import {TurnSummaryModal} from "@/components/TurnSummaryModal";
@@ -29,6 +30,7 @@ interface Props {
     onSellCompanyShares: (companyId: CompanyTypeId, shares: number) => void;
     onMarry: (partnerId: PartnerId) => void;
     onSeeDoctor: () => void;
+    onDonate: () => void;
     onEndTurn: () => void;
     onSuicide: () => void;
 }
@@ -45,6 +47,7 @@ export const GameScreen = ({
     onSellCompanyShares,
     onMarry,
     onSeeDoctor,
+    onDonate,
     onEndTurn,
     onSuicide,
 }: Props) => {
@@ -117,7 +120,7 @@ export const GameScreen = ({
                         hint={state.health < ILLNESS_HEALTH_THRESHOLD ? "警戒：年結可能入院" : undefined}
                         action={<SeeDoctorButton state={state} locked={locked} onSeeDoctor={onSeeDoctor} />}
                     />
-                    <Stat label="名聲" value={String(state.reputation)} />
+                    <Stat label="名聲" value={String(state.reputation)} action={<DonateButton state={state} locked={locked} onDonate={onDonate} />} />
                     <Stat label="倉庫" value={`${usedWarehouse}/${state.warehouseCapacity}`} tone={warehouseTone} />
                     <Stat label="總資產" value={formatMoney(assets)} tone="good" />
                 </section>

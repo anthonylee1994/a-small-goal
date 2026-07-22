@@ -8,6 +8,7 @@ import {
     dismissBirthReveal,
     dismissEvent,
     dismissTurnSummary,
+    donate,
     endTurn,
     foundCompany,
     marry,
@@ -35,6 +36,7 @@ interface GameActions {
     sellCompanyShares: (companyId: CompanyTypeId, shares: number) => void;
     marry: (partnerId: PartnerId) => void;
     seeDoctor: () => void;
+    donate: () => void;
     endTurn: () => void;
 }
 
@@ -63,6 +65,7 @@ export const useGameStore = create<GameStore>()(
             sellCompanyShares: (companyId, shares) => set(s => ({game: sellCompanyShares(s.game, companyId, shares)})),
             marry: partnerId => set(s => ({game: marry(s.game, partnerId)})),
             seeDoctor: () => set(s => ({game: seeDoctor(s.game)})),
+            donate: () => set(s => ({game: donate(s.game)})),
             endTurn: () => set(s => ({game: endTurn(s.game)})),
         }),
         {

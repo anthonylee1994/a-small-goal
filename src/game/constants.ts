@@ -43,6 +43,15 @@ export const DOCTOR_BASE_FEE = 40_000;
 export const DOCTOR_WEALTH_RATE = 0.012;
 export const DOCTOR_FEE_CAP = 180_000;
 
+/**
+ * 捐款買名聲：每次固定 +GAIN（受 100 cap）。
+ * 收費 = 基價×通脹×(1 + 現有名聲×SCALE)，越高級公司要嘅名聲越貴，避免無限白嫖。
+ * 粗算 0→50 名聲約 ~$0.5M（20 歲無通脹），夠中期公司門檻但唔抵過結婚／事件。
+ */
+export const DONATE_BASE_FEE = 20_000;
+export const DONATE_REP_COST_SCALE = 0.06;
+export const DONATE_REP_GAIN = 5;
+
 /** Negative cash events: never wipe a poor run in one hit. */
 export const CASH_LOSS_MAX_FRACTION = 0.5;
 export const CASH_LOSS_MIN_RESERVE = 1_000;

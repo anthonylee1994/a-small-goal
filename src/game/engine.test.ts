@@ -12,7 +12,10 @@ import {
     fairUnitPrice,
     foundCompany,
     getCompanySharePrice,
+    donate,
     getDoctorFee,
+    getDonateFee,
+    getDonateReputationGain,
     getRank,
     holdingCostTotal,
     holdingUnitCost,
@@ -32,6 +35,9 @@ import {
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
     DOCTOR_WEALTH_RATE,
+    DONATE_BASE_FEE,
+    DONATE_REP_COST_SCALE,
+    DONATE_REP_GAIN,
     END_AGE,
     START_AGE,
     START_HEALTH,
@@ -487,5 +493,43 @@ describe("seeDoctor", () => {
         expect(next).toBe(state);
         expect(next.cash).toBe(100);
         expect(next.health).toBe(40);
+    });
+});
+
+describe("donate", () => {
+    it("scales fee with reputation and inflation", () => {
+        const low = {...playingState(500), age: START_AGE, reputation: 0, cash: 1_000_000};
+        const mid = {...playingState(501), age: START_AGE, reputation: 25, cash: 1_000_000};
+        const older = {...playingState(502), age: START_AGE + 20, reputation: 0, cash: 1_000_000};
+
+        expect(getDonateFee(low)).toBe(DONATE_BASE_FEE);
+        expect(getDonateFee(mid)).toBe(Math.round(DONATE_BASE_FEE * (1 + 25 * DONATE_REP_COST_SCALE)));
+        expect(getDonateFee(mid)).toBeGreaterThan(getDonateFee(low));
+        expect(getDonateFee(older)).toBe(Math.round(DONATE_BASE_FEE * (1 + 20 * 0.02)));
+        expect(getDonateReputationGain(low)).toBe(DONATE_REP_GAIN);
+    });
+
+    it("spends cash and raises reputation", () => {
+        let state = {...playingState(503), reputation: 10, cash: 1_000_000};
+        const fee = getDonateFee(state);
+        const before = state.reputation;
+        state = donate(state);
+        expect(state.cash).toBe(1_000_000 - fee);
+        expect(state.reputation).toBe(before + DONATE_REP_GAIN);
+    });
+
+    it("caps reputation at 100 and refuses when full", () => {
+        const almost = {...playingState(504), reputation: 98, cash: 1_000_000};
+        expect(getDonateReputationGain(almost)).toBe(2);
+        const after = donate(almost);
+        expect(after.reputation).toBe(100);
+
+        const full = {...playingState(505), reputation: 100, cash: 1_000_000};
+        expect(donate(full)).toBe(full);
+    });
+
+    it("does nothing when cash is insufficient", () => {
+        const state = {...playingState(506), reputation: 0, cash: 100};
+        expect(donate(state)).toBe(state);
     });
 });

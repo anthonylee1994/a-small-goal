@@ -18,6 +18,9 @@ import {
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
     DOCTOR_WEALTH_RATE,
+    DONATE_BASE_FEE,
+    DONATE_REP_COST_SCALE,
+    DONATE_REP_GAIN,
     END_AGE,
     FREE_CHECKUP_AGE_STEP,
     FREE_CHECKUP_HEALTH,
@@ -497,6 +500,36 @@ export function seeDoctor(state: GameState): GameState {
         health: 100,
     };
     return pushLog(next, `睇完醫生，花咗 ${formatMoney(fee)}，健康 ${before} → 100。`, "good");
+}
+
+/** 今次捐款實際可得名聲（已計 100 cap）。 */
+export function getDonateReputationGain(state: GameState): number {
+    if (state.reputation >= 100) return 0;
+    return Math.min(DONATE_REP_GAIN, 100 - state.reputation);
+}
+
+/** 捐款收費：基價×通脹×(1 + 名聲×SCALE)。 */
+export function getDonateFee(state: GameState): number {
+    const infl = inflationFactor(state.age);
+    const repScale = 1 + Math.max(0, state.reputation) * DONATE_REP_COST_SCALE;
+    return Math.max(1, Math.round(DONATE_BASE_FEE * infl * repScale));
+}
+
+export function donate(state: GameState): GameState {
+    if (state.phase !== "playing") return state;
+    const gain = getDonateReputationGain(state);
+    if (gain <= 0) return state;
+
+    const fee = getDonateFee(state);
+    if (state.cash < fee) return state;
+
+    const before = state.reputation;
+    let next: GameState = {
+        ...state,
+        cash: state.cash - fee,
+        reputation: clamp(state.reputation + gain, 0, 100),
+    };
+    return pushLog(next, `捐咗 ${formatMoney(fee)} 做公益，名聲 ${before} → ${next.reputation}（+${gain}）。`, "good");
 }
 
 export function buyGood(state: GameState, goodId: GoodId, quantity: number): GameState {

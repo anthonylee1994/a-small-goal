@@ -22,6 +22,7 @@ export const App = () => {
     const sellCompanyShares = useGameStore(s => s.sellCompanyShares);
     const marry = useGameStore(s => s.marry);
     const seeDoctor = useGameStore(s => s.seeDoctor);
+    const donate = useGameStore(s => s.donate);
     const endTurn = useGameStore(s => s.endTurn);
 
     useEffect(() => {
@@ -57,6 +58,7 @@ export const App = () => {
             onSellCompanyShares={sellCompanyShares}
             onMarry={marry}
             onSeeDoctor={() => seeDoctor()}
+            onDonate={() => donate()}
             onEndTurn={() => endTurn()}
             onSuicide={() => suicide()}
         />
