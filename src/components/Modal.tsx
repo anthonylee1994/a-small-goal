@@ -39,7 +39,7 @@ export const Modal = ({children, onClose, labelledBy, closeLabel = "關閉", cla
 
             <section
                 data-modal-panel
-                className={`modal-panel relative z-10 max-h-[min(90dvh,40rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl border-4 border-(--border) bg-white p-5 text-left shadow-[6px_6px_0_var(--border)] ${className}`}
+                className={`modal-panel relative z-10 w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl border-4 border-(--border) bg-white p-5 text-left shadow-[6px_6px_0_var(--border)] ${className}`}
                 onClick={event => event.stopPropagation()}
             >
                 {children}
