@@ -18,7 +18,7 @@ export const Button = ({children, onClick, type = "button", variant = "primary",
         sm: "min-h-10 rounded-xl px-3 py-2 text-sm md:text-base",
     };
     const variantClasses = {
-        primary: "bg-(--coral) text-white",
+        primary: "bg-(--coral) text-white md:text-2xl!",
         secondary: "bg-(--accent) text-(--ink)",
         danger: "bg-(--danger) text-white",
         ghost: "bg-white text-(--ink)",
