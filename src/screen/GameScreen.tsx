@@ -104,21 +104,21 @@ export const GameScreen = ({
     };
 
     return (
-        <main className="mx-auto flex w-full max-w-md flex-col overflow-x-hidden">
+        <main className="app-shell mx-auto flex w-full flex-col overflow-x-hidden">
             <ActionToast latest={state.log[0]} suppressed={gameModalOpen} />
 
-            <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-44 sm:px-4 sm:pt-4">
+            <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-44 sm:px-4 sm:pt-4 md:gap-4 md:px-5 md:pt-5 lg:px-6">
                 <div className="screen-enter">
                     <GameHeader state={state} onSuicide={onSuicide} />
                 </div>
 
                 {state.easyMode ? (
-                    <div className="screen-enter screen-enter-delay-1 rounded-xl border-2 border-(--border) bg-(--mint) px-3 py-1.5 text-center text-[11px] font-black" role="status">
+                    <div className="screen-enter screen-enter-delay-1 rounded-xl border-2 border-(--border) bg-(--mint) px-3 py-1.5 text-center text-[11px] md:text-base font-black" role="status">
                         簡易模式 · 健康／扣款較溫和
                     </div>
                 ) : null}
 
-                <section className="screen-enter screen-enter-delay-1 grid grid-cols-2 gap-2 text-sm">
+                <section className="screen-enter screen-enter-delay-1 grid grid-cols-2 gap-2 text-sm md:text-base sm:grid-cols-3 lg:grid-cols-6">
                     <Stat label="年齡" value={`${state.age} 歲`} />
                     <Stat label="現金" value={formatMoney(state.cash)} tone={cashTone} />
                     <Stat
@@ -135,7 +135,7 @@ export const GameScreen = ({
 
                 {state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD ? (
                     <div
-                        className="screen-enter screen-enter-delay-2 rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-2 text-sm font-black text-(--danger) shadow-[3px_3px_0_var(--border)]"
+                        className="screen-enter screen-enter-delay-2 rounded-2xl border-4 border-(--danger) bg-[#ffe4e6] px-3 py-2 text-sm md:text-base font-black text-(--danger) shadow-[3px_3px_0_var(--border)]"
                         role="status"
                     >
                         {state.cash < 0 ? "現金見紅！年結清盤後仍負債就破產。" : null}
@@ -159,7 +159,7 @@ export const GameScreen = ({
             </div>
 
             <div className="screen-enter-dock fixed inset-x-0 bottom-0 z-30">
-                <div className="mx-auto w-full max-w-md">
+                <div className="app-shell mx-auto w-full">
                     <BottomPanel activeTab={activeTab} onTabChange={setActiveTab} endTurnDisabled={locked} onEndTurn={() => setConfirmEndTurn(true)} />
                 </div>
             </div>

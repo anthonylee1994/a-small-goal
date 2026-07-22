@@ -139,104 +139,115 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
     }, [landMod, reduceMotion, result.id]);
 
     return (
-        <main className="relative mx-auto flex w-full max-w-md flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5">
-            <SoundEffectToggle className="absolute top-3 right-3 z-10 sm:top-4 sm:right-4" />
+        <main className="app-shell relative mx-auto flex w-full flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5 md:h-dvh md:max-h-dvh md:justify-between md:gap-0 md:overflow-hidden md:px-8 md:py-10 lg:px-10 lg:py-12">
+            <SoundEffectToggle className="absolute top-3 right-3 z-10 sm:top-4 sm:right-4 md:top-5 md:right-5" />
 
-            <div>
-                <p className="text-xs font-black tracking-wide text-(--coral)">首抽限定 · 人生開局</p>
-                <h1 className="mt-1 text-3xl font-black leading-none" style={{fontFamily: "var(--font-display)"}}>
+            {/* Title block — same rhythm as TitleScreen */}
+            <div className="mx-auto w-full max-w-xl shrink-0 space-y-2 md:space-y-3">
+                <p className="text-xs font-black tracking-wide text-(--coral) md:text-base">首抽限定 · 人生開局</p>
+                <h1 className="text-3xl font-black leading-none tracking-tight md:text-5xl lg:text-6xl" style={{fontFamily: "var(--font-display)"}}>
                     投胎轉盤
                 </h1>
-                <p className="mt-2 text-sm font-bold text-(--muted)">{phase === "done" ? "命運已定，睇清楚你嘅出生。" : "正在為你投胎……"}</p>
+                <p className="text-sm font-bold text-(--muted) md:text-lg">{phase === "done" ? "命運已定，睇清楚你嘅出生。" : "正在為你投胎……"}</p>
             </div>
 
-            <div className="relative mx-auto w-[min(100%,18.5rem)]">
-                <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2" aria-hidden="true">
-                    <div className="h-0 w-0 border-x-14 border-t-22 border-x-transparent border-t-(--coral) drop-shadow-[2px_3px_0_var(--border)]" />
-                </div>
-
-                <div
-                    className={`relative aspect-square rounded-full border-4 border-(--border) bg-white shadow-[6px_6px_0_var(--border)] ${phase === "done" ? "roulette-landed" : ""}`}
-                    aria-live="polite"
-                    aria-atomic="true"
-                >
-                    <svg
-                        viewBox={`0 0 ${VIEW} ${VIEW}`}
-                        className="h-full w-full"
-                        style={{
-                            transform: `rotate(${rotation}deg)`,
-                            transition: spinning ? `transform ${SPIN_MS}ms cubic-bezier(0.12, 0.75, 0.08, 1)` : "none",
-                        }}
-                        role="img"
-                        aria-label="投胎轉盤"
-                    >
-                        {segments.map(({family, start, end, mid, span}) => {
-                            const label = polar(mid, span >= 90 ? 54 : 58);
-                            const fontSize = span >= 90 ? 11 : span >= 60 ? 10 : 9;
-                            return (
-                                <g key={family.id}>
-                                    <path d={wedgePath(start, end)} fill={WHEEL_COLORS[family.id]} stroke="#1A1A1A" strokeWidth="2.5" />
-                                    <text
-                                        x={label.x}
-                                        y={label.y}
-                                        textAnchor="middle"
-                                        dominantBaseline="middle"
-                                        fill="#1A1A1A"
-                                        fontSize={fontSize}
-                                        fontWeight="900"
-                                        style={{fontFamily: "var(--font-display)"}}
-                                        transform={`rotate(${mid}, ${label.x}, ${label.y})`}
-                                    >
-                                        {family.name}
-                                    </text>
-                                </g>
-                            );
-                        })}
-                        <circle cx={CENTER} cy={CENTER} r="22" fill="#FFF8E7" stroke="#1A1A1A" strokeWidth="3" />
-                        <text x={CENTER} y={CENTER + 1} textAnchor="middle" dominantBaseline="middle" fontSize="18">
-                            💰
-                        </text>
-                    </svg>
-                </div>
-            </div>
-
-            <ul className="grid grid-cols-3 gap-2" aria-label="可投胎家庭">
-                {families.map(family => {
-                    const Icon = BIRTH_FAMILY_ICONS[family.id];
-                    const active = phase === "done" && family.id === result.id;
-                    return (
-                        <li
-                            key={family.id}
-                            className={`rounded-2xl border-2 border-(--border) px-1.5 py-2 ${active ? "shadow-[3px_3px_0_var(--border)]" : "opacity-80"}`}
-                            style={{background: WHEEL_COLORS[family.id]}}
-                        >
-                            <Icon className="mx-auto size-5" strokeWidth={2.25} aria-hidden="true" />
-                            <p className="mt-1 text-[14px] font-black leading-tight">{family.name}</p>
-                            <p className="text-[14px] font-bold tabular-nums text-(--ink)/70">{formatMoney(family.startingCash)}</p>
-                        </li>
-                    );
-                })}
-            </ul>
-
-            {phase !== "done" ? (
-                <Button disabled onClick={() => undefined}>
-                    刷緊首抽
-                </Button>
-            ) : (
-                <div className="space-y-3">
-                    <div className="rounded-2xl border-4 border-(--border) bg-white px-4 py-3 shadow-[4px_4px_0_var(--border)]">
-                        <div className="mb-2 flex items-center justify-center gap-2">
-                            <ResultIcon className="size-6" strokeWidth={2.5} aria-hidden="true" />
-                            <p className="text-lg font-black" style={{fontFamily: "var(--font-display)"}}>
-                                首抽結果：{result.name}
-                            </p>
-                        </div>
-                        <p className="text-sm font-bold text-(--muted)">{FAMILY_BLURB[result.id]}</p>
-                        <p className="mt-2 text-xs font-bold text-(--muted)">起步資金 {formatMoney(result.startingCash)}</p>
+            {/* Wheel fills leftover viewport height on desktop (TitleScreen hero role). */}
+            <div className="flex min-h-0 w-full flex-1 items-center justify-center py-2 md:min-h-0 md:py-4">
+                <div className="relative w-[min(100%,18.5rem)] md:aspect-square md:h-full md:w-auto md:max-h-full md:max-w-full">
+                    <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 md:-top-2" aria-hidden="true">
+                        <div className="h-0 w-0 border-x-14 border-t-22 border-x-transparent border-t-(--coral) drop-shadow-[2px_3px_0_var(--border)] md:border-x-16 md:border-t-26" />
                     </div>
-                    <Button onClick={onConfirm}>開始人生</Button>
+
+                    <div
+                        className={`relative aspect-square rounded-full border-4 border-(--border) bg-white shadow-[6px_6px_0_var(--border)] md:h-full md:w-full md:shadow-[8px_8px_0_var(--border)] ${phase === "done" ? "roulette-landed" : ""}`}
+                        aria-live="polite"
+                        aria-atomic="true"
+                    >
+                        <svg
+                            viewBox={`0 0 ${VIEW} ${VIEW}`}
+                            className="h-full w-full"
+                            style={{
+                                transform: `rotate(${rotation}deg)`,
+                                transition: spinning ? `transform ${SPIN_MS}ms cubic-bezier(0.12, 0.75, 0.08, 1)` : "none",
+                            }}
+                            role="img"
+                            aria-label="投胎轉盤"
+                        >
+                            {segments.map(({family, start, end, mid, span}) => {
+                                const label = polar(mid, span >= 90 ? 54 : 58);
+                                const fontSize = span >= 90 ? 11 : span >= 60 ? 10 : 9;
+                                return (
+                                    <g key={family.id}>
+                                        <path d={wedgePath(start, end)} fill={WHEEL_COLORS[family.id]} stroke="#1A1A1A" strokeWidth="2.5" />
+                                        <text
+                                            x={label.x}
+                                            y={label.y}
+                                            textAnchor="middle"
+                                            dominantBaseline="middle"
+                                            fill="#1A1A1A"
+                                            fontSize={fontSize}
+                                            fontWeight="900"
+                                            style={{fontFamily: "var(--font-display)"}}
+                                            transform={`rotate(${mid}, ${label.x}, ${label.y})`}
+                                        >
+                                            {family.name}
+                                        </text>
+                                    </g>
+                                );
+                            })}
+                            <circle cx={CENTER} cy={CENTER} r="22" fill="#FFF8E7" stroke="#1A1A1A" strokeWidth="3" />
+                            <text x={CENTER} y={CENTER + 1} textAnchor="middle" dominantBaseline="middle" fontSize="18">
+                                💰
+                            </text>
+                        </svg>
+                    </div>
                 </div>
-            )}
+            </div>
+
+            {/* Bottom stack — full shell width like TitleScreen controls */}
+            <div className="mx-auto flex w-full max-w-xl shrink-0 flex-col gap-3 md:max-w-none md:gap-4">
+                <ul className="grid grid-cols-3 gap-2 md:gap-3" aria-label="可投胎家庭">
+                    {families.map(family => {
+                        const Icon = BIRTH_FAMILY_ICONS[family.id];
+                        const active = phase === "done" && family.id === result.id;
+                        return (
+                            <li
+                                key={family.id}
+                                className={`rounded-2xl border-2 border-(--border) px-1.5 py-2 md:rounded-3xl md:px-3 md:py-4 ${active ? "shadow-[3px_3px_0_var(--border)] md:shadow-[4px_4px_0_var(--border)]" : "opacity-80"}`}
+                                style={{background: WHEEL_COLORS[family.id]}}
+                            >
+                                <Icon className="mx-auto size-5 md:size-7" strokeWidth={2.25} aria-hidden="true" />
+                                <p className="mt-1 text-[14px] font-black leading-tight md:mt-2 md:text-lg">{family.name}</p>
+                                <p className="text-[14px] font-bold tabular-nums text-(--ink)/70 md:text-base">{formatMoney(family.startingCash)}</p>
+                            </li>
+                        );
+                    })}
+                </ul>
+
+                {phase !== "done" ? (
+                    <div className="mx-auto w-full max-w-md md:max-w-lg">
+                        <Button disabled onClick={() => undefined}>
+                            刷緊首抽
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-3 md:gap-4">
+                        <div className="rounded-2xl border-4 border-(--border) bg-white px-4 py-3 shadow-[4px_4px_0_var(--border)] md:rounded-3xl md:px-6 md:py-5 md:shadow-[6px_6px_0_var(--border)]">
+                            <div className="mb-2 flex items-center justify-center gap-2 md:mb-3 md:gap-3">
+                                <ResultIcon className="size-6 shrink-0 md:size-8" strokeWidth={2.5} aria-hidden="true" />
+                                <p className="text-lg font-black md:text-2xl" style={{fontFamily: "var(--font-display)"}}>
+                                    首抽結果：{result.name}
+                                </p>
+                            </div>
+                            <p className="text-sm font-bold text-(--muted) md:text-lg">{FAMILY_BLURB[result.id]}</p>
+                            <p className="mt-2 text-xs font-bold text-(--muted) md:mt-3 md:text-base">起步資金 {formatMoney(result.startingCash)}</p>
+                        </div>
+                        <div className="mx-auto w-full max-w-md md:max-w-lg">
+                            <Button onClick={onConfirm}>開始人生</Button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </main>
     );
 };

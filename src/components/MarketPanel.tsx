@@ -32,22 +32,22 @@ export const MarketPanel = ({state, locked, highlightGoodId, onBuy, onSell, onUp
             icon={MarketSectionIcon}
             accent="sky"
             action={
-                <span className="rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black text-(--ink)">
+                <span className="rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] md:text-base font-black text-(--ink)">
                     倉 {used}/{state.warehouseCapacity}
                 </span>
             }
         >
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-xs font-bold">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-xs font-bold md:text-base">
                 <div className="min-w-0">
                     <p>剩餘空間 {free} 格</p>
-                    <p className="text-[10px] font-black text-(--muted)">下次擴建 {formatMoney(upgradeCost)}</p>
+                    <p className="text-[10px] md:text-base font-black text-(--muted)">下次擴建 {formatMoney(upgradeCost)}</p>
                 </div>
                 <Button size="sm" variant="secondary" disabled={!canUpgrade} className="w-auto!" onClick={() => setConfirmUpgrade(true)}>
                     升級 +{WAREHOUSE_UPGRADE_SIZE}
                 </Button>
             </div>
 
-            <ul className="space-y-3">
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {GOODS.map(good => (
                     <GoodRow
                         key={good.id}
@@ -115,7 +115,7 @@ const QtyChip = ({label, disabled, active = false, onClick}: QtyChipProps) => (
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className={`min-h-9 w-full rounded-lg border-2 border-(--border) px-1 text-[11px] font-black tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
+        className={`min-h-9 w-full rounded-lg border-2 border-(--border) px-1 text-[11px] md:text-base font-black tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
             active ? "bg-(--accent) text-(--ink)" : "bg-white text-(--ink) active:enabled:bg-(--bg)"
         }`}
     >
@@ -157,11 +157,11 @@ const GoodRow = ({goodId, name, price, owned, unitCost, totalCost, unrealizedPnl
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                        <h4 className="truncate text-base font-black leading-tight" style={{fontFamily: "var(--font-display)"}}>
+                        <h4 className="truncate text-base md:text-lg font-black leading-tight" style={{fontFamily: "var(--font-display)"}}>
                             {name}
                         </h4>
                         <span
-                            className={`shrink-0 rounded-full border-2 px-2 py-0.5 text-[10px] font-black tabular-nums ${
+                            className={`shrink-0 rounded-full border-2 px-2 py-0.5 text-[10px] md:text-base font-black tabular-nums ${
                                 owned > 0 ? "border-(--border) bg-white text-(--ink)" : "border-dashed border-(--border) bg-transparent text-(--muted)"
                             }`}
                         >
@@ -179,20 +179,22 @@ const GoodRow = ({goodId, name, price, owned, unitCost, totalCost, unrealizedPnl
             {owned > 0 ? (
                 <div className="mt-3 grid grid-cols-2 gap-2">
                     <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-2.5 py-2">
-                        <p className="text-[10px] font-black tracking-wide text-(--muted)">成本</p>
+                        <p className="text-[10px] md:text-base font-black tracking-wide text-(--muted)">成本</p>
                         {hasCostBasis ? (
                             <div>
-                                <p className="mt-0.5 text-sm font-black leading-tight tabular-nums">{formatMoney(unitCost)}/件</p>
-                                <p className="text-[10px] font-bold tabular-nums text-(--muted)">共 {formatMoney(totalCost)}</p>
+                                <p className="mt-0.5 text-sm md:text-base font-black leading-tight tabular-nums">{formatMoney(unitCost)}/件</p>
+                                <p className="text-[10px] md:text-base font-bold tabular-nums text-(--muted)">共 {formatMoney(totalCost)}</p>
                             </div>
                         ) : (
-                            <p className="mt-0.5 text-sm font-black text-(--muted)">—</p>
+                            <p className="mt-0.5 text-sm md:text-base font-black text-(--muted)">—</p>
                         )}
                     </div>
                     <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-2.5 py-2">
-                        <p className="text-[10px] font-black tracking-wide text-(--muted)">浮盈虧</p>
-                        <p className={`mt-0.5 text-sm font-black leading-tight tabular-nums ${pnlTone}`}>{hasCostBasis ? `${unrealizedPnl >= 0 ? "+" : ""}${formatMoney(unrealizedPnl)}` : "—"}</p>
-                        <p className="text-[10px] font-bold tabular-nums text-(--muted)">市值 {formatMoney(price * owned)}</p>
+                        <p className="text-[10px] md:text-base font-black tracking-wide text-(--muted)">浮盈虧</p>
+                        <p className={`mt-0.5 text-sm md:text-base font-black leading-tight tabular-nums ${pnlTone}`}>
+                            {hasCostBasis ? `${unrealizedPnl >= 0 ? "+" : ""}${formatMoney(unrealizedPnl)}` : "—"}
+                        </p>
+                        <p className="text-[10px] md:text-base font-bold tabular-nums text-(--muted)">市值 {formatMoney(price * owned)}</p>
                     </div>
                 </div>
             ) : null}
@@ -211,7 +213,7 @@ const GoodRow = ({goodId, name, price, owned, unitCost, totalCost, unrealizedPnl
                         type="button"
                         disabled={locked}
                         onClick={() => setQty(owned)}
-                        className={`w-full min-h-9 rounded-lg border-2 border-(--border) text-[11px] font-black tabular-nums disabled:cursor-not-allowed disabled:opacity-35 ${
+                        className={`w-full min-h-9 rounded-lg border-2 border-(--border) text-[11px] md:text-base font-black tabular-nums disabled:cursor-not-allowed disabled:opacity-35 ${
                             qty === owned ? "bg-(--accent) text-(--ink)" : "bg-white text-(--ink) active:enabled:bg-(--bg)"
                         }`}
                     >
@@ -222,7 +224,7 @@ const GoodRow = ({goodId, name, price, owned, unitCost, totalCost, unrealizedPnl
                 <QuantityInput id={`qty-${goodId}`} label={`${name} 數量`} value={qty} onChange={setQty} min={0} max={999} disabled={locked} />
 
                 {!locked && qty > 0 ? (
-                    <p className="text-center text-[11px] font-bold tabular-nums text-(--muted)">
+                    <p className="text-center text-[11px] md:text-base font-bold tabular-nums text-(--muted)">
                         {canSell && owned >= qty ? `賣出約 ${formatMoney(price * qty)}` : `買入約 ${formatMoney(tradeCost)}`}
                         {needSpace > freeSpace ? " · 倉庫爆滿" : ""}
                         {cash < tradeCost && qty > owned ? " · 錢唔夠" : ""}

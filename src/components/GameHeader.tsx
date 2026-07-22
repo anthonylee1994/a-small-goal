@@ -36,7 +36,7 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                             </h1>
                             <SoundEffectToggle />
                         </div>
-                        <p className="mt-2 text-xs font-bold text-(--muted)">
+                        <p className="mt-2 text-xs font-bold text-(--muted) md:text-base">
                             {family ? `出生：${family.name}` : "人生進行中"}
                             {" · "}
                             {PHASE_LABEL[state.phase]}
@@ -48,7 +48,7 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                 </div>
 
                 <div className="mt-4">
-                    <div className="mb-1 flex items-center justify-between text-[11px] font-black">
+                    <div className="mb-1 flex items-center justify-between text-[11px] md:text-base font-black">
                         <span>
                             {state.age} 歲 / {END_AGE} 歲退休
                         </span>
@@ -68,8 +68,8 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                 </div>
 
                 <div className="mt-3">
-                    <Button variant="ghost" size="sm" className="w-full gap-1.5 text-(--danger)" onClick={() => setConfirmSuicide(true)}>
-                        <DeathIcon className="size-4" strokeWidth={2.5} aria-hidden="true" />
+                    <Button variant="ghost" size="sm" className="w-full gap-1.5 text-(--danger) md:min-h-12 md:py-3 md:text-lg" onClick={() => setConfirmSuicide(true)}>
+                        <DeathIcon className="size-4 md:size-5" strokeWidth={2.5} aria-hidden="true" />
                         重新投胎
                     </Button>
                 </div>

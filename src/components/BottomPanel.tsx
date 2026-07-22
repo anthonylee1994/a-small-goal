@@ -27,13 +27,13 @@ interface Props {
 
 export const BottomPanel = ({activeTab, onTabChange, endTurnDisabled, onEndTurn}: Props) => {
     return (
-        <nav className="border-t-4 border-(--border) bg-(--panel)/95 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
-            <div className="flex flex-col gap-3">
-                <Button variant="danger" disabled={endTurnDisabled} onClick={onEndTurn}>
+        <nav className="border-t-4 border-(--border) bg-(--panel)/95 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm md:px-4">
+            <div className="flex flex-col gap-3 md:flex-row-reverse md:items-stretch md:gap-3">
+                <Button variant="danger" disabled={endTurnDisabled} onClick={onEndTurn} className="md:w-auto! md:min-w-48 md:shrink-0 md:px-7 md:text-xl">
                     結束今年
                 </Button>
 
-                <div className="grid grid-cols-4 gap-1.5" role="tablist" aria-label="遊戲分頁">
+                <div className="grid flex-1 grid-cols-4 gap-1.5 md:gap-2" role="tablist" aria-label="遊戲分頁">
                     {TABS.map(tab => {
                         const Icon = tab.icon;
                         const active = activeTab === tab.id;
@@ -44,11 +44,11 @@ export const BottomPanel = ({activeTab, onTabChange, endTurnDisabled, onEndTurn}
                                 role="tab"
                                 aria-selected={active}
                                 onClick={() => onTabChange(tab.id)}
-                                className={`flex flex-col items-center gap-0.5 rounded-xl border-2 border-(--border) px-1 py-2 text-[10px] font-black transition-[transform,box-shadow] active:translate-x-px active:translate-y-px active:shadow-none ${
+                                className={`flex flex-col items-center gap-0.5 rounded-xl border-2 border-(--border) px-1 py-2 text-[10px] font-black transition-[transform,box-shadow] active:translate-x-px active:translate-y-px active:shadow-none sm:flex-row sm:justify-center sm:gap-1.5 sm:text-xs md:gap-2 md:rounded-2xl md:px-2 md:py-3.5 md:text-lg ${
                                     active ? "bg-(--accent) shadow-[2px_2px_0_var(--border)]" : "bg-white shadow-[2px_2px_0_var(--border)]"
                                 }`}
                             >
-                                <Icon className="size-5" strokeWidth={2.5} aria-hidden="true" />
+                                <Icon className="size-5 md:size-7" strokeWidth={2.5} aria-hidden="true" />
                                 {tab.label}
                             </button>
                         );

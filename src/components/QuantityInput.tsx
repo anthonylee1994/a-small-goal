@@ -41,7 +41,7 @@ export const QuantityInput = ({value, onChange, min = 1, max = 999, disabled = f
                 disabled={disabled}
                 value={value}
                 onChange={e => onChange(clampValue(Number(e.target.value)))}
-                className="min-w-0 flex-1 border-x-2 border-(--border) bg-(--bg) text-center text-sm font-black tabular-nums outline-none disabled:opacity-40"
+                className="min-w-0 flex-1 border-x-2 border-(--border) bg-(--bg) text-center text-sm md:text-base font-black tabular-nums outline-none disabled:opacity-40"
             />
             <button
                 type="button"

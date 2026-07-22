@@ -34,16 +34,16 @@ export const LogPanel = ({entries, limit = 8}: Props) => {
     return (
         <section className="overflow-hidden rounded-2xl border-4 border-(--border) bg-white shadow-[4px_4px_0_var(--border)]">
             <header className="flex items-center justify-between gap-2 border-b-4 border-(--border) bg-(--accent) px-4 py-3">
-                <h3 className="text-base font-black tracking-tight text-(--ink)" style={{fontFamily: "var(--font-display)"}}>
+                <h3 className="text-base md:text-lg font-black tracking-tight text-(--ink)" style={{fontFamily: "var(--font-display)"}}>
                     最近事件
                 </h3>
-                <span className="rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black">
+                <span className="rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] md:text-base font-black">
                     {visible.length}/{limit}
                 </span>
             </header>
 
             {visible.length === 0 ? (
-                <p className="px-4 py-6 text-center text-sm text-(--muted)">暫時未有紀錄。開始玩啦！</p>
+                <p className="px-4 py-6 text-center text-sm md:text-base text-(--muted)">暫時未有紀錄。開始玩啦！</p>
             ) : (
                 <ul className="divide-y-2 divide-(--border)">
                     {visible.map((entry, index) => {
@@ -53,10 +53,10 @@ export const LogPanel = ({entries, limit = 8}: Props) => {
                                 <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border-2 border-(--border) ${tone.dot}`} aria-hidden="true" />
                                 <div className="min-w-0 flex-1">
                                     <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                                        <span className="rounded-md border-2 border-(--border) bg-(--bg) px-1.5 py-0.5 text-[10px] font-black text-(--ink)">{entry.age}歲</span>
-                                        <span className={`rounded-md border-2 border-(--border) px-1.5 py-0.5 text-[10px] font-black ${tone.chip}`}>{tone.label}</span>
+                                        <span className="rounded-md border-2 border-(--border) bg-(--bg) px-1.5 py-0.5 text-[10px] md:text-base font-black text-(--ink)">{entry.age}歲</span>
+                                        <span className={`rounded-md border-2 border-(--border) px-1.5 py-0.5 text-[10px] md:text-base font-black ${tone.chip}`}>{tone.label}</span>
                                     </div>
-                                    <p className="text-sm leading-snug font-medium wrap-break-word text-(--ink)">{entry.text}</p>
+                                    <p className="text-sm md:text-base leading-snug font-medium wrap-break-word text-(--ink)">{entry.text}</p>
                                 </div>
                             </li>
                         );

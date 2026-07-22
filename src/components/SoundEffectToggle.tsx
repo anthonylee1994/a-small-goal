@@ -29,9 +29,9 @@ export const SoundEffectToggle = ({className = ""}: Props) => {
             aria-label={muted ? "開啟音效" : "關閉音效"}
             aria-pressed={!muted}
             title={muted ? "開啟音效" : "關閉音效"}
-            className={`flex size-8 shrink-0 items-center justify-center rounded-lg border-2 border-(--border) bg-white text-(--ink) shadow-[2px_2px_0_var(--border)] transition-[transform,box-shadow] active:translate-x-px active:translate-y-px active:shadow-none ${className}`}
+            className={`flex size-8 shrink-0 items-center justify-center rounded-lg border-2 border-(--border) bg-white text-(--ink) shadow-[2px_2px_0_var(--border)] transition-[transform,box-shadow] active:translate-x-px active:translate-y-px active:shadow-none md:size-11 md:rounded-xl md:shadow-[3px_3px_0_var(--border)] ${className}`}
         >
-            {muted ? <SoundOffIcon className="size-3.5" strokeWidth={2.5} aria-hidden="true" /> : <SoundOnIcon className="size-3.5" strokeWidth={2.5} aria-hidden="true" />}
+            {muted ? <SoundOffIcon className="size-3.5 md:size-5" strokeWidth={2.5} aria-hidden="true" /> : <SoundOnIcon className="size-3.5 md:size-5" strokeWidth={2.5} aria-hidden="true" />}
         </button>
     );
 };

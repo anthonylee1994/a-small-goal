@@ -98,7 +98,7 @@ export const ActionToast = ({latest, suppressed: suppressedProp = false}: Props)
     return (
         <div className="fixed inset-x-0 top-3 z-40 flex justify-center px-4" role="status" aria-live="polite">
             <div
-                className={`action-toast flex max-w-md items-center gap-2 rounded-2xl border-4 border-(--border) px-3 py-3 text-sm font-black text-(--ink) shadow-[4px_4px_0_var(--border)] ${TONE_BG[entry.tone]} ${
+                className={`action-toast app-shell flex w-full items-center gap-2 rounded-2xl border-4 border-(--border) px-3 py-3 text-sm md:text-base font-black text-(--ink) shadow-[4px_4px_0_var(--border)] ${TONE_BG[entry.tone]} ${
                     leaving ? "action-toast-out" : ""
                 }`}
             >

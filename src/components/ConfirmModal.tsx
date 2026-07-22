@@ -33,7 +33,7 @@ export const ConfirmModal = ({title, message, confirmLabel = "確定", cancelLab
                 </h2>
             </div>
 
-            <p className="whitespace-pre-line text-sm leading-relaxed text-(--muted)">{message}</p>
+            <p className="whitespace-pre-line text-sm md:text-base leading-relaxed text-(--muted)">{message}</p>
 
             <div className={`mt-5 gap-2 ${showCancel ? "grid grid-cols-2" : ""}`}>
                 {showCancel ? (

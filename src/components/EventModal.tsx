@@ -33,22 +33,22 @@ export const EventModal = ({event, onDismiss, onJumpToMarket}: Props) => {
                     <Icon className="size-8" strokeWidth={2.25} />
                 </div>
                 <div>
-                    <p className="text-xs font-black tracking-wide text-(--coral)">啪！今年突發事件</p>
+                    <p className="text-xs font-black tracking-wide text-(--coral) md:text-base">啪！今年突發事件</p>
                     <h2 id="event-modal-title" className="text-2xl font-black leading-tight" style={{fontFamily: "var(--font-display)"}}>
                         {event.title}
                     </h2>
                 </div>
             </div>
 
-            <p className="text-sm leading-relaxed text-(--muted)">{event.message}</p>
+            <p className="text-sm md:text-base leading-relaxed text-(--muted)">{event.message}</p>
 
-            <ul className="mt-4 space-y-1 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-sm font-bold">
+            <ul className="mt-4 space-y-1 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-sm md:text-base font-bold">
                 {event.effects.length === 0 ? <li>冇特別影響</li> : event.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{effectLabel(effect)}</li>)}
             </ul>
 
             {priceGoods.length > 0 ? (
                 <div className="mt-3 space-y-2">
-                    <p className="text-xs font-black text-(--muted)">受影響商品 · 撳掣去市場</p>
+                    <p className="text-xs font-black text-(--muted) md:text-base">受影響商品 · 撳掣去市場</p>
                     <div className="flex flex-wrap gap-2">
                         {priceGoods.map(effect => {
                             const GoodIcon = GOOD_ICONS[effect.goodId];

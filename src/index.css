@@ -49,6 +49,23 @@ body {
     overflow-x: hidden;
 }
 
+/* Mobile-first shell: phone width on small screens, expands on tablet/desktop. */
+.app-shell {
+    max-width: 28rem; /* ~max-w-md */
+}
+
+@media (min-width: 768px) {
+    .app-shell {
+        max-width: 42rem; /* ~max-w-2xl */
+    }
+}
+
+@media (min-width: 1024px) {
+    .app-shell {
+        max-width: 56rem; /* ~max-w-4xl */
+    }
+}
+
 /* While a modal is open: hard-stop background scroll / rubber-band. */
 html:has(body.modal-scroll-locked),
 body.modal-scroll-locked {

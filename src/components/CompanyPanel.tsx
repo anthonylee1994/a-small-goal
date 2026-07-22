@@ -63,19 +63,19 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
             title="創業帝國"
             icon={CompanySectionIcon}
             accent="mint"
-            action={<span className="rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black text-(--ink)">持有 {ownedCount}</span>}
+            action={<span className="rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] md:text-base font-black text-(--ink)">持有 {ownedCount}</span>}
         >
             {ownedCount === 0 ? (
-                <p className="mb-3 rounded-xl border-2 border-dashed border-(--border) bg-(--bg) px-3 py-2 text-center text-xs font-bold text-(--muted)">
+                <p className="mb-3 rounded-xl border-2 border-dashed border-(--border) bg-(--bg) px-3 py-2 text-center text-xs font-bold text-(--muted) md:text-base">
                     未開過公司。開業後持有 100 股（100%），可以喺股市增持／減持；年收同維護跟持股比例計。
                 </p>
             ) : (
-                <p className="mb-3 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-center text-[11px] font-bold text-(--muted)">
+                <p className="mb-3 rounded-xl border-2 border-(--border) bg-(--bg) px-3 py-2 text-center text-[11px] md:text-base font-bold text-(--muted)">
                     股價每年浮動。沽清 100% 即退出該業務；收入／維護按持股 % 結算。
                 </p>
             )}
 
-            <ul className="space-y-3">
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {options.map(company => {
                     const Icon = COMPANY_ICONS[company.id];
                     const collapsePct = Math.round(company.annualCollapseChance * 100);
@@ -121,14 +121,14 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
                                     <Icon className="size-6" strokeWidth={2.25} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <h4 className="text-base font-black" style={{fontFamily: "var(--font-display)"}}>
+                                    <h4 className="text-base md:text-lg font-black" style={{fontFamily: "var(--font-display)"}}>
                                         {company.name}
                                     </h4>
-                                    <p className="mt-0.5 text-sm font-black tabular-nums">{formatMoney(company.cost)}</p>
-                                    <p className="text-[11px] font-bold leading-snug text-(--muted)">
+                                    <p className="mt-0.5 text-sm md:text-base font-black tabular-nums">{formatMoney(company.cost)}</p>
+                                    <p className="text-[11px] md:text-base font-bold leading-snug text-(--muted)">
                                         年收 {formatMoney(company.annualIncome)} · 維護 {formatMoney(company.maintenance)} · 估值 {formatMoney(company.valuation)}
                                     </p>
-                                    <p className="mt-1 text-[11px] font-bold text-(--muted)">
+                                    <p className="mt-1 text-[11px] md:text-base font-bold text-(--muted)">
                                         開業得 {COMPANY_TOTAL_SHARES} 股 · 現價約 {formatMoney(company.sharePrice)}/股 · 倒閉率約 {collapsePct}%
                                     </p>
                                 </div>
@@ -137,7 +137,7 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
                             <Button size="sm" variant="secondary" disabled={blocked} onClick={() => setPendingCompanyId(company.id)}>
                                 創業
                             </Button>
-                            {reasons.length > 0 ? <p className="mt-2 text-[11px] font-bold text-(--muted)">{reasons.join(" · ")}</p> : null}
+                            {reasons.length > 0 ? <p className="mt-2 text-[11px] md:text-base font-bold text-(--muted)">{reasons.join(" · ")}</p> : null}
                         </li>
                     );
                 })}
@@ -245,35 +245,35 @@ const OwnedCompanyRow = ({
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                        <h4 className="truncate text-base font-black" style={{fontFamily: "var(--font-display)"}}>
+                        <h4 className="truncate text-base md:text-lg font-black" style={{fontFamily: "var(--font-display)"}}>
                             {name}
                         </h4>
-                        <span className="shrink-0 rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] font-black tabular-nums">{ownedShares}%</span>
+                        <span className="shrink-0 rounded-full border-2 border-(--border) bg-white px-2 py-0.5 text-[10px] md:text-base font-black tabular-nums">{ownedShares}%</span>
                     </div>
                     <p className="mt-1 text-lg font-black leading-none tabular-nums" style={{fontFamily: "var(--font-display)"}}>
                         {formatMoney(sharePrice)}
-                        <span className="ml-1 text-[10px] font-bold text-(--muted)">/股</span>
+                        <span className="ml-1 text-[10px] md:text-base font-bold text-(--muted)">/股</span>
                     </p>
-                    <p className="mt-1 text-[11px] font-bold text-(--muted)">
+                    <p className="mt-1 text-[11px] md:text-base font-bold text-(--muted)">
                         年收份額 {formatMoney(stakeIncome)} · 維護 {formatMoney(stakeMaint)}
                     </p>
-                    <p className="mt-0.5 text-[11px] font-black text-(--coral)">{inGrace ? `新舖保護中 · 仲有 ${graceYearsLeft} 年免倒閉` : `年結倒閉率約 ${collapsePct}%`}</p>
+                    <p className="mt-0.5 text-[11px] md:text-base font-black text-(--coral)">{inGrace ? `新舖保護中 · 仲有 ${graceYearsLeft} 年免倒閉` : `年結倒閉率約 ${collapsePct}%`}</p>
                 </div>
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-2.5 py-2">
-                    <p className="text-[10px] font-black tracking-wide text-(--muted)">持股成本</p>
-                    <p className="mt-0.5 text-sm font-black leading-tight tabular-nums">{formatMoney(unitCost)}/股</p>
-                    <p className="text-[10px] font-bold tabular-nums text-(--muted)">共 {formatMoney(costBasis)}</p>
+                    <p className="text-[10px] md:text-base font-black tracking-wide text-(--muted)">持股成本</p>
+                    <p className="mt-0.5 text-sm md:text-base font-black leading-tight tabular-nums">{formatMoney(unitCost)}/股</p>
+                    <p className="text-[10px] md:text-base font-bold tabular-nums text-(--muted)">共 {formatMoney(costBasis)}</p>
                 </div>
                 <div className="rounded-xl border-2 border-(--border) bg-(--bg) px-2.5 py-2">
-                    <p className="text-[10px] font-black tracking-wide text-(--muted)">浮盈虧</p>
-                    <p className={`mt-0.5 text-sm font-black leading-tight tabular-nums ${pnlTone}`}>
+                    <p className="text-[10px] md:text-base font-black tracking-wide text-(--muted)">浮盈虧</p>
+                    <p className={`mt-0.5 text-sm md:text-base font-black leading-tight tabular-nums ${pnlTone}`}>
                         {unrealizedPnl >= 0 ? "+" : ""}
                         {formatMoney(unrealizedPnl)}
                     </p>
-                    <p className="text-[10px] font-bold tabular-nums text-(--muted)">市值 {formatMoney(holdingValue)}</p>
+                    <p className="text-[10px] md:text-base font-bold tabular-nums text-(--muted)">市值 {formatMoney(holdingValue)}</p>
                 </div>
             </div>
 
@@ -288,7 +288,7 @@ const OwnedCompanyRow = ({
                 <QuantityInput id={`shares-${companyId}`} label={`${name} 股數`} value={qty} onChange={setQty} min={0} max={COMPANY_TOTAL_SHARES} disabled={locked} />
 
                 {!locked && qty > 0 ? (
-                    <p className="text-center text-[11px] font-bold tabular-nums text-(--muted)">
+                    <p className="text-center text-[11px] md:text-base font-bold tabular-nums text-(--muted)">
                         {qty <= maxSell ? `沽出約 ${formatMoney(sharePrice * qty)}` : `增持約 ${formatMoney(tradeCost)}`}
                         {qty > roomToBuy && qty > maxSell ? " · 超出可買上限" : ""}
                         {qty > maxSell && cash < tradeCost ? " · 錢唔夠" : ""}
@@ -303,7 +303,7 @@ const OwnedCompanyRow = ({
                         賣出股份
                     </Button>
                 </div>
-                <p className="text-center text-[10px] font-bold text-(--muted)">
+                <p className="text-center text-[10px] md:text-base font-bold text-(--muted)">
                     可增持 {roomToBuy} 股 · 可沽 {maxSell} 股
                 </p>
             </div>
@@ -323,7 +323,7 @@ const ShareChip = ({label, disabled, active = false, onClick}: ShareChipProps) =
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className={`min-h-9 w-full rounded-lg border-2 border-(--border) px-1 text-[11px] font-black tabular-nums disabled:cursor-not-allowed disabled:opacity-35 ${
+        className={`min-h-9 w-full rounded-lg border-2 border-(--border) px-1 text-[11px] md:text-base font-black tabular-nums disabled:cursor-not-allowed disabled:opacity-35 ${
             active ? "bg-(--accent) text-(--ink)" : "bg-white text-(--ink) active:enabled:bg-(--bg)"
         }`}
     >

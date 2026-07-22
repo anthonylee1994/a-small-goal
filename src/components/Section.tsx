@@ -20,7 +20,7 @@ export const Section = ({title, icon: Icon, accent = "accent", action, children}
     return (
         <section className="overflow-hidden rounded-2xl border-4 border-(--border) bg-white shadow-[4px_4px_0_var(--border)]">
             <header className={`flex items-center justify-between gap-2 border-b-4 border-(--border) px-4 py-3 ${ACCENT[accent]}`}>
-                <h3 className="flex items-center gap-2 text-base font-black tracking-tight" style={{fontFamily: "var(--font-display)"}}>
+                <h3 className="flex items-center gap-2 text-base md:text-lg font-black tracking-tight" style={{fontFamily: "var(--font-display)"}}>
                     <Icon className="size-5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                     {title}
                 </h3>
