@@ -1030,7 +1030,6 @@ function finishBankruptcy(state: GameState): GameState {
     return pushLog(next, `清盤後仍然負債，你破產出局。總資產 ${formatMoney(assets)}`, "bad");
 }
 
-/** 玩家主動結束今世，進入結算後可重新投胎。 */
 export function commitSuicide(state: GameState): GameState {
     if (state.phase === "dead" || state.phase === "retired" || state.phase === "title") return state;
 
@@ -1042,7 +1041,7 @@ export function commitSuicide(state: GameState): GameState {
         health: 0,
         totalAssets: assets,
     };
-    return pushLog(next, `你選擇結束今世，準備重新投胎。總資產 ${formatMoney(assets)}`, "bad");
+    return pushLog(next, `你選擇咗自殺，準備重新投胎。總資產 ${formatMoney(assets)}`, "bad");
 }
 
 function finishRetire(state: GameState): GameState {

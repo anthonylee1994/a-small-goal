@@ -79,7 +79,7 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                 <ConfirmModal
                     title="確定重生投胎？"
                     message="呢一世就此結束，會先睇結算，之後先可以重新投胎。"
-                    confirmLabel="結束今世"
+                    confirmLabel="立即自殺"
                     cancelLabel="再忍忍"
                     danger
                     onCancel={() => setConfirmSuicide(false)}

@@ -31,7 +31,7 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const isWin = !isDead && rank.tier === "winner";
 
     const title = isSuicide ? "投胎結算" : isBankruptcy ? "破產結算" : isDead ? "猝死結算" : "退休結算";
-    const ageHint = isSuicide ? " · 主動結束今世" : isBankruptcy ? " · 負債出局" : isDead ? " · 未活到退休" : null;
+    const ageHint = isSuicide ? " · 自殺" : isBankruptcy ? " · 負債出局" : isDead ? " · 未活到退休" : null;
     const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : isWin ? "WIN!" : "差啲";
 
     React.useEffect(() => {
