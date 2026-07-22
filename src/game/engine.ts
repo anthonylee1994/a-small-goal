@@ -496,7 +496,7 @@ export function seeDoctor(state: GameState): GameState {
         cash: state.cash - fee,
         health: 100,
     };
-    return pushLog(next, `睇完醫生，花咗 ${formatMoney(fee)}，健康 ${before} → 100（一次過回滿）。`, "good");
+    return pushLog(next, `睇完醫生，花咗 ${formatMoney(fee)}，健康 ${before} → 100。`, "good");
 }
 
 export function buyGood(state: GameState, goodId: GoodId, quantity: number): GameState {
