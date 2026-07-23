@@ -169,7 +169,7 @@ export const CompanyPanel = ({state, locked, onFound, onBuyShares, onSellShares}
             {pending ? (
                 <ConfirmModal
                     title={`開「${pending.name}」？`}
-                    message={`投資 ${formatMoney(pending.cost)}，開業後持有 100% 股份（${COMPANY_TOTAL_SHARES} 股），當刻市值等於投資額。股價年結先會浮動。第一次創業保底成功；之後失敗退一半。開業後 ${COMPANY_COLLAPSE_GRACE_YEARS} 年內唔會倒閉。`}
+                    message={`投資 ${formatMoney(pending.cost)}，開業後持有 100% 股份（${COMPANY_TOTAL_SHARES} 股），當刻市值等於投資額。股價年結先會浮動。第一次創業保底成功；之後失敗退一半。窮撚首次創業有折扣。開業後 ${COMPANY_COLLAPSE_GRACE_YEARS} 年內唔會倒閉。`}
                     confirmLabel="創業"
                     cancelLabel="取消"
                     danger

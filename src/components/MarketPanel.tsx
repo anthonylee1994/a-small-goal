@@ -23,7 +23,7 @@ export const MarketPanel = ({state, locked, highlightGoodId, onBuy, onSell, onUp
     const [confirmUpgrade, setConfirmUpgrade] = useState(false);
     const used = getUsedWarehouse(state);
     const free = Math.max(0, state.warehouseCapacity - used);
-    const upgradeCost = getWarehouseUpgradeCost(state.warehouseCapacity);
+    const upgradeCost = getWarehouseUpgradeCost(state.warehouseCapacity, state.birthFamilyId);
     const canUpgrade = !locked && state.cash >= upgradeCost;
 
     return (

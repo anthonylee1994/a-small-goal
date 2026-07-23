@@ -48,7 +48,10 @@ export const TitleScreen = ({onStart}: Props) => {
                 <h1 className="text-[2rem] font-black leading-none tracking-tight sm:text-4xl md:text-5xl lg:text-6xl" style={{fontFamily: "var(--font-display)"}}>
                     一億小目標
                 </h1>
-                <p className="text-sm leading-relaxed text-(--muted) sm:text-base md:text-lg lg:text-xl">20 歲起步，40 年內靠炒賣、創業同家庭選擇，目標喺 60 歲前累積至少一億。</p>
+                <p className="text-sm leading-relaxed text-(--muted) sm:text-base md:text-lg lg:text-xl">
+                    20 歲起步，40 年內靠炒賣、創業同家庭選擇
+                    <br /> 目標喺 60 歲前累積至少一億
+                </p>
             </div>
 
             <label className="screen-enter screen-enter-delay-3 mx-auto flex w-full max-w-xs cursor-pointer items-start gap-3 rounded-2xl border-4 border-(--border) px-4 py-3 text-left shadow-[4px_4px_0_var(--border)] transition-[transform,box-shadow,background-color] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none md:max-w-md md:gap-4 md:rounded-3xl md:px-5 md:py-4 bg-white">

@@ -4,6 +4,7 @@ import {EVENT_MAP, EVENTS} from "../data/events";
 import {GOOD_MAP, GOODS} from "../data/goods";
 import {PARTNER_MAP, PARTNERS} from "../data/partners";
 import type {
+    BirthFamilyId,
     Child,
     CompanyClosure,
     CompanyTypeId,
@@ -41,15 +42,21 @@ import {
     FREE_CHECKUP_AGE_STEP,
     FREE_CHECKUP_HEALTH,
     HEALTH_DRAIN_PER_TURN,
+    HIGH_TIER_GOOD_IDS,
     ILLNESS_FEE,
     ILLNESS_HEALTH_RESTORE,
     ILLNESS_HEALTH_THRESHOLD,
     INFLATION_PER_YEAR,
+    LOW_CLASS_FIRST_COMPANY_DISCOUNT,
+    LOW_CLASS_FIRST_WAREHOUSE_DISCOUNT,
+    LOW_CLASS_STARTING_REPUTATION,
     MAX_CHILDREN,
     MAX_LOGS,
     MILESTONE_THRESHOLDS,
     PRICE_CHEAP_RATIO,
     PRICE_EXPENSIVE_RATIO,
+    PRICE_HIGH_TIER_MAX,
+    PRICE_HIGH_TIER_MIN,
     PRICE_RANDOM_MAX,
     PRICE_RANDOM_MIN,
     START_AGE,
@@ -248,11 +255,17 @@ export function getRank(assets: number): Rank {
     return {tier, title, message};
 }
 
+function isHighTierGood(goodId: GoodId): boolean {
+    return (HIGH_TIER_GOOD_IDS as readonly string[]).includes(goodId);
+}
+
 function generatePrices(age: number, rng: Rng, eventMults: Partial<Record<GoodId, number>> = {}): Record<GoodId, number> {
     const infl = inflationFactor(age);
     const prices = emptyPrices();
     for (const good of GOODS) {
-        const roll = randomBetween(rng, PRICE_RANDOM_MIN, PRICE_RANDOM_MAX);
+        const min = isHighTierGood(good.id) ? PRICE_HIGH_TIER_MIN : PRICE_RANDOM_MIN;
+        const max = isHighTierGood(good.id) ? PRICE_HIGH_TIER_MAX : PRICE_RANDOM_MAX;
+        const roll = randomBetween(rng, min, max);
         const mult = eventMults[good.id] ?? 1;
         prices[good.id] = Math.max(1, Math.round(good.basePrice * infl * roll * mult));
     }
@@ -467,10 +480,12 @@ export function startGame(state: GameState, seed?: number, options?: StartGameOp
     const easyMode = options?.easyMode ?? state.easyMode ?? false;
     const rng = createRng(nextSeed);
     const family = pickWeighted(rng, BIRTH_FAMILIES);
+    const startingReputation = family.id === "low_class" ? LOW_CLASS_STARTING_REPUTATION : START_REPUTATION;
 
     let next: GameState = {
         ...createInitialState(nextSeed),
         cash: family.startingCash,
+        reputation: startingReputation,
         birthFamilyId: family.id,
         birthRevealed: false,
         seed: nextSeed,
@@ -478,6 +493,9 @@ export function startGame(state: GameState, seed?: number, options?: StartGameOp
     };
 
     next = pushLog(next, `投胎成功：你而家係一名${family.name}，起步資金 ${formatMoney(family.startingCash)}`, "good");
+    if (family.id === "low_class") {
+        next = pushLog(next, `窮撚特別待遇：起步名聲 ${startingReputation}；第一次創業同第一次擴倉有折扣，搏翻身啦。`, "info");
+    }
     if (easyMode) {
         next = pushLog(next, "簡易模式開啟：健康消耗減半、負面現金事件較溫和。", "info");
     }
@@ -731,16 +749,31 @@ export function warehouseUpgradeLevel(capacity: number): number {
 /**
  * Next warehouse upgrade cost — exponential in upgrade level:
  * BASE × GROWTH^level (level 0 = first upgrade from starting capacity).
+ * Low-class birth gets a discount on the first upgrade only.
  */
-export function getWarehouseUpgradeCost(capacity: number): number {
+export function getWarehouseUpgradeCost(capacity: number, birthFamilyId?: BirthFamilyId | null): number {
     const level = warehouseUpgradeLevel(capacity);
-    return Math.max(1, Math.round(WAREHOUSE_UPGRADE_COST_BASE * Math.pow(WAREHOUSE_UPGRADE_COST_GROWTH, level)));
+    let cost = Math.max(1, Math.round(WAREHOUSE_UPGRADE_COST_BASE * Math.pow(WAREHOUSE_UPGRADE_COST_GROWTH, level)));
+    if (birthFamilyId === "low_class" && level === 0) {
+        cost = Math.max(1, Math.round(cost * (1 - LOW_CLASS_FIRST_WAREHOUSE_DISCOUNT)));
+    }
+    return cost;
+}
+
+/** Founding cash cost (after low-class first-shop discount when applicable). */
+export function getCompanyFoundingCost(state: GameState, companyId: CompanyTypeId): number {
+    const def = COMPANY_MAP[companyId];
+    if (!def) return 0;
+    if (state.birthFamilyId === "low_class" && state.companyFoundAttempts === 0) {
+        return Math.max(1, Math.round(def.cost * (1 - LOW_CLASS_FIRST_COMPANY_DISCOUNT)));
+    }
+    return def.cost;
 }
 
 export function upgradeWarehouse(state: GameState): GameState {
     if (state.phase !== "playing") return state;
 
-    const cost = getWarehouseUpgradeCost(state.warehouseCapacity);
+    const cost = getWarehouseUpgradeCost(state.warehouseCapacity, state.birthFamilyId);
     if (state.cash < cost) {
         return pushLog(state, `升級倉庫要 ${formatMoney(cost)}，錢唔夠。`, "bad");
     }
@@ -765,8 +798,9 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
     if (state.companies.some(c => c.typeId === companyId)) {
         return pushLog(state, `你已經有間${def.name}啦。`, "bad");
     }
-    if (state.cash < def.cost) {
-        return pushLog(state, `開${def.name}要 ${formatMoney(def.cost)}，錢唔夠。`, "bad");
+    const foundingCost = getCompanyFoundingCost(state, companyId);
+    if (state.cash < foundingCost) {
+        return pushLog(state, `開${def.name}要 ${formatMoney(foundingCost)}，錢唔夠。`, "bad");
     }
     if (state.reputation < def.minReputation) {
         return pushLog(state, `名聲唔夠開${def.name}（需要 ${def.minReputation}，你得 ${state.reputation}）。`, "bad");
@@ -775,6 +809,7 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
     const successChance = clamp(0.55 + state.reputation / 200 - def.failChance, 0.35, 0.95);
     const firstAttempt = state.companyFoundAttempts === 0;
     const guaranteed = firstAttempt;
+    const lowClassDiscount = foundingCost < def.cost;
     // Mix attempt count + company id so retries in the same year re-roll instead of replaying the same seed.
     const attemptSalt = 100 + hashString(companyId) + state.companyFoundAttempts * 7919;
     const rng = turnRng(state, attemptSalt);
@@ -782,27 +817,28 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
 
     let next: GameState = {
         ...state,
-        cash: state.cash - def.cost,
+        cash: state.cash - foundingCost,
         companyFoundAttempts: state.companyFoundAttempts + 1,
     };
 
     if (!guaranteed && roll > successChance) {
-        const refund = Math.round(def.cost * COMPANY_FAIL_REFUND_RATE);
+        const refund = Math.round(foundingCost * COMPANY_FAIL_REFUND_RATE);
         next = {
             ...next,
             cash: next.cash + refund,
             reputation: clamp(next.reputation - 3, 0, 100),
         };
-        next = pushLog(next, `開${def.name}失敗！退回一半籌備費 ${formatMoney(refund)}，淨蝕 ${formatMoney(def.cost - refund)}。（成功率 ${(successChance * 100).toFixed(0)}%）`, "bad");
+        next = pushLog(next, `開${def.name}失敗！退回一半籌備費 ${formatMoney(refund)}，淨蝕 ${formatMoney(foundingCost - refund)}。（成功率 ${(successChance * 100).toFixed(0)}%）`, "bad");
         return next;
     }
 
-    const foundingSharePrice = Math.max(1, Math.round(def.cost / COMPANY_TOTAL_SHARES));
+    // IPO mark-to-cost uses cash actually invested (after any birth discount).
+    const foundingSharePrice = Math.max(1, Math.round(foundingCost / COMPANY_TOTAL_SHARES));
     const founded: OwnedCompany = {
         typeId: companyId,
         foundedAge: next.age,
         shares: COMPANY_TOTAL_SHARES,
-        costBasis: def.cost,
+        costBasis: foundingCost,
     };
     next = {
         ...next,
@@ -814,7 +850,10 @@ export function foundCompany(state: GameState, companyId: CompanyTypeId): GameSt
         },
     };
     const sharePrice = getCompanySharePrice(next, companyId);
-    const bonus = guaranteed ? "（第一次創業保底成功！）" : "";
+    const bonusParts: string[] = [];
+    if (guaranteed) bonusParts.push("第一次創業保底成功");
+    if (lowClassDiscount) bonusParts.push("窮撚首次創業折扣");
+    const bonus = bonusParts.length > 0 ? `（${bonusParts.join("；")}！）` : "";
     next = pushLog(
         next,
         `成功創立${def.name}！持有 ${COMPANY_TOTAL_SHARES} 股（100%），開業市值 ${formatMoney(sharePrice * COMPANY_TOTAL_SHARES)}（= 投資額），現價 ${formatMoney(sharePrice)}/股。${bonus}`,
@@ -1273,12 +1312,15 @@ export function getCompanyOptions(state: GameState) {
         const inGrace = owned != null && yearsOpen != null && yearsOpen < COMPANY_COLLAPSE_GRACE_YEARS;
         const sharePrice = getCompanySharePrice(state, c.id);
         const fairShare = Math.max(1, Math.round((c.valuation * inflationFactor(state.age)) / COMPANY_TOTAL_SHARES));
+        const foundingCost = getCompanyFoundingCost(state, c.id);
         return {
             ...c,
+            cost: foundingCost,
+            listCost: c.cost,
             owned: owned != null,
             ownedShares: owned?.shares ?? 0,
             ownedCostBasis: owned?.costBasis ?? 0,
-            canAfford: state.cash >= c.cost,
+            canAfford: state.cash >= foundingCost,
             repOk: state.reputation >= c.minReputation,
             annualCollapseChance: companyCollapseChance(state, c.id),
             inGrace,

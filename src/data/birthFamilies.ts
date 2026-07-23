@@ -1,8 +1,11 @@
 import type {BirthFamilyDef, BirthFamilyId} from "../types/game";
 
-/** Equal weight; low class bumped to $25k so early negative events less often insta-kill. */
+/**
+ * Equal weight. Low class keeps a real poverty start but enough cash to trade
+ * through early bad events and aim at the first shop / warehouse upgrade.
+ */
 export const BIRTH_FAMILIES: readonly BirthFamilyDef[] = [
-    {id: "low_class", name: "死窮撚", startingCash: 25_000, weight: 1},
+    {id: "low_class", name: "死窮撚", startingCash: 45_000, weight: 1},
     {id: "middle_class", name: "死中產", startingCash: 100_000, weight: 1},
     {id: "high_class", name: "二世祖", startingCash: 1_000_000, weight: 1},
 ] as const;

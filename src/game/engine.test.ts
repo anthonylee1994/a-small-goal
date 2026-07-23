@@ -38,6 +38,7 @@ import {
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
     DOCTOR_WEALTH_RATE,
+    LOW_CLASS_FIRST_COMPANY_DISCOUNT,
     DONATE_BASE_FEE,
     DONATE_REP_COST_SCALE,
     DONATE_REP_GAIN,
@@ -253,9 +254,9 @@ describe("events", () => {
             }
         }
         expect(found).not.toBeNull();
-        expect(found!.reputation).toBe(0);
+        const beforeRep = found!.reputation;
         const next = chooseEvent(found!, "help");
-        expect(next.reputation).toBe(2);
+        expect(next.reputation).toBe(beforeRep + 2);
     });
 
     it("reputation toast shows intended amount even when already at 0", () => {
@@ -368,26 +369,38 @@ describe("endTurn / assets", () => {
     });
 
     it("warehouse upgrade cost grows exponentially with capacity", () => {
-        const c0 = getWarehouseUpgradeCost(START_WAREHOUSE);
-        const c1 = getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE);
-        const c2 = getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE * 2);
+        const c0 = getWarehouseUpgradeCost(START_WAREHOUSE, "middle_class");
+        const c1 = getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE, "middle_class");
+        const c2 = getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE * 2, "middle_class");
         expect(c0).toBe(WAREHOUSE_UPGRADE_COST_BASE);
         expect(c1).toBe(Math.round(WAREHOUSE_UPGRADE_COST_BASE * WAREHOUSE_UPGRADE_COST_GROWTH));
         expect(c2).toBe(Math.round(WAREHOUSE_UPGRADE_COST_BASE * WAREHOUSE_UPGRADE_COST_GROWTH ** 2));
         expect(c1).toBeGreaterThan(c0);
         expect(c2).toBeGreaterThan(c1);
 
-        let state = {...playingState(205), warehouseCapacity: START_WAREHOUSE, cash: 10_000_000};
+        let state: GameState = {
+            ...playingState(205),
+            birthFamilyId: "middle_class",
+            warehouseCapacity: START_WAREHOUSE,
+            cash: 10_000_000,
+        };
         const paid: number[] = [];
         for (let i = 0; i < 3; i += 1) {
             const beforeCash = state.cash;
-            const cost = getWarehouseUpgradeCost(state.warehouseCapacity);
+            const cost = getWarehouseUpgradeCost(state.warehouseCapacity, state.birthFamilyId);
             state = upgradeWarehouse(state);
             paid.push(beforeCash - state.cash);
             expect(paid[i]).toBe(cost);
         }
         expect(paid[1]!).toBeGreaterThan(paid[0]!);
         expect(paid[2]!).toBeGreaterThan(paid[1]!);
+    });
+
+    it("low_class gets a discount on the first warehouse upgrade only", () => {
+        const full = getWarehouseUpgradeCost(START_WAREHOUSE, "middle_class");
+        const discounted = getWarehouseUpgradeCost(START_WAREHOUSE, "low_class");
+        expect(discounted).toBeLessThan(full);
+        expect(getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE, "low_class")).toBe(getWarehouseUpgradeCost(START_WAREHOUSE + WAREHOUSE_UPGRADE_SIZE, "middle_class"));
     });
 });
 
@@ -466,7 +479,13 @@ describe("foundCompany first success + refund", () => {
 
 describe("company shares buy / sell", () => {
     it("sets founding share price so market cap equals investment (no instant flip)", () => {
-        let state = {...playingState(600), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
+        let state: GameState = {
+            ...playingState(600),
+            birthFamilyId: "middle_class",
+            cash: 1_000_000,
+            companyFoundAttempts: 0,
+            reputation: 0,
+        };
         const cashBefore = state.cash;
         state = foundCompany(state, "bubble_tea");
         const def = COMPANY_MAP.bubble_tea;
@@ -483,8 +502,23 @@ describe("company shares buy / sell", () => {
         expect(state.cash).toBe(cashBefore);
     });
 
+    it("low_class first founding pays discounted cost basis", () => {
+        let state: GameState = {
+            ...playingState(602),
+            birthFamilyId: "low_class",
+            cash: 1_000_000,
+            companyFoundAttempts: 0,
+            reputation: 5,
+        };
+        const def = COMPANY_MAP.bubble_tea;
+        const expectedCost = Math.round(def.cost * (1 - LOW_CLASS_FIRST_COMPANY_DISCOUNT));
+        state = foundCompany(state, "bubble_tea");
+        expect(state.companies[0]?.costBasis).toBe(expectedCost);
+        expect(getCompanySharePrice(state, "bubble_tea") * COMPANY_TOTAL_SHARES).toBe(expectedCost);
+    });
+
     it("sells part of stake and scales remaining ownership", () => {
-        let state = {...playingState(601), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
+        let state: GameState = {...playingState(601), birthFamilyId: "middle_class", cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
         state = foundCompany(state, "bubble_tea");
         const price = getCompanySharePrice(state, "bubble_tea");
         const cashBefore = state.cash;

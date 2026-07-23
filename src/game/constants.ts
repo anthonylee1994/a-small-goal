@@ -11,15 +11,26 @@ export const TARGET_ASSETS = 100_000_000;
 export const INFLATION_PER_YEAR = 0.02;
 /**
  * Goods price vs fair (base × inflation).
- * Slightly wider than 0.7–1.45 so pure trading can reach late-game wealth,
- * without returning to the old 0.5–2.0 flip lottery.
+ * Mid/low tiers keep a wide band so trading stays skillful;
+ * high-tier (bitcoin/gold/ev/options) uses a tighter band to curb pure yolo.
  */
 export const PRICE_RANDOM_MIN = 0.62;
 export const PRICE_RANDOM_MAX = 1.55;
+/** High-tier goods: milder lottery than mid/low (still room to trade). */
+export const PRICE_HIGH_TIER_MIN = 0.66;
+export const PRICE_HIGH_TIER_MAX = 1.5;
+export const HIGH_TIER_GOOD_IDS = ["bitcoin", "gold", "ev", "options"] as const;
 
 /** Relative to fair (base × inflation): below = cheap, above = expensive. */
 export const PRICE_CHEAP_RATIO = 0.9;
 export const PRICE_EXPENSIVE_RATIO = 1.15;
+
+/** Dead-poor birth: small rep head-start + first shop / first warehouse discounts. */
+export const LOW_CLASS_STARTING_REPUTATION = 5;
+/** Fraction off founding cost for the first company when birthFamily is low_class. */
+export const LOW_CLASS_FIRST_COMPANY_DISCOUNT = 0.3;
+/** Fraction off the first warehouse upgrade for low_class. */
+export const LOW_CLASS_FIRST_WAREHOUSE_DISCOUNT = 0.4;
 
 export const WAREHOUSE_UPGRADE_SIZE = 50;
 /** First upgrade cost (capacity 100 → 150). Later upgrades grow exponentially. */
@@ -29,11 +40,14 @@ export const WAREHOUSE_UPGRADE_COST_GROWTH = 1.75;
 /** @deprecated use getWarehouseUpgradeCost — kept as first-tier alias */
 export const WAREHOUSE_UPGRADE_COST = WAREHOUSE_UPGRADE_COST_BASE;
 
-/** Softened from 5 so mid-game less “invisible tax”. Easy mode halves this. */
-export const HEALTH_DRAIN_PER_TURN = 4;
+/**
+ * Health is a real tax: ignore it and you die; spam doctor and yolo cash dies.
+ * Easy mode halves drain / illness fee.
+ */
+export const HEALTH_DRAIN_PER_TURN = 5;
 export const ILLNESS_HEALTH_THRESHOLD = 30;
-export const ILLNESS_FEE = 20_000;
-export const ILLNESS_HEALTH_RESTORE = 15;
+export const ILLNESS_FEE = 24_000;
+export const ILLNESS_HEALTH_RESTORE = 12;
 
 /** Free checkup every N calendar ages (25, 30, …). */
 export const FREE_CHECKUP_AGE_STEP = 5;
@@ -43,9 +57,9 @@ export const FREE_CHECKUP_HEALTH = 10;
  * 睇醫生：一次過回滿健康。
  * 收費 = 基價×通脹 + 總資產抽成，另有通脹後 cap（全滿血要夠貴先有 trade-off）。
  */
-export const DOCTOR_BASE_FEE = 40_000;
-export const DOCTOR_WEALTH_RATE = 0.012;
-export const DOCTOR_FEE_CAP = 180_000;
+export const DOCTOR_BASE_FEE = 45_000;
+export const DOCTOR_WEALTH_RATE = 0.013;
+export const DOCTOR_FEE_CAP = 200_000;
 
 /**
  * 捐款買名聲：每次固定 +GAIN（受 100 cap）。

@@ -14,6 +14,7 @@ import {
     dismissEvent,
     endTurn,
     foundCompany,
+    getCompanyFoundingCost,
     getDoctorFee,
     getUsedWarehouse,
     getWarehouseUpgradeCost,
@@ -61,7 +62,7 @@ function fairPrice(goodId: GoodId, age: number): number {
 
 function tryUpgradeWarehouse(state: GameState, reserve: number): GameState {
     let next = state;
-    while (next.cash >= getWarehouseUpgradeCost(next.warehouseCapacity) + reserve && getUsedWarehouse(next) >= next.warehouseCapacity * 0.85) {
+    while (next.cash >= getWarehouseUpgradeCost(next.warehouseCapacity, next.birthFamilyId) + reserve && getUsedWarehouse(next) >= next.warehouseCapacity * 0.85) {
         const before = next.warehouseCapacity;
         next = upgradeWarehouse(next);
         if (next.warehouseCapacity === before) break;
@@ -114,7 +115,8 @@ function foundAffordableCompanies(state: GameState, reserve: number, maxPerYear 
         if (founded >= maxPerYear) break;
         if (next.companies.some(c => c.typeId === company.id)) continue;
         if (next.reputation < company.minReputation) continue;
-        if (next.cash < company.cost + reserve) continue;
+        const foundingCost = getCompanyFoundingCost(next, company.id);
+        if (next.cash < foundingCost + reserve) continue;
         const before = next.companies.length;
         next = foundCompany(next, company.id);
         if (next.companies.length > before) founded += 1;
@@ -230,50 +232,81 @@ export function runSim(seed: number, strategy: StrategyId): SimResult {
     };
 }
 
+function pct(arr: number[], p: number): number {
+    if (arr.length === 0) return 0;
+    return arr[Math.min(arr.length - 1, Math.floor((arr.length - 1) * p))] ?? 0;
+}
+
+function mean(arr: number[]): number {
+    return arr.length ? arr.reduce((s, n) => s + n, 0) / arr.length : 0;
+}
+
+function fmtMoney(n: number): string {
+    return `$${Math.round(n).toLocaleString("en-US")}`;
+}
+
+function summarizeList(label: string, list: SimResult[]): string {
+    const finals = list.map(r => r.finalAssets).sort((a, b) => a - b);
+    const at = (age: number) =>
+        list
+            .map(r => r.snapshots.find(s => s.age === age)?.assets ?? null)
+            .filter((v): v is number => v != null)
+            .sort((a, b) => a - b);
+
+    const a20 = at(20);
+    const a40 = at(40);
+    const a60 = at(60);
+    const wins = list.filter(r => r.winner).length;
+    const almost = list.filter(r => r.finalAssets >= 10_000_000).length;
+    const deaths = list.filter(r => r.reason === "death").length;
+
+    return [
+        label,
+        `n=${list.length}`,
+        `win=${wins}`,
+        `almost10M=${almost}`,
+        `death=${deaths}`,
+        `final mean=${fmtMoney(mean(finals))} p50=${fmtMoney(pct(finals, 0.5))} p90=${fmtMoney(pct(finals, 0.9))}`,
+        `age20 p50=${fmtMoney(pct(a20, 0.5))}`,
+        `age40 p50=${fmtMoney(pct(a40, 0.5))}`,
+        `age60 p50=${fmtMoney(pct(a60, 0.5))}`,
+    ].join(" | ");
+}
+
 export function summarize(results: SimResult[]) {
-    const byStrategy = new Map<StrategyId, SimResult[]>();
-    for (const r of results) {
-        const list = byStrategy.get(r.strategy) ?? [];
-        list.push(r);
-        byStrategy.set(r.strategy, list);
-    }
-
     const lines: string[] = [];
-    for (const [strategy, list] of byStrategy) {
-        const finals = list.map(r => r.finalAssets).sort((a, b) => a - b);
-        const at = (age: number) =>
-            list
-                .map(r => r.snapshots.find(s => s.age === age)?.assets ?? null)
-                .filter((v): v is number => v != null)
-                .sort((a, b) => a - b);
 
-        const pct = (arr: number[], p: number) => arr[Math.min(arr.length - 1, Math.floor((arr.length - 1) * p))] ?? 0;
-        const mean = (arr: number[]) => (arr.length ? arr.reduce((s, n) => s + n, 0) / arr.length : 0);
-        const fmt = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
-
-        const a20 = at(20);
-        const a40 = at(40);
-        const a60 = at(60);
-        const wins = list.filter(r => r.winner).length;
-        const deaths = list.filter(r => r.reason === "death").length;
-
+    lines.push("--- by strategy ---");
+    for (const strategy of BALANCE_STRATEGIES) {
         lines.push(
-            [
+            summarizeList(
                 strategy,
-                `n=${list.length}`,
-                `win=${wins}`,
-                `death=${deaths}`,
-                `final mean=${fmt(mean(finals))} p50=${fmt(pct(finals, 0.5))} p90=${fmt(pct(finals, 0.9))}`,
-                `age20 p50=${fmt(pct(a20, 0.5))}`,
-                `age40 p50=${fmt(pct(a40, 0.5))}`,
-                `age60 p50=${fmt(pct(a60, 0.5))}`,
-            ].join(" | ")
+                results.filter(r => r.strategy === strategy)
+            )
         );
     }
+
+    lines.push("--- by birth family ---");
+    for (const family of ["low_class", "middle_class", "high_class"] as const) {
+        lines.push(
+            summarizeList(
+                family,
+                results.filter(r => r.birthFamilyId === family)
+            )
+        );
+    }
+
+    const totalWins = results.filter(r => r.winner).length;
+    const totalDeaths = results.filter(r => r.reason === "death").length;
+    lines.push(`--- overall | n=${results.length} | win=${totalWins} (${((totalWins / Math.max(1, results.length)) * 100).toFixed(1)}%) | death=${totalDeaths} ---`);
+
     return lines.join("\n");
 }
 
-/** Fixed seeds for Phase 3 acceptance (≥10 games). */
-export const BALANCE_SEEDS = [101, 202, 303, 404, 505, 606, 707, 808, 909, 1010, 1111, 1212] as const;
+/**
+ * Fixed seeds for Phase 3 acceptance (≥20).
+ * Broader pool so birth-family stratified reports are less skewed.
+ */
+export const BALANCE_SEEDS = [101, 202, 303, 404, 505, 606, 707, 808, 909, 1010, 1111, 1212, 1313, 1414, 1515, 1616, 1717, 1818, 1919, 2020, 2121, 2222, 2323, 2424] as const;
 
 export const BALANCE_STRATEGIES: StrategyId[] = ["trade_only", "company_rush", "hybrid", "high_tier_yolo", "low_tier_scalp"];
