@@ -74,6 +74,17 @@ export type PriceSignal = "cheap" | "fair" | "expensive";
 
 export interface StartGameOptions {
     easyMode?: boolean;
+    /** 發達之路 bonuses from meta progression (applied once at start). */
+    meta?: {
+        cashBonus: number;
+        reputationBonus: number;
+        warehouseBonus: number;
+        endAge: number;
+    };
+}
+
+export function getEndAge(state: GameState): number {
+    return state.endAge ?? END_AGE;
 }
 
 const CHILD_NAMES = ["小明", "小美", "阿強", "嘉欣", "梓軒", "詩詩", "浩然", "欣怡", "子傑", "樂怡"];
@@ -440,6 +451,8 @@ export function normalizeGameState(raw: GameState): GameState {
         companies: (raw.companies ?? []).map(c => normalizeOwnedCompany(c)),
         children: raw.children ?? [],
         log: raw.log ?? [],
+        endAge: raw.endAge ?? END_AGE,
+        metaBonusesApplied: raw.metaBonusesApplied ?? {cash: 0, reputation: 0, warehouse: 0},
     };
 }
 
@@ -472,29 +485,55 @@ export function createInitialState(seed?: number): GameState {
         milestonesUnlocked: [],
         companyFoundAttempts: 0,
         lastTurnSummary: null,
+        endAge: END_AGE,
+        metaBonusesApplied: {cash: 0, reputation: 0, warehouse: 0},
     };
 }
 
 export function startGame(state: GameState, seed?: number, options?: StartGameOptions): GameState {
     const nextSeed = seed ?? state.seed ?? Date.now();
     const easyMode = options?.easyMode ?? state.easyMode ?? false;
+    const meta = options?.meta;
+    const cashBonus = Math.max(0, meta?.cashBonus ?? 0);
+    const reputationBonus = Math.max(0, meta?.reputationBonus ?? 0);
+    const warehouseBonus = Math.max(0, meta?.warehouseBonus ?? 0);
+    const endAge = Math.max(END_AGE, meta?.endAge ?? END_AGE);
+
     const rng = createRng(nextSeed);
     const family = pickWeighted(rng, BIRTH_FAMILIES);
-    const startingReputation = family.id === "low_class" ? LOW_CLASS_STARTING_REPUTATION : START_REPUTATION;
+    const familyRep = family.id === "low_class" ? LOW_CLASS_STARTING_REPUTATION : START_REPUTATION;
+    const startingReputation = clamp(familyRep + reputationBonus, 0, 100);
+    const startingCash = family.startingCash + cashBonus;
+    const startingWarehouse = START_WAREHOUSE + warehouseBonus;
 
     let next: GameState = {
         ...createInitialState(nextSeed),
-        cash: family.startingCash,
+        cash: startingCash,
         reputation: startingReputation,
+        warehouseCapacity: startingWarehouse,
         birthFamilyId: family.id,
         birthRevealed: false,
         seed: nextSeed,
         easyMode,
+        endAge,
+        metaBonusesApplied: {
+            cash: cashBonus,
+            reputation: reputationBonus,
+            warehouse: warehouseBonus,
+        },
     };
 
-    next = pushLog(next, `投胎成功：你而家係一名${family.name}，起步資金 ${formatMoney(family.startingCash)}`, "good");
+    next = pushLog(next, `投胎成功：你而家係一名${family.name}，起步資金 ${formatMoney(startingCash)}`, "good");
     if (family.id === "low_class") {
-        next = pushLog(next, `窮撚特別待遇：起步名聲 ${startingReputation}；第一次創業同第一次擴倉有折扣，搏翻身啦。`, "info");
+        next = pushLog(next, `窮撚特別待遇：起步名聲 ${familyRep}；第一次創業同第一次擴倉有折扣，搏翻身啦。`, "info");
+    }
+    if (cashBonus > 0 || reputationBonus > 0 || warehouseBonus > 0 || endAge > END_AGE) {
+        const parts: string[] = [];
+        if (cashBonus > 0) parts.push(`現金+${formatMoney(cashBonus)}`);
+        if (reputationBonus > 0) parts.push(`名聲+${reputationBonus}`);
+        if (warehouseBonus > 0) parts.push(`倉庫+${warehouseBonus}`);
+        if (endAge > END_AGE) parts.push(`退休${endAge}歲`);
+        next = pushLog(next, `發達之路加成：${parts.join("、")}`, "info");
     }
     if (easyMode) {
         next = pushLog(next, "簡易模式開啟：健康消耗減半、負面現金事件較溫和。", "info");
@@ -1174,7 +1213,8 @@ function finishDeath(state: GameState): GameState {
         health: 0,
         totalAssets: assets,
     };
-    return pushLog(next, `健康歸零，你猝死街頭。總資產 ${formatMoney(assets)}（未活到 60 歲）`, "bad");
+    const endAge = getEndAge(state);
+    return pushLog(next, `健康歸零，你猝死街頭。總資產 ${formatMoney(assets)}（未活到 ${endAge} 歲）`, "bad");
 }
 
 function finishBankruptcy(state: GameState): GameState {
@@ -1205,14 +1245,15 @@ export function commitSuicide(state: GameState): GameState {
 function finishRetire(state: GameState): GameState {
     const assets = totalAssets(state);
     const rank = getRank(assets);
+    const endAge = getEndAge(state);
     let next: GameState = {
         ...state,
         phase: "retired",
         gameOverReason: "retirement",
-        age: END_AGE,
+        age: endAge,
         totalAssets: assets,
     };
-    return pushLog(next, `60 歲光榮退休！總資產 ${formatMoney(assets)} — ${rank.title}`, rank.tier === "winner" ? "good" : "info");
+    return pushLog(next, `${endAge} 歲光榮退休！總資產 ${formatMoney(assets)} — ${rank.title}`, rank.tier === "winner" ? "good" : "info");
 }
 
 /** SPEC §5 endTurn settlement order. */
@@ -1283,8 +1324,9 @@ export function endTurn(state: GameState): GameState {
     if (next.cash < 0) return finishBankruptcy(next);
 
     const nextAge = next.age + 1;
-    if (nextAge >= END_AGE) {
-        return finishRetire({...next, age: END_AGE});
+    const endAge = getEndAge(next);
+    if (nextAge >= endAge) {
+        return finishRetire({...next, age: endAge});
     }
 
     return beginTurn({

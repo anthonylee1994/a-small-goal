@@ -2,7 +2,8 @@ import {useState} from "react";
 import {Button} from "@/components/Button";
 import {ConfirmModal} from "@/components/ConfirmModal";
 import {SoundEffectToggle} from "@/components/SoundEffectToggle";
-import {START_AGE, END_AGE} from "@/game/constants";
+import {START_AGE} from "@/game/constants";
+import {getEndAge} from "@/game/engine";
 import {BIRTH_FAMILY_MAP} from "@/data/birthFamilies";
 import type {GameState} from "@/types/game";
 import {BrandIcon, DeathIcon} from "@/ui/icons";
@@ -23,7 +24,8 @@ const PHASE_LABEL: Record<GameState["phase"], string> = {
 export const GameHeader = ({state, onSuicide}: Props) => {
     const [confirmSuicide, setConfirmSuicide] = useState(false);
     const family = state.birthFamilyId ? BIRTH_FAMILY_MAP[state.birthFamilyId] : null;
-    const progress = Math.min(1, Math.max(0, (state.age - START_AGE) / Math.max(1, END_AGE - START_AGE)));
+    const endAge = getEndAge(state);
+    const progress = Math.min(1, Math.max(0, (state.age - START_AGE) / Math.max(1, endAge - START_AGE)));
 
     return (
         <>
@@ -50,7 +52,7 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                 <div className="mt-4">
                     <div className="mb-1 flex items-center justify-between text-[11px] md:text-base font-black">
                         <span>
-                            {state.age} 歲 / {END_AGE} 歲退休
+                            {state.age} 歲 / {endAge} 歲退休
                         </span>
                         <span>{Math.round(progress * 100)}%</span>
                     </div>
@@ -61,7 +63,7 @@ export const GameHeader = ({state, onSuicide}: Props) => {
                             role="progressbar"
                             aria-valuenow={state.age}
                             aria-valuemin={START_AGE}
-                            aria-valuemax={END_AGE}
+                            aria-valuemax={endAge}
                             aria-label="年齡進度"
                         />
                     </div>

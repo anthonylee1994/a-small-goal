@@ -3,12 +3,15 @@ import {playClick, unlockSfx, type ClickSfx} from "@/audio/sfx";
 import {TitleScreen} from "@/screen/TitleScreen";
 import {BirthRouletteScreen} from "@/screen/BirthRouletteScreen";
 import {GameScreen} from "@/screen/GameScreen";
+import {ProsperityPathScreen} from "@/screen/ProsperityPathScreen";
 import {SettlementScreen} from "@/screen/SettlementScreen";
 import {useGameStore} from "@/stores/gameStore";
 
 export const App = () => {
     const [hydrated, setHydrated] = React.useState(() => useGameStore.persist.hasHydrated());
     const game = useGameStore(s => s.game);
+    const meta = useGameStore(s => s.meta);
+    const uiScreen = useGameStore(s => s.uiScreen);
     const start = useGameStore(s => s.start);
     const restart = useGameStore(s => s.restart);
     const suicide = useGameStore(s => s.suicide);
@@ -25,6 +28,9 @@ export const App = () => {
     const seeDoctor = useGameStore(s => s.seeDoctor);
     const donate = useGameStore(s => s.donate);
     const endTurn = useGameStore(s => s.endTurn);
+    const openProsperity = useGameStore(s => s.openProsperity);
+    const closeProsperity = useGameStore(s => s.closeProsperity);
+    const buyProsperityUpgrade = useGameStore(s => s.buyProsperityUpgrade);
 
     React.useEffect(() => {
         const unsub = useGameStore.persist.onFinishHydration(() => setHydrated(true));
@@ -65,8 +71,13 @@ export const App = () => {
     if (!hydrated) return null;
 
     if (game.phase === "title") {
+        if (uiScreen === "prosperity") {
+            return <ProsperityPathScreen meta={meta} onBuy={buyProsperityUpgrade} onBack={() => closeProsperity()} />;
+        }
         return (
             <TitleScreen
+                prosperityPoints={meta.points}
+                onOpenProsperity={() => openProsperity()}
                 onStart={({easyMode}) => {
                     void unlockSfx();
                     start(undefined, {easyMode});

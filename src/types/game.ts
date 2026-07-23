@@ -253,4 +253,15 @@ export interface GameState {
     companyFoundAttempts: number;
     /** Settlement highlight for the year just ended; UI dismisses. */
     lastTurnSummary: TurnSummary | null;
+    /**
+     * Retirement age for this run (base 60 + 發達之路).
+     * Locked at startGame so mid-run meta upgrades do not change the current life.
+     */
+    endAge: number;
+    /** Meta bonuses baked into this run at startGame (for log / debug). */
+    metaBonusesApplied: {
+        cash: number;
+        reputation: number;
+        warehouse: number;
+    };
 }

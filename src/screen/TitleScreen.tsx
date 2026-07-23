@@ -6,9 +6,11 @@ import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 
 interface Props {
     onStart: (options: {easyMode: boolean}) => void;
+    onOpenProsperity: () => void;
+    prosperityPoints: number;
 }
 
-export const TitleScreen = ({onStart}: Props) => {
+export const TitleScreen = ({onStart, onOpenProsperity, prosperityPoints}: Props) => {
     const [easyMode, setEasyMode] = React.useState(false);
 
     React.useEffect(() => {
@@ -19,7 +21,7 @@ export const TitleScreen = ({onStart}: Props) => {
 
     return (
         <main className="app-shell relative mx-auto flex w-full flex-col justify-center gap-7 overflow-x-hidden px-5 py-10 text-center sm:px-6 md:gap-10 md:px-8 md:py-16 lg:gap-12 lg:py-20">
-            <SoundEffectToggle className="absolute top-3 right-3 z-10 sm:top-4 sm:right-4 md:top-5 md:right-5" />
+            <SoundEffectToggle floating />
 
             <div className="screen-enter-hero relative mx-auto max-w-[min(100%,11rem)] md:max-w-[min(100%,16rem)]">
                 <div
@@ -70,8 +72,11 @@ export const TitleScreen = ({onStart}: Props) => {
                 </span>
             </label>
 
-            <div className="screen-enter screen-enter-delay-4 mx-auto w-full max-w-md md:max-w-lg">
+            <div className="screen-enter screen-enter-delay-4 mx-auto flex w-full max-w-md flex-col gap-3 md:max-w-lg md:gap-4">
                 <Button onClick={() => onStart({easyMode})}>開始遊戲</Button>
+                <Button variant="secondary" onClick={onOpenProsperity}>
+                    發達之路
+                </Button>
             </div>
         </main>
     );

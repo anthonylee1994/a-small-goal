@@ -57,6 +57,9 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
     const families = BIRTH_FAMILIES;
     const resultId = state.birthFamilyId;
     const result = useMemo(() => families.find(f => f.id === resultId) ?? families[0]!, [families, resultId]);
+    /** 發達之路「初次資金」已叠喺 startGame 嘅 cash 上。 */
+    const cashBonus = state.metaBonusesApplied?.cash ?? 0;
+    const displayCash = (base: number) => base + cashBonus;
 
     const segments = useMemo(() => {
         const totalWeight = families.reduce((sum, f) => sum + f.weight, 0);
@@ -140,7 +143,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
 
     return (
         <main className="app-shell relative mx-auto flex w-full flex-col justify-center gap-6 overflow-x-hidden px-5 py-10 text-center sm:px-6 md:gap-8 md:px-8 md:py-14 lg:gap-9 lg:py-16">
-            <SoundEffectToggle className="absolute top-3 right-3 z-10 sm:top-4 sm:right-4 md:top-5 md:right-5" />
+            <SoundEffectToggle floating />
 
             {/* Title */}
             <div className="mx-auto w-full max-w-xl space-y-2 md:space-y-2.5">
@@ -218,7 +221,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                             >
                                 <Icon className="mx-auto size-5 md:size-6" strokeWidth={2.25} aria-hidden="true" />
                                 <p className="mt-1 text-[14px] font-black leading-tight md:mt-1.5 md:text-base">{family.name}</p>
-                                <p className="text-[13px] font-bold tabular-nums text-(--ink)/70 md:text-sm">{formatMoney(family.startingCash)}</p>
+                                <p className="text-[13px] font-bold tabular-nums text-(--ink)/70 md:text-sm">{formatMoney(displayCash(family.startingCash))}</p>
                             </li>
                         );
                     })}
@@ -240,7 +243,12 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                                 </p>
                             </div>
                             <p className="text-sm font-bold text-(--muted) md:text-base">{FAMILY_BLURB[result.id]}</p>
-                            <p className="mt-1.5 text-xs font-bold text-(--muted) md:mt-2 md:text-sm">起步資金 {formatMoney(result.startingCash)}</p>
+                            <p className="mt-1.5 text-sm font-black tabular-nums md:mt-2 md:text-base">起步資金 {formatMoney(state.cash)}</p>
+                            {cashBonus > 0 ? (
+                                <p className="mt-1 text-[11px] font-bold text-(--muted) md:text-sm">
+                                    家庭 {formatMoney(result.startingCash)} · 發達之路 +{formatMoney(cashBonus)}
+                                </p>
+                            ) : null}
                         </div>
                         <div className="mx-auto w-full max-w-md mt-2">
                             <Button onClick={onConfirm}>開始人生</Button>
