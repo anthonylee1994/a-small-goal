@@ -139,11 +139,11 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
     }, [landMod, reduceMotion, result.id]);
 
     return (
-        <main className="app-shell relative mx-auto flex w-full flex-col justify-center gap-5 overflow-x-hidden px-4 py-8 text-center sm:px-5 md:h-dvh md:max-h-dvh md:justify-between md:gap-0 md:overflow-hidden md:px-8 md:py-10 lg:px-10 lg:py-12">
+        <main className="app-shell relative mx-auto flex w-full flex-col justify-center gap-6 overflow-x-hidden px-5 py-10 text-center sm:px-6 md:gap-8 md:px-8 md:py-14 lg:gap-9 lg:py-16">
             <SoundEffectToggle className="absolute top-3 right-3 z-10 sm:top-4 sm:right-4 md:top-5 md:right-5" />
 
-            {/* Title block — same rhythm as TitleScreen */}
-            <div className="mx-auto w-full max-w-xl shrink-0 space-y-2 md:space-y-3">
+            {/* Title */}
+            <div className="mx-auto w-full max-w-xl space-y-2 md:space-y-2.5">
                 <p className="text-xs font-black tracking-wide text-(--coral) md:text-base">首抽限定 · 人生開局</p>
                 <h1 className="text-3xl font-black leading-none tracking-tight md:text-5xl lg:text-6xl" style={{fontFamily: "var(--font-display)"}}>
                     投胎轉盤
@@ -151,15 +151,15 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                 <p className="text-sm font-bold text-(--muted) md:text-lg">{phase === "done" ? "命運已定，睇清楚你嘅出生。" : "正在為你投胎……"}</p>
             </div>
 
-            {/* Wheel fills leftover viewport height on desktop (TitleScreen hero role). */}
-            <div className="flex min-h-0 w-full flex-1 items-center justify-center py-2 md:min-h-0 md:py-4">
-                <div className="relative w-[min(100%,18.5rem)] md:aspect-square md:h-full md:w-auto md:max-h-full md:max-w-full">
-                    <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 md:-top-2" aria-hidden="true">
-                        <div className="h-0 w-0 border-x-14 border-t-22 border-x-transparent border-t-(--coral) drop-shadow-[2px_3px_0_var(--border)] md:border-x-16 md:border-t-26" />
+            {/* Wheel — fixed size, not stretched by leftover viewport */}
+            <div className="mx-auto w-full max-w-xl pt-3 md:pt-4">
+                <div className="relative mx-auto w-[min(100%,17rem)] md:w-[min(100%,18.5rem)] lg:w-[min(100%,19.5rem)]">
+                    <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 md:-top-1.5" aria-hidden="true">
+                        <div className="h-0 w-0 border-x-12 border-t-20 border-x-transparent border-t-(--coral) drop-shadow-[2px_3px_0_var(--border)] md:border-x-14 md:border-t-22" />
                     </div>
 
                     <div
-                        className={`relative aspect-square rounded-full border-4 border-(--border) bg-white shadow-[6px_6px_0_var(--border)] md:h-full md:w-full md:shadow-[8px_8px_0_var(--border)] ${phase === "done" ? "roulette-landed" : ""}`}
+                        className={`relative aspect-square w-full rounded-full border-4 border-(--border) bg-white shadow-[6px_6px_0_var(--border)] md:shadow-[7px_7px_0_var(--border)] ${phase === "done" ? "roulette-landed" : ""}`}
                         aria-live="polite"
                         aria-atomic="true"
                     >
@@ -204,8 +204,8 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                 </div>
             </div>
 
-            {/* Bottom stack — full shell width like TitleScreen controls */}
-            <div className="mx-auto flex w-full max-w-xl shrink-0 flex-col gap-3 md:max-w-none md:gap-4">
+            {/* Families + CTA — same max width as title */}
+            <div className="mx-auto flex w-full max-w-xl flex-col gap-3 md:gap-4">
                 <ul className="grid grid-cols-3 gap-2 md:gap-3" aria-label="可投胎家庭">
                     {families.map(family => {
                         const Icon = BIRTH_FAMILY_ICONS[family.id];
@@ -213,36 +213,36 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                         return (
                             <li
                                 key={family.id}
-                                className={`rounded-2xl border-2 border-(--border) px-1.5 py-2 md:rounded-3xl md:px-3 md:py-4 ${active ? "shadow-[3px_3px_0_var(--border)] md:shadow-[4px_4px_0_var(--border)]" : "opacity-80"}`}
+                                className={`rounded-2xl border-4 border-(--border) px-1.5 py-2.5 md:rounded-3xl md:px-3 md:py-3.5 ${active ? "shadow-[3px_3px_0_var(--border)] md:shadow-[4px_4px_0_var(--border)]" : "opacity-80"}`}
                                 style={{background: WHEEL_COLORS[family.id]}}
                             >
-                                <Icon className="mx-auto size-5 md:size-7" strokeWidth={2.25} aria-hidden="true" />
-                                <p className="mt-1 text-[14px] font-black leading-tight md:mt-2 md:text-lg">{family.name}</p>
-                                <p className="text-[14px] font-bold tabular-nums text-(--ink)/70 md:text-base">{formatMoney(family.startingCash)}</p>
+                                <Icon className="mx-auto size-5 md:size-6" strokeWidth={2.25} aria-hidden="true" />
+                                <p className="mt-1 text-[14px] font-black leading-tight md:mt-1.5 md:text-base">{family.name}</p>
+                                <p className="text-[13px] font-bold tabular-nums text-(--ink)/70 md:text-sm">{formatMoney(family.startingCash)}</p>
                             </li>
                         );
                     })}
                 </ul>
 
                 {phase !== "done" ? (
-                    <div className="mx-auto w-full max-w-md md:max-w-lg">
+                    <div className="mx-auto w-full max-w-md mt-2">
                         <Button disabled onClick={() => undefined}>
                             刷緊首抽
                         </Button>
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-3 md:gap-4">
-                        <div className="rounded-2xl border-4 border-(--border) bg-white px-4 py-3 shadow-[4px_4px_0_var(--border)] md:rounded-3xl md:px-6 md:py-5 md:shadow-[6px_6px_0_var(--border)]">
-                            <div className="mb-2 flex items-center justify-center gap-2 md:mb-3 md:gap-3">
-                                <ResultIcon className="size-6 shrink-0 md:size-8" strokeWidth={2.5} aria-hidden="true" />
-                                <p className="text-lg font-black md:text-2xl" style={{fontFamily: "var(--font-display)"}}>
+                    <div className="flex flex-col gap-3 md:gap-3.5">
+                        <div className="rounded-2xl border-4 border-(--border) bg-white px-4 py-3 shadow-[4px_4px_0_var(--border)] md:rounded-3xl md:px-5 md:py-4 md:shadow-[5px_5px_0_var(--border)]">
+                            <div className="mb-1.5 flex items-center justify-center gap-2 md:mb-2 md:gap-2.5">
+                                <ResultIcon className="size-6 shrink-0 md:size-7" strokeWidth={2.5} aria-hidden="true" />
+                                <p className="text-lg font-black md:text-xl" style={{fontFamily: "var(--font-display)"}}>
                                     首抽結果：{result.name}
                                 </p>
                             </div>
-                            <p className="text-sm font-bold text-(--muted) md:text-lg">{FAMILY_BLURB[result.id]}</p>
-                            <p className="mt-2 text-xs font-bold text-(--muted) md:mt-3 md:text-base">起步資金 {formatMoney(result.startingCash)}</p>
+                            <p className="text-sm font-bold text-(--muted) md:text-base">{FAMILY_BLURB[result.id]}</p>
+                            <p className="mt-1.5 text-xs font-bold text-(--muted) md:mt-2 md:text-sm">起步資金 {formatMoney(result.startingCash)}</p>
                         </div>
-                        <div className="mx-auto w-full max-w-md md:max-w-lg">
+                        <div className="mx-auto w-full max-w-md mt-2">
                             <Button onClick={onConfirm}>開始人生</Button>
                         </div>
                     </div>
