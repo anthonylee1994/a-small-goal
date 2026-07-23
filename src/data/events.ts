@@ -9,7 +9,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "snack_boom",
         title: "薯片代言瘋搶",
-        message: "天王巨星代言薯片，成個香港搶到癲。街邊檔斷貨，炒家已經喺度虎視眈眈。",
+        message: "天王巨星代言薯片，成個香港搶到癲。街邊檔口斷貨，炒家已經喺度虎視眈眈。",
         weight: 0.8,
         choices: [
             {
@@ -155,7 +155,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "vitasoy_craze",
         title: "維他奶荒",
-        message: "間間茶餐廳都話「今日冇奶」，阿嬸已經排起長龍。",
+        message: "間間茶餐廳都話「今日冇奶」，一班師奶已經排起長龍。",
         weight: 0.9,
         choices: [
             {
@@ -480,7 +480,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "bitcoin_moon",
         title: "幣圈復活夜",
-        message: "名人出咗個帖文，比特幣半夜起飛。",
+        message: "名人出咗個 post，比特幣半夜起飛。",
         weight: 0.8,
         choices: [
             {
@@ -593,7 +593,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "lai_see",
         title: "阿爺派利是",
-        message: "拜年見到阿爺，封利是厚到可以當啟動資金。",
+        message: "拜年見到阿爺，嗰封利是厚到可以當啟動資金。",
         weight: 1,
         choices: [
             {
@@ -622,7 +622,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "food_poisoning",
         title: "街邊小食中伏",
-        message: "魚蛋食完肚痛，你企喺街考慮下一步。",
+        message: "魚蛋食完肚痛，你企喺街度諗緊點算。",
         weight: 0.9,
         choices: [
             {
@@ -845,7 +845,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "whatsapp_scam",
         title: "WhatsApp「阿仔」",
-        message: "收到個自稱「阿仔」嘅 WhatsApp，一開口就問你借錢。",
+        message: "收到條 WhatsApp，自稱係你「阿仔」，一開口就問你借錢。",
         weight: 1,
         choices: [
             {
@@ -863,7 +863,7 @@ export const EVENTS: readonly EventDef[] = [
             },
             {
                 id: "report",
-                label: "報警同廣傳",
+                label: "報警兼四處提醒",
                 effects: [
                     {type: "health", amount: -2},
                     {type: "reputation", amount: 2},
@@ -936,7 +936,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "parking_fine",
         title: "咪錶刺客",
-        message: "「只係停多兩分鐘」，罰單已經貼上玻璃。",
+        message: "「只係停多兩分鐘」，罰單已經貼咗喺玻璃度。",
         weight: 1.1,
         choices: [
             {
@@ -966,7 +966,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "stock_group_trap",
         title: "必升股票群",
-        message: "群組話「穩賺不賠」，入群費同跟單提示一齊湧埋嚟。",
+        message: "群組話「穩賺唔蝕」，入群費同跟單提示一齊湧埋嚟。",
         weight: 0.8,
         choices: [
             {
@@ -1026,7 +1026,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "nft_jpeg",
         title: "買咗張 JPEG",
-        message: "朋友話呢張圖將來值千萬。錢包連結頁已打開。",
+        message: "朋友話呢張圖將來值千萬。銀包連結頁已經打開咗。",
         weight: 0.8,
         choices: [
             {
@@ -1087,7 +1087,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "karaoke_overtime",
         title: "通宵 K 房",
-        message: "同事：「唱兩首就走。」麥克風已經塞喺你手上。",
+        message: "同事：「唱兩首就走。」麥克風已經塞咗喺你手度。",
         weight: 1,
         choices: [
             {
@@ -1265,7 +1265,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "cross_border_shop",
         title: "北上掃貨",
-        message: "群組瘋傳北上平貨清單，高鐵票可以而家訂。",
+        message: "群組瘋傳北上平貨清單，高鐵票而家可以訂。",
         weight: 1,
         choices: [
             {
@@ -1291,7 +1291,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "electricity_hike",
         title: "電費加價通知",
-        message: "電費單厚過月餅。冷氣遙控喺你手上。",
+        message: "電費單厚過月餅。冷氣遙控喺你手度。",
         weight: 1,
         choices: [
             {
@@ -1503,7 +1503,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "options_fomc",
         title: "聯儲局開會夜",
-        message: "聯儲局準備開金口，期權盤上落如過山車。",
+        message: "聯儲局準備開金口，期權盤上落好似過山車咁。",
         weight: 0.85,
         choices: [
             {
@@ -1560,7 +1560,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "chips_bar_promo",
         title: "酒吧送薯片潮",
-        message: "蘭桂坊買酒送薯片，零食櫃被掃空。",
+        message: "蘭桂坊買酒送薯片，零食櫃俾人掃空。",
         weight: 0.85,
         choices: [
             {
@@ -1613,7 +1613,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "vitasoy_heatwave",
         title: "熱浪搶凍奶",
-        message: "三十八度，便利店凍維他奶被掃清。",
+        message: "三十八度，便利店凍維他奶俾人掃清。",
         weight: 0.9,
         choices: [
             {
@@ -1643,7 +1643,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "ev_charger_queue",
         title: "充電樁大排長龍",
-        message: "充電站前面仲有七架車，你舊電就快跌到零。",
+        message: "充電站前面仲有七架車，你架車就快冇電。",
         weight: 0.9,
         choices: [
             {
@@ -1732,7 +1732,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "office_layoff_rumor",
         title: "公司裁員傳聞",
-        message: "茶水間流傳「下個月大執位」，空氣凝固。",
+        message: "茶水間流傳「下個月大執位」，空氣都凝固埋。",
         weight: 0.95,
         choices: [
             {
@@ -1906,7 +1906,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "wet_market_auntie",
         title: "街市阿嬸強力推銷",
-        message: "阿嬸塞咗兩斤菜畀你：「新鮮到跳。」你根本唔敢拒絕。",
+        message: "阿嬸塞咗兩斤菜畀你：「新鮮到識跳。」你根本唔敢拒絕。",
         weight: 1.15,
         choices: [
             {
@@ -2032,7 +2032,7 @@ export const EVENTS: readonly EventDef[] = [
     {
         id: "elderly_visit",
         title: "探訪獨居長者",
-        message: "機構問你去唔去探獨居伯伯，連水果籃都幫你睇好。",
+        message: "機構問你去唔去探獨居伯伯，連水果籃都幫你揀好。",
         weight: 1.05,
         choices: [
             {
