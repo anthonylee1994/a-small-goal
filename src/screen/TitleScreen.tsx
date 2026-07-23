@@ -7,10 +7,9 @@ import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 interface Props {
     onStart: (options: {easyMode: boolean}) => void;
     onOpenProsperity: () => void;
-    prosperityPoints: number;
 }
 
-export const TitleScreen = ({onStart, onOpenProsperity, prosperityPoints}: Props) => {
+export const TitleScreen = ({onStart, onOpenProsperity}: Props) => {
     const [easyMode, setEasyMode] = React.useState(false);
 
     React.useEffect(() => {

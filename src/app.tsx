@@ -76,7 +76,6 @@ export const App = () => {
         }
         return (
             <TitleScreen
-                prosperityPoints={meta.points}
                 onOpenProsperity={() => openProsperity()}
                 onStart={({easyMode}) => {
                     void unlockSfx();
