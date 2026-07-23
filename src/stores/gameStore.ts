@@ -5,6 +5,7 @@ import {
     buyGood,
     commitSuicide,
     createInitialState,
+    chooseEvent,
     dismissBirthReveal,
     dismissEvent,
     dismissTurnSummary,
@@ -26,6 +27,7 @@ interface GameActions {
     restart: () => void;
     suicide: () => void;
     dismissBirthReveal: () => void;
+    chooseEvent: (choiceId: string) => void;
     dismissEvent: () => void;
     dismissTurnSummary: () => void;
     buy: (goodId: GoodId, quantity: number) => void;
@@ -55,6 +57,7 @@ export const useGameStore = create<GameStore>()(
             restart: () => set({game: createInitialState()}),
             suicide: () => set(s => ({game: commitSuicide(s.game)})),
             dismissBirthReveal: () => set(s => ({game: dismissBirthReveal(s.game)})),
+            chooseEvent: choiceId => set(s => ({game: chooseEvent(s.game, choiceId)})),
             dismissEvent: () => set(s => ({game: dismissEvent(s.game)})),
             dismissTurnSummary: () => set(s => ({game: dismissTurnSummary(s.game)})),
             buy: (goodId, quantity) => set(s => ({game: buyGood(s.game, goodId, quantity)})),

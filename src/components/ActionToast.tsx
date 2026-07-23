@@ -20,6 +20,9 @@ const TONE_BG: Record<LogEntry["tone"], string> = {
 };
 
 const SHOW_MS = 2200;
+/** Longer copy (e.g. multi-effect event resolve) stays up a bit more. */
+const SHOW_MS_LONG = 3600;
+const LONG_TEXT_LEN = 36;
 const BOUNCE_OUT_MS = 320;
 
 export const ActionToast = ({latest, suppressed: suppressedProp = false}: Props) => {
@@ -43,13 +46,14 @@ export const ActionToast = ({latest, suppressed: suppressedProp = false}: Props)
         clearTimers();
         setEntry(log);
         setLeaving(false);
+        const holdMs = log.text.length >= LONG_TEXT_LEN || log.text.includes(" · ") ? SHOW_MS_LONG : SHOW_MS;
         hideTimer.current = window.setTimeout(() => {
             setLeaving(true);
             removeTimer.current = window.setTimeout(() => {
                 setEntry(null);
                 setLeaving(false);
             }, BOUNCE_OUT_MS);
-        }, SHOW_MS);
+        }, holdMs);
     };
 
     const dismiss = () => {

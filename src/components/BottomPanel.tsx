@@ -44,7 +44,7 @@ export const BottomPanel = ({activeTab, onTabChange, endTurnDisabled, onEndTurn}
                                 role="tab"
                                 aria-selected={active}
                                 onClick={() => onTabChange(tab.id)}
-                                className={`flex flex-col items-center gap-0.5 rounded-xl border-2 border-(--border) px-1 py-2 text-[10px] font-black transition-[transform,box-shadow] active:translate-x-px active:translate-y-px active:shadow-none sm:flex-row sm:justify-center sm:gap-1.5 sm:text-xs md:gap-2 md:rounded-2xl md:px-2 md:py-3.5 md:text-lg ${
+                                className={`flex flex-col items-center gap-0.5 rounded-xl border-2 border-(--border) px-1 py-2 text-[12px] font-black transition-[transform,box-shadow] active:translate-x-px active:translate-y-px active:shadow-none sm:flex-row sm:justify-center sm:gap-1.5 sm:text-xs md:gap-2 md:rounded-2xl md:px-2 md:py-3.5 md:text-lg ${
                                     active ? "bg-(--accent) shadow-[2px_2px_0_var(--border)]" : "bg-white shadow-[2px_2px_0_var(--border)]"
                                 }`}
                             >

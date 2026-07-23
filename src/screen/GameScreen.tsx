@@ -21,7 +21,7 @@ import {TurnSummaryModal} from "@/components/TurnSummaryModal";
 
 interface Props {
     state: GameState;
-    onDismissEvent: () => void;
+    onChooseEvent: (choiceId: string) => void;
     onDismissTurnSummary: () => void;
     onBuy: (goodId: GoodId, quantity: number) => void;
     onSell: (goodId: GoodId, quantity: number) => void;
@@ -38,7 +38,7 @@ interface Props {
 
 export const GameScreen = ({
     state,
-    onDismissEvent,
+    onChooseEvent,
     onDismissTurnSummary,
     onBuy,
     onSell,
@@ -95,7 +95,12 @@ export const GameScreen = ({
 
     const closeEventModal = () => {
         setEventPreviewOpen(false);
-        if (state.phase === "event") onDismissEvent();
+        // Pending events must be resolved via onChooseEvent — never auto-dismiss from UI.
+    };
+
+    const handleChooseEvent = (choiceId: string) => {
+        onChooseEvent(choiceId);
+        setEventPreviewOpen(false);
     };
 
     const handleJumpToMarket = (goodId: GoodId) => {
@@ -195,7 +200,16 @@ export const GameScreen = ({
 
             {showTurnSummary && state.lastTurnSummary ? <TurnSummaryModal summary={state.lastTurnSummary} onDismiss={onDismissTurnSummary} /> : null}
 
-            {showEventModal && event ? <EventModal event={event} onDismiss={closeEventModal} onJumpToMarket={handleJumpToMarket} /> : null}
+            {showEventModal && event ? (
+                <EventModal
+                    event={event}
+                    pending={state.phase === "event"}
+                    selectedChoiceId={state.currentEventChoiceId}
+                    onChoose={handleChooseEvent}
+                    onDismiss={closeEventModal}
+                    onJumpToMarket={handleJumpToMarket}
+                />
+            ) : null}
         </main>
     );
 };

@@ -7,6 +7,7 @@ import {
     buyCompanyShares,
     buyGood,
     companyValue,
+    chooseEvent,
     createInitialState,
     dismissBirthReveal,
     dismissEvent,
@@ -74,19 +75,18 @@ describe("createInitialState / startGame", () => {
         expect(state.seed).toBe(42);
     });
 
-    it("startGame rolls a birth family and enters event phase", () => {
+    it("startGame rolls a birth family and enters event phase without applying effects yet", () => {
         const state = startGame(createInitialState(), 7);
         expect(state.birthFamilyId).not.toBeNull();
         expect(state.birthRevealed).toBe(false);
         const family = BIRTH_FAMILY_MAP[state.birthFamilyId!];
         expect(state.phase).toBe("event");
         expect(state.currentEventId).not.toBeNull();
+        expect(state.eventEffectsPending).toBe(true);
+        expect(state.currentEventChoiceId).toBeNull();
         expect(state.log.some(l => l.text.includes("投胎成功"))).toBe(true);
-
-        const event = EVENT_MAP[state.currentEventId!];
-        const rawCash = event.effects.filter(e => e.type === "cash").reduce((sum, e) => sum + (e.type === "cash" ? e.amount : 0), 0);
-        const cashDelta = softenCashLoss(rawCash, family.startingCash, false);
-        expect(state.cash).toBe(family.startingCash + cashDelta);
+        // Effects wait for chooseEvent — cash is still birth cash only.
+        expect(state.cash).toBe(family.startingCash);
         expect(state.easyMode).toBe(false);
         expect(state.milestonesUnlocked).toEqual([]);
     });
@@ -122,10 +122,14 @@ describe("phase gates", () => {
         expect(next).toBe(state);
     });
 
-    it("dismissEvent moves event → playing", () => {
-        const state = dismissEvent(startGame(createInitialState(), 9));
+    it("dismissEvent auto-picks first choice and moves event → playing", () => {
+        const before = startGame(createInitialState(), 9);
+        const event = EVENT_MAP[before.currentEventId!];
+        const state = dismissEvent(before);
         expect(state.phase).toBe("playing");
         expect(state.eventDismissed).toBe(true);
+        expect(state.eventEffectsPending).toBe(false);
+        expect(state.currentEventChoiceId).toBe(event.choices[0]?.id);
     });
 });
 
@@ -205,10 +209,9 @@ describe("buyGood / sellGood", () => {
 });
 
 describe("events", () => {
-    it("applies snack_boom price multiplier into yearly prices", () => {
-        // Search a small seed range for snack_boom for a deterministic assertion path
+    it("snack_boom price mult applies only after choosing ride", () => {
         let found: GameState | null = null;
-        for (let seed = 1; seed < 200; seed++) {
+        for (let seed = 1; seed < 400; seed++) {
             const s = startGame(createInitialState(), seed);
             if (s.currentEventId === "snack_boom") {
                 found = s;
@@ -216,37 +219,79 @@ describe("events", () => {
             }
         }
         expect(found).not.toBeNull();
-        const event = EVENT_MAP.snack_boom;
-        expect(event.effects[0]).toMatchObject({type: "price_mult", goodId: "chips", mult: 2.5});
-        expect(found!.prices.chips).toBeGreaterThan(0);
+        const before = found!.prices.chips;
+        expect(before).toBeGreaterThan(0);
+        const ride = chooseEvent(found!, "ride");
+        expect(ride.currentEventChoiceId).toBe("ride");
+        expect(ride.prices.chips).toBe(Math.max(1, Math.round(before * 2.5)));
+        expect(ride.phase).toBe("playing");
     });
 
-    it("windfall adds cash", () => {
+    it("windfall adds cash only after pocket choice", () => {
         let found: GameState | null = null;
-        for (let seed = 1; seed < 400; seed++) {
-            const before = createInitialState(seed);
-            const s = startGame(before, seed);
+        for (let seed = 1; seed < 600; seed++) {
+            const s = startGame(createInitialState(), seed);
             if (s.currentEventId === "windfall") {
                 found = s;
-                const familyCash = BIRTH_FAMILY_MAP[s.birthFamilyId!].startingCash;
-                expect(s.cash).toBe(familyCash + 50_000);
                 break;
             }
         }
         expect(found).not.toBeNull();
+        const familyCash = BIRTH_FAMILY_MAP[found!.birthFamilyId!].startingCash;
+        expect(found!.cash).toBe(familyCash);
+        const next = chooseEvent(found!, "pocket");
+        expect(next.cash).toBe(familyCash + 50_000);
     });
 
-    it("charity event raises reputation", () => {
+    it("charity event raises reputation after help choice", () => {
         let found: GameState | null = null;
-        for (let seed = 1; seed < 800; seed++) {
+        for (let seed = 1; seed < 1000; seed++) {
             const s = startGame(createInitialState(), seed);
             if (s.currentEventId === "anonymous_kindness") {
                 found = s;
-                expect(s.reputation).toBe(2);
                 break;
             }
         }
         expect(found).not.toBeNull();
+        expect(found!.reputation).toBe(0);
+        const next = chooseEvent(found!, "help");
+        expect(next.reputation).toBe(2);
+    });
+
+    it("reputation toast shows intended amount even when already at 0", () => {
+        let found: GameState | null = null;
+        for (let seed = 1; seed < 600; seed++) {
+            const s = startGame(createInitialState(), seed);
+            if (s.currentEventId === "vitasoy_craze") {
+                found = s;
+                break;
+            }
+        }
+        expect(found).not.toBeNull();
+        expect(found!.reputation).toBe(0);
+        const next = chooseEvent(found!, "scalper_shame");
+        expect(next.reputation).toBe(0);
+        expect(next.log[0]?.text).toContain("名聲 -4");
+        expect(next.log[0]?.text).not.toContain("名聲 +0");
+    });
+
+    it("different choices yield different outcomes", () => {
+        let found: GameState | null = null;
+        for (let seed = 1; seed < 600; seed++) {
+            const s = startGame(createInitialState(), seed);
+            if (s.currentEventId === "relative_borrow") {
+                found = s;
+                break;
+            }
+        }
+        expect(found).not.toBeNull();
+        const familyCash = found!.cash;
+        const lend = chooseEvent(found!, "lend");
+        const refuse = chooseEvent(found!, "refuse");
+        expect(lend.cash).toBeLessThan(familyCash);
+        expect(refuse.cash).toBe(familyCash);
+        expect(refuse.reputation).toBeLessThan(lend.reputation + 10);
+        expect(refuse.reputation).toBe(Math.max(0, found!.reputation - 4));
     });
 });
 

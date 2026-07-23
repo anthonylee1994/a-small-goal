@@ -13,7 +13,7 @@ export const App = () => {
     const restart = useGameStore(s => s.restart);
     const suicide = useGameStore(s => s.suicide);
     const dismissBirthReveal = useGameStore(s => s.dismissBirthReveal);
-    const dismissEvent = useGameStore(s => s.dismissEvent);
+    const chooseEvent = useGameStore(s => s.chooseEvent);
     const dismissTurnSummary = useGameStore(s => s.dismissTurnSummary);
     const buy = useGameStore(s => s.buy);
     const sell = useGameStore(s => s.sell);
@@ -86,7 +86,7 @@ export const App = () => {
     return (
         <GameScreen
             state={game}
-            onDismissEvent={() => dismissEvent()}
+            onChooseEvent={choiceId => chooseEvent(choiceId)}
             onDismissTurnSummary={() => dismissTurnSummary()}
             onBuy={buy}
             onSell={sell}

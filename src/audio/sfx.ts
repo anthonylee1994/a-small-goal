@@ -164,7 +164,7 @@ export function playRouletteLand(kind: RouletteLandKind = "middle_class"): void 
     void playRouletteLandAsync(kind);
 }
 
-/** Comic “啪！” stinger when the yearly event modal pops. */
+/** Comic stinger when the yearly event modal pops. */
 export function playEventModal(): void {
     if (muted) return;
     void playEventModalAsync();

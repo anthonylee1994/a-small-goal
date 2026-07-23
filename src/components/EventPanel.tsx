@@ -23,7 +23,7 @@ export const EventPanel = ({state, onOpen}: Props) => {
                     <Icon className="size-6" strokeWidth={2.25} />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <p className="text-[10px] md:text-base font-black text-(--coral)">{state.phase === "event" ? "事件未關閉 · 市場暫停" : "本年事件 · 撳開睇詳情"}</p>
+                    <p className="text-[10px] md:text-base font-black text-(--coral)">{state.phase === "event" ? "未抉擇 · 市場暫停" : "本年事件"}</p>
                     <h2 className="truncate text-base md:text-lg font-black" style={{fontFamily: "var(--font-display)"}}>
                         {event.title}
                     </h2>

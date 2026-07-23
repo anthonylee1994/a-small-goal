@@ -190,12 +190,21 @@ export interface PartnerDef {
 
 export type EventEffect = {type: "price_mult"; goodId: GoodId; mult: number} | {type: "cash"; amount: number} | {type: "health"; amount: number} | {type: "reputation"; amount: number};
 
+/** One player-facing branch for a yearly event. */
+export interface EventChoice {
+    id: string;
+    /** Button label (short). */
+    label: string;
+    effects: EventEffect[];
+}
+
 export interface EventDef {
     id: EventId;
     title: string;
     message: string;
     weight: number;
-    effects: EventEffect[];
+    /** Player must pick one; effects apply only after chooseEvent. */
+    choices: EventChoice[];
 }
 
 export interface BirthFamilyDef {
@@ -224,6 +233,13 @@ export interface GameState {
     partnerId: PartnerId | null;
     children: Child[];
     currentEventId: EventId | null;
+    /** Choice id after player resolves the event; null while still deciding. */
+    currentEventChoiceId: string | null;
+    /**
+     * True until chooseEvent applies this year's choice effects.
+     * Legacy saves default to false so old mid-event states are not double-applied.
+     */
+    eventEffectsPending: boolean;
     eventDismissed: boolean;
     totalAssets: number | null;
     gameOverReason: GameOverReason | null;

@@ -3,7 +3,23 @@ import {COMPANIES, COMPANY_MAP} from "../data/companies";
 import {EVENT_MAP, EVENTS} from "../data/events";
 import {GOOD_MAP, GOODS} from "../data/goods";
 import {PARTNER_MAP, PARTNERS} from "../data/partners";
-import type {Child, CompanyClosure, CompanyTypeId, EventDef, GameState, GoodId, LogEntry, MilestoneId, OwnedCompany, PartnerId, Rank, RankTier, TurnSummary} from "../types/game";
+import type {
+    Child,
+    CompanyClosure,
+    CompanyTypeId,
+    EventChoice,
+    EventDef,
+    EventEffect,
+    GameState,
+    GoodId,
+    LogEntry,
+    MilestoneId,
+    OwnedCompany,
+    PartnerId,
+    Rank,
+    RankTier,
+    TurnSummary,
+} from "../types/game";
 import {
     BASE_CHILD_CHANCE,
     CASH_LOSS_MAX_FRACTION,
@@ -243,9 +259,9 @@ function generatePrices(age: number, rng: Rng, eventMults: Partial<Record<GoodId
     return prices;
 }
 
-function eventPriceMults(event: EventDef): Partial<Record<GoodId, number>> {
+function effectPriceMults(effects: readonly EventEffect[]): Partial<Record<GoodId, number>> {
     const mults: Partial<Record<GoodId, number>> = {};
-    for (const effect of event.effects) {
+    for (const effect of effects) {
         if (effect.type === "price_mult") {
             mults[effect.goodId] = (mults[effect.goodId] ?? 1) * effect.mult;
         }
@@ -266,11 +282,37 @@ export function softenCashLoss(rawAmount: number, cash: number, easyMode: boolea
     return -loss;
 }
 
-function applyEventNonPriceEffects(state: GameState, event: EventDef): {state: GameState; messages: string[]} {
+export function formatEventEffectLabel(effect: EventEffect): string {
+    switch (effect.type) {
+        case "price_mult": {
+            const name = GOOD_MAP[effect.goodId]?.name ?? effect.goodId;
+            return `${name} 價格 ×${effect.mult}`;
+        }
+        case "cash":
+            return effect.amount >= 0 ? `現金 +${formatMoney(effect.amount)}` : `現金 ${formatMoney(effect.amount)}`;
+        case "health":
+            return `健康 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`;
+        case "reputation":
+            return `名聲 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`;
+    }
+}
+
+/** Apply choice effects: price mults scale current year prices; cash/health/rep mutate stats. */
+function applyEventEffects(state: GameState, effects: readonly EventEffect[]): {state: GameState; messages: string[]} {
     let next = {...state};
     const messages: string[] = [];
+    const priceMults = effectPriceMults(effects);
 
-    for (const effect of event.effects) {
+    if (Object.keys(priceMults).length > 0) {
+        const prices = {...next.prices};
+        for (const goodId of Object.keys(priceMults) as GoodId[]) {
+            const mult = priceMults[goodId] ?? 1;
+            prices[goodId] = Math.max(1, Math.round(prices[goodId] * mult));
+        }
+        next = {...next, prices};
+    }
+
+    for (const effect of effects) {
         switch (effect.type) {
             case "cash": {
                 const amount = softenCashLoss(effect.amount, next.cash, next.easyMode);
@@ -286,22 +328,23 @@ function applyEventNonPriceEffects(state: GameState, event: EventDef): {state: G
                 next = {...next, health: clamp(next.health + effect.amount, 0, 100)};
                 messages.push(`健康 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`);
                 break;
-            case "reputation": {
-                const before = next.reputation;
+            case "reputation":
+                // Show intended amount (like health), not post-clamp delta — 0 名聲扣 4 仍應顯示 −4。
                 next = {...next, reputation: clamp(next.reputation + effect.amount, 0, 100)};
-                const delta = next.reputation - before;
-                messages.push(`名聲 ${delta >= 0 ? "+" : ""}${delta}`);
+                messages.push(`名聲 ${effect.amount >= 0 ? "+" : ""}${effect.amount}`);
                 break;
-            }
             case "price_mult": {
-                const name = GOOD_MAP[effect.goodId]?.name ?? effect.goodId;
-                messages.push(`${name} 價格 ×${effect.mult}`);
+                messages.push(formatEventEffectLabel(effect));
                 break;
             }
         }
     }
 
     return {state: next, messages};
+}
+
+export function getEventChoice(event: EventDef, choiceId: string): EventChoice | null {
+    return event.choices.find(c => c.id === choiceId) ?? null;
 }
 
 export function fairUnitPrice(goodId: GoodId, age: number): number {
@@ -358,12 +401,19 @@ function checkAgeMilestones(state: GameState): GameState {
 
 /** Fill fields missing from older persisted saves. */
 export function normalizeGameState(raw: GameState): GameState {
+    const legacy = raw as GameState & {eventEffectsPending?: boolean; currentEventChoiceId?: string | null};
+    // Old builds applied effects in beginTurn; never re-apply on those saves.
+    const eventEffectsPending = legacy.eventEffectsPending ?? false;
+    const currentEventChoiceId = legacy.currentEventChoiceId ?? (raw.eventDismissed ? "legacy" : null);
+
     return {
         ...createInitialState(raw.seed),
         ...raw,
         easyMode: raw.easyMode ?? false,
         milestonesUnlocked: raw.milestonesUnlocked ?? [],
         companyFoundAttempts: raw.companyFoundAttempts ?? 0,
+        eventEffectsPending,
+        currentEventChoiceId,
         lastTurnSummary: raw.lastTurnSummary
             ? {
                   ...raw.lastTurnSummary,
@@ -398,6 +448,8 @@ export function createInitialState(seed?: number): GameState {
         partnerId: null,
         children: [],
         currentEventId: null,
+        currentEventChoiceId: null,
+        eventEffectsPending: false,
         eventDismissed: false,
         totalAssets: null,
         gameOverReason: null,
@@ -449,31 +501,89 @@ export function beginTurn(state: GameState): GameState {
 
     const rng = turnRng(state, 1);
     const event = pickWeighted(rng, EVENTS);
-    const prices = generatePrices(state.age, rng, eventPriceMults(event));
+    // Prices without event mults — player choice applies price_mult afterwards.
+    const prices = generatePrices(state.age, rng, {});
     const companySharePrices = generateCompanySharePrices(state.age, rng);
-    const applied = applyEventNonPriceEffects({...state, prices, companySharePrices}, event);
 
     let next: GameState = {
-        ...applied.state,
+        ...state,
         phase: "event",
         prices,
         companySharePrices,
         currentEventId: event.id,
+        currentEventChoiceId: null,
+        eventEffectsPending: true,
         eventDismissed: false,
     };
 
     next = pushLog(next, `【${event.title}】${event.message}`, "event");
-    for (const msg of applied.messages) {
-        next = pushLog(next, `【${event.title}】${msg}`, "event");
+    return next;
+}
+
+/**
+ * Resolve this year's event by picking a choice. Applies effects once, then enters playing.
+ * Legacy saves with eventEffectsPending=false only change phase (no double apply).
+ */
+export function chooseEvent(state: GameState, choiceId: string): GameState {
+    if (state.phase !== "event") return state;
+    if (state.eventDismissed && state.currentEventChoiceId != null) return state;
+
+    const event = getCurrentEvent(state);
+    if (!event || event.choices.length === 0) {
+        return {
+            ...state,
+            phase: "playing",
+            eventDismissed: true,
+            eventEffectsPending: false,
+            currentEventChoiceId: choiceId || "none",
+        };
     }
+
+    const choice = getEventChoice(event, choiceId) ?? event.choices[0];
+    if (!choice) {
+        return {...state, phase: "playing", eventDismissed: true, eventEffectsPending: false};
+    }
+
+    let next: GameState = {
+        ...state,
+        currentEventChoiceId: choice.id,
+        eventEffectsPending: false,
+        eventDismissed: true,
+        phase: "playing",
+    };
+
+    // One log line so ActionToast (log[0]) shows every effect, not only the last.
+    const parts: string[] = [`你揀咗：${choice.label}`];
+    if (state.eventEffectsPending) {
+        const applied = applyEventEffects(next, choice.effects);
+        next = applied.state;
+        parts.push(...applied.messages);
+    }
+    next = pushLog(next, `【${event.title}】${parts.join(" · ")}`, "event");
 
     if (next.health <= 0) return finishDeath(next);
     return next;
 }
 
+/** Auto-pick first choice (tests / balance sim / escape hatch). */
 export function dismissEvent(state: GameState): GameState {
     if (state.phase !== "event") return state;
-    return {...state, phase: "playing", eventDismissed: true};
+    if (!state.eventEffectsPending && state.currentEventChoiceId != null) {
+        return {...state, phase: "playing", eventDismissed: true};
+    }
+    if (!state.eventEffectsPending) {
+        // Legacy mid-event: effects already applied under old engine.
+        return {
+            ...state,
+            phase: "playing",
+            eventDismissed: true,
+            currentEventChoiceId: state.currentEventChoiceId ?? "legacy",
+            eventEffectsPending: false,
+        };
+    }
+    const event = getCurrentEvent(state);
+    const fallbackId = event?.choices[0]?.id ?? "default";
+    return chooseEvent(state, fallbackId);
 }
 
 /** 睇醫生收費：基價×通脹 + 資產抽成，上限跟通脹。 */
@@ -1142,6 +1252,8 @@ export function endTurn(state: GameState): GameState {
         ...next,
         age: nextAge,
         currentEventId: null,
+        currentEventChoiceId: null,
+        eventEffectsPending: false,
         eventDismissed: false,
     });
 }
