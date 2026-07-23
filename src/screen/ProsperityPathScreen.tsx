@@ -1,3 +1,5 @@
+import React from "react";
+import {startProsperityBgm, stopProsperityBgm} from "@/audio/bgm";
 import {Button} from "@/components/Button";
 import {SoundEffectToggle} from "@/components/SoundEffectToggle";
 import {formatMoney} from "@/game/format";
@@ -115,6 +117,11 @@ export const ProsperityPathScreen = ({meta, onBuy, onBack}: Props) => {
     const totalLevels = PROSPERITY_UPGRADES.reduce((sum, def) => sum + def.maxLevel, 0);
     const ownedLevels = PROSPERITY_UPGRADES.reduce((sum, def) => sum + meta.levels[def.id], 0);
     const pathPct = totalLevels <= 0 ? 0 : Math.round((ownedLevels / totalLevels) * 100);
+
+    React.useEffect(() => {
+        startProsperityBgm();
+        return () => stopProsperityBgm();
+    }, []);
 
     return (
         <main className="app-shell relative mx-auto flex w-full flex-col overflow-x-hidden px-4 py-8 sm:px-5 md:px-6 md:py-12 lg:px-8">

@@ -8,7 +8,7 @@
 
 import {isSfxMuted, onAudioReady, resumeAudio, subscribeSfx} from "@/audio/sfx";
 
-export type BgmTrack = "game" | "roulette" | "settlement_win" | "settlement_lose";
+export type BgmTrack = "game" | "roulette" | "prosperity" | "settlement_win" | "settlement_lose";
 
 interface TrackDef {
     bpm: number;
@@ -143,6 +143,80 @@ const LOSE_BASS: readonly number[] = [
 
 const LOSE_PAD: readonly number[] = [110, 87.31, 98, 110];
 
+// --- Prosperity path: warm shop / level-up stroll (F major-ish) ---------------
+
+const PROSPERITY_LEAD: readonly number[] = [
+    349.23,
+    349.23,
+    440,
+    523.25,
+    587.33,
+    523.25,
+    440,
+    392, // F4 climb
+    440,
+    440,
+    523.25,
+    587.33,
+    659.25,
+    587.33,
+    523.25,
+    440, // A4 arc
+    392,
+    392,
+    440,
+    523.25,
+    587.33,
+    523.25,
+    493.88,
+    440, // G4 walk
+    523.25,
+    587.33,
+    659.25,
+    698.46,
+    659.25,
+    587.33,
+    523.25,
+    440, // C5 peak → rest
+];
+
+const PROSPERITY_BASS: readonly number[] = [
+    87.31,
+    87.31,
+    87.31,
+    87.31,
+    87.31,
+    87.31,
+    130.81,
+    130.81, // F2 → C3
+    110,
+    110,
+    110,
+    110,
+    110,
+    110,
+    146.83,
+    146.83, // A2 → D3
+    98,
+    98,
+    98,
+    98,
+    98,
+    98,
+    146.83,
+    146.83, // G2 → D3
+    87.31,
+    87.31,
+    87.31,
+    110,
+    110,
+    130.81,
+    130.81,
+    174.61, // F2 → A2 → C3 → F3
+];
+
+const PROSPERITY_PAD: readonly number[] = [87.31, 110, 98, 87.31];
+
 const TRACKS: Record<BgmTrack, TrackDef> = {
     game: {
         bpm: 112,
@@ -161,6 +235,15 @@ const TRACKS: Record<BgmTrack, TrackDef> = {
         bass: ROULETTE_BASS,
         pad: ROULETTE_PAD,
         hatSteps: OFFBEAT_HATS,
+    },
+    prosperity: {
+        bpm: 100,
+        gain: 0.04,
+        steps: 32,
+        lead: PROSPERITY_LEAD,
+        bass: PROSPERITY_BASS,
+        pad: PROSPERITY_PAD,
+        hatSteps: SPARSE_HATS,
     },
     settlement_win: {
         bpm: 128,
@@ -295,7 +378,7 @@ function scheduleStep(audio: AudioContext, dest: AudioNode, track: TrackDef, ind
     }
 
     if (track.hatSteps.has(i)) {
-        const hatPeak = activeTrack === "settlement_lose" ? 0.006 : activeTrack === "roulette" ? 0.008 : 0.009;
+        const hatPeak = activeTrack === "settlement_lose" ? 0.006 : activeTrack === "prosperity" ? 0.007 : activeTrack === "roulette" ? 0.008 : 0.009;
         hat(audio, dest, when, hatPeak);
     }
 }
@@ -429,4 +512,14 @@ export function startSettlementBgm(outcome: "win" | "lose"): void {
 /** Stop settlement BGM. Idempotent. */
 export function stopSettlementBgm(): void {
     if (wantTrack === "settlement_win" || wantTrack === "settlement_lose") stopTrack();
+}
+
+/** 發達之路 meta shop loop. Idempotent. */
+export function startProsperityBgm(): void {
+    startTrack("prosperity");
+}
+
+/** Stop prosperity BGM. Idempotent. */
+export function stopProsperityBgm(): void {
+    if (wantTrack === "prosperity") stopTrack();
 }
