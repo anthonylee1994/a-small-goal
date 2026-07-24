@@ -34,7 +34,7 @@ export const TitleScreen = ({onStart, onOpenProsperity}: Props) => {
                     style={{"--badge-tilt": "6deg"} as React.CSSProperties}
                     aria-hidden="true"
                 >
-                    啪！
+                    小目標
                 </span>
                 <span
                     className="screen-enter-badge screen-enter-delay-2 absolute -bottom-1 left-0 rounded-xl border-2 border-(--border) bg-(--mint) px-2 py-1 text-xs font-black shadow-[2px_2px_0_var(--border)] md:left-1 md:px-3 md:py-1.5 md:text-base"
