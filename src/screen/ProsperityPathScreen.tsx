@@ -241,7 +241,7 @@ export const ProsperityPathScreen = ({meta, onBuy, onBack}: Props) => {
                 </ul>
 
                 <Button variant="ghost" onClick={onBack}>
-                    返回標題
+                    返回主頁
                 </Button>
             </div>
         </main>
