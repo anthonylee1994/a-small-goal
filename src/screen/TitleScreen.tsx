@@ -55,7 +55,7 @@ export const TitleScreen = ({onStart, onOpenProsperity}: Props) => {
                 </p>
             </div>
 
-            <label className="screen-enter screen-enter-delay-3 mx-auto flex w-full max-w-xs cursor-pointer items-start gap-3 rounded-2xl border-4 border-(--border) px-4 py-3 text-left shadow-[4px_4px_0_var(--border)] transition-[transform,box-shadow,background-color] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none md:max-w-md md:gap-4 md:rounded-3xl md:px-5 md:py-4 bg-white">
+            <label className="screen-enter screen-enter-delay-3 mx-auto flex w-full max-w-xs cursor-pointer items-start gap-3 rounded-2xl border-4 border-(--border) px-4 py-3 text-left shadow-[4px_4px_0_var(--border)] transition-[transform,box-shadow,background-color] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none md:max-w-md md:gap-4 md:rounded-3xl md:px-5 md:py-4 bg-white select-none">
                 <input
                     type="checkbox"
                     className="mt-1 size-4 shrink-0 accent-(--coral) md:mt-1.5 md:size-5"
