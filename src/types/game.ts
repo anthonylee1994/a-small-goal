@@ -227,6 +227,8 @@ export interface GameState {
     /** Total purchase cost basis per good (weighted average on buy, proportional on sell). */
     inventoryCost: Record<GoodId, number>;
     prices: Record<GoodId, number>;
+    /** Last year's prices — used for trend display and momentum. */
+    prevPrices: Record<GoodId, number>;
     companies: OwnedCompany[];
     /** Per-share market price this year for each company type. */
     companySharePrices: Record<CompanyTypeId, number>;
@@ -264,4 +266,6 @@ export interface GameState {
         reputation: number;
         warehouse: number;
     };
+    /** Outstanding bank loan balance (principal + accrued interest). */
+    loanBalance: number;
 }

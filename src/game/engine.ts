@@ -47,14 +47,16 @@ import {
     ILLNESS_HEALTH_RESTORE,
     ILLNESS_HEALTH_THRESHOLD,
     INFLATION_PER_YEAR,
+    LOAN_INTEREST_RATE_HIGH,
+    LOAN_INTEREST_RATE_LOW,
+    LOAN_MAX_ASSET_RATIO,
+    LOAN_MIN_AMOUNT,
     LOW_CLASS_FIRST_COMPANY_DISCOUNT,
     LOW_CLASS_FIRST_WAREHOUSE_DISCOUNT,
     LOW_CLASS_STARTING_REPUTATION,
     MAX_CHILDREN,
     MAX_LOGS,
     MILESTONE_THRESHOLDS,
-    PRICE_CHEAP_RATIO,
-    PRICE_EXPENSIVE_RATIO,
     PRICE_HIGH_TIER_MAX,
     PRICE_HIGH_TIER_MIN,
     PRICE_RANDOM_MAX,
@@ -63,6 +65,8 @@ import {
     START_HEALTH,
     START_REPUTATION,
     START_WAREHOUSE,
+    TREND_MOMENTUM_BONUS,
+    TREND_THRESHOLD,
     WAREHOUSE_UPGRADE_COST_BASE,
     WAREHOUSE_UPGRADE_COST_GROWTH,
     WAREHOUSE_UPGRADE_SIZE,
@@ -237,7 +241,7 @@ export function companyStockUnrealizedPnl(state: GameState, typeId: CompanyTypeI
 }
 
 export function totalAssets(state: GameState): number {
-    return state.cash + inventoryValue(state) + companyValue(state);
+    return state.cash + inventoryValue(state) + companyValue(state) - (state.loanBalance ?? 0);
 }
 
 export function getRank(assets: number): Rank {
@@ -270,12 +274,27 @@ function isHighTierGood(goodId: GoodId): boolean {
     return (HIGH_TIER_GOOD_IDS as readonly string[]).includes(goodId);
 }
 
-function generatePrices(age: number, rng: Rng, eventMults: Partial<Record<GoodId, number>> = {}): Record<GoodId, number> {
+function generatePrices(age: number, rng: Rng, eventMults: Partial<Record<GoodId, number>> = {}, prevPrices?: Record<GoodId, number>): Record<GoodId, number> {
     const infl = inflationFactor(age);
     const prices = emptyPrices();
     for (const good of GOODS) {
-        const min = isHighTierGood(good.id) ? PRICE_HIGH_TIER_MIN : PRICE_RANDOM_MIN;
-        const max = isHighTierGood(good.id) ? PRICE_HIGH_TIER_MAX : PRICE_RANDOM_MAX;
+        let min = isHighTierGood(good.id) ? PRICE_HIGH_TIER_MIN : PRICE_RANDOM_MIN;
+        let max = isHighTierGood(good.id) ? PRICE_HIGH_TIER_MAX : PRICE_RANDOM_MAX;
+
+        // Momentum: last year's deviation from fair biases this year's roll range.
+        const prev = prevPrices?.[good.id];
+        if (prev != null && prev > 0) {
+            const fairPrev = Math.max(1, good.basePrice * inflationFactor(age - 1));
+            const deviation = prev / fairPrev - 1;
+            if (deviation > TREND_THRESHOLD) {
+                min += TREND_MOMENTUM_BONUS;
+                max += TREND_MOMENTUM_BONUS;
+            } else if (deviation < -TREND_THRESHOLD) {
+                min -= TREND_MOMENTUM_BONUS;
+                max -= TREND_MOMENTUM_BONUS;
+            }
+        }
+
         const roll = randomBetween(rng, min, max);
         const mult = eventMults[good.id] ?? 1;
         prices[good.id] = Math.max(1, Math.round(good.basePrice * infl * roll * mult));
@@ -377,25 +396,6 @@ export function fairUnitPrice(goodId: GoodId, age: number): number {
     return Math.max(1, Math.round(good.basePrice * inflationFactor(age)));
 }
 
-export function priceSignal(price: number, fair: number): PriceSignal {
-    if (fair <= 0) return "fair";
-    const ratio = price / fair;
-    if (ratio <= PRICE_CHEAP_RATIO) return "cheap";
-    if (ratio >= PRICE_EXPENSIVE_RATIO) return "expensive";
-    return "fair";
-}
-
-export function priceSignalLabel(signal: PriceSignal): string {
-    switch (signal) {
-        case "cheap":
-            return "平";
-        case "expensive":
-            return "貴";
-        default:
-            return "合理";
-    }
-}
-
 function unlockMilestone(state: GameState, id: MilestoneId, text: string): GameState {
     if (state.milestonesUnlocked.includes(id)) return state;
     let next: GameState = {
@@ -447,12 +447,14 @@ export function normalizeGameState(raw: GameState): GameState {
         inventory: {...emptyInventory(), ...raw.inventory},
         inventoryCost: {...emptyInventory(), ...(raw.inventoryCost ?? {})},
         prices: {...emptyPrices(), ...raw.prices},
+        prevPrices: {...emptyPrices(), ...(raw.prevPrices ?? {})},
         companySharePrices: {...emptyCompanySharePrices(), ...(raw.companySharePrices ?? {})},
         companies: (raw.companies ?? []).map(c => normalizeOwnedCompany(c)),
         children: raw.children ?? [],
         log: raw.log ?? [],
         endAge: raw.endAge ?? END_AGE,
         metaBonusesApplied: raw.metaBonusesApplied ?? {cash: 0, reputation: 0, warehouse: 0},
+        loanBalance: raw.loanBalance ?? 0,
     };
 }
 
@@ -469,6 +471,7 @@ export function createInitialState(seed?: number): GameState {
         inventory: emptyInventory(),
         inventoryCost: emptyInventory(),
         prices: emptyPrices(),
+        prevPrices: emptyPrices(),
         companies: [],
         companySharePrices: emptyCompanySharePrices(),
         partnerId: null,
@@ -487,6 +490,7 @@ export function createInitialState(seed?: number): GameState {
         lastTurnSummary: null,
         endAge: END_AGE,
         metaBonusesApplied: {cash: 0, reputation: 0, warehouse: 0},
+        loanBalance: 0,
     };
 }
 
@@ -559,12 +563,14 @@ export function beginTurn(state: GameState): GameState {
     const rng = turnRng(state, 1);
     const event = pickWeighted(rng, EVENTS);
     // Prices without event mults — player choice applies price_mult afterwards.
-    const prices = generatePrices(state.age, rng, {});
+    // Momentum: last year's prices bias this year's roll range.
+    const prices = generatePrices(state.age, rng, {}, state.prevPrices);
     const companySharePrices = generateCompanySharePrices(state.age, rng);
 
     let next: GameState = {
         ...state,
         phase: "event",
+        prevPrices: {...state.prices},
         prices,
         companySharePrices,
         currentEventId: event.id,
@@ -697,6 +703,74 @@ export function donate(state: GameState): GameState {
         reputation: clamp(state.reputation + gain, 0, 100),
     };
     return pushLog(next, `捐咗 ${formatMoney(fee)} 做公益，名聲 ${before} → ${next.reputation}（+${gain}）。`, "good");
+}
+
+/** Loan interest rate: linear from HIGH (rep 0) to LOW (rep 100). */
+export function getLoanInterestRate(reputation: number): number {
+    const t = clamp(reputation, 0, 100) / 100;
+    return LOAN_INTEREST_RATE_HIGH + (LOAN_INTEREST_RATE_LOW - LOAN_INTEREST_RATE_HIGH) * t;
+}
+
+/** Gross assets (before subtracting loan). */
+export function grossAssets(state: GameState): number {
+    return state.cash + inventoryValue(state) + companyValue(state);
+}
+
+/**
+ * Maximum total loan allowed based on net equity (cash + inventory + companies − debt).
+ * Using equity — not gross — so borrowed cash cannot inflate the credit line
+ * (otherwise debt can snowball toward ~1× original assets).
+ */
+export function getMaxLoan(state: GameState): number {
+    return Math.max(0, Math.round(totalAssets(state) * LOAN_MAX_ASSET_RATIO));
+}
+
+/** How much more the player can still borrow this turn. */
+export function getAvailableLoan(state: GameState): number {
+    return Math.max(0, getMaxLoan(state) - (state.loanBalance ?? 0));
+}
+
+export function takeLoan(state: GameState, amount: number): GameState {
+    if (state.phase !== "playing") return state;
+    if (!isPositiveInt(amount)) return state;
+    if (amount < LOAN_MIN_AMOUNT) {
+        return pushLog(state, `最少要借 ${formatMoney(LOAN_MIN_AMOUNT)}。`, "bad");
+    }
+    const available = getAvailableLoan(state);
+    if (amount > available) {
+        return pushLog(state, `借唔到咁多！最多再借 ${formatMoney(available)}（抵押品上限 ${formatMoney(getMaxLoan(state))}，已借 ${formatMoney(state.loanBalance ?? 0)}）。`, "bad");
+    }
+
+    const rate = getLoanInterestRate(state.reputation);
+    let next: GameState = {
+        ...state,
+        cash: state.cash + amount,
+        loanBalance: (state.loanBalance ?? 0) + amount,
+    };
+    return pushLog(next, `借咗 ${formatMoney(amount)}，年息 ${(rate * 100).toFixed(0)}%。總欠款 ${formatMoney(next.loanBalance)}。`, "info");
+}
+
+export function repayLoan(state: GameState, amount: number): GameState {
+    if (state.phase !== "playing") return state;
+    if (!isPositiveInt(amount)) return state;
+
+    const balance = state.loanBalance ?? 0;
+    if (balance <= 0) {
+        return pushLog(state, "你冇欠款。", "bad");
+    }
+    const repay = Math.min(amount, balance, state.cash);
+    if (repay <= 0) {
+        return pushLog(state, "錢唔夠還款。", "bad");
+    }
+
+    let next: GameState = {
+        ...state,
+        cash: state.cash - repay,
+        loanBalance: balance - repay,
+    };
+    const remaining = next.loanBalance ?? 0;
+    const doneText = remaining <= 0 ? " 貸款已清還！" : ` 餘額 ${formatMoney(remaining)}。`;
+    return pushLog(next, `還咗 ${formatMoney(repay)}。${doneText}`, remaining <= 0 ? "good" : "info");
 }
 
 export function buyGood(state: GameState, goodId: GoodId, quantity: number): GameState {
@@ -1239,7 +1313,7 @@ export function commitSuicide(state: GameState): GameState {
         health: 0,
         totalAssets: assets,
     };
-    return pushLog(next, `你選擇咗自殺，準備重新投胎。總資產 ${formatMoney(assets)}`, "bad");
+    return pushLog(next, `你選擇咗重新投胎，準備重新投胎。總資產 ${formatMoney(assets)}`, "bad");
 }
 
 function finishRetire(state: GameState): GameState {
@@ -1289,6 +1363,14 @@ export function endTurn(state: GameState): GameState {
         const health = settleHealth(next);
         next = health.state;
         messages.push(...health.messages);
+    }
+
+    // Loan interest compounds yearly.
+    if ((next.loanBalance ?? 0) > 0) {
+        const rate = getLoanInterestRate(next.reputation);
+        const interest = Math.max(1, Math.ceil(next.loanBalance * rate));
+        next = {...next, loanBalance: next.loanBalance + interest};
+        messages.push(`銀行貸款利息 +${formatMoney(interest)}（${(rate * 100).toFixed(0)}%），總欠款 ${formatMoney(next.loanBalance)}`);
     }
 
     if (next.cash < 0) {

@@ -1,9 +1,9 @@
 import type {LucideIcon} from "lucide-react";
 import {ScrollText} from "lucide-react";
 import {Button} from "@/components/Button";
-import {CompanySectionIcon, FamilySectionIcon, MarketSectionIcon} from "@/ui/icons";
+import {BankSectionIcon, CompanySectionIcon, FamilySectionIcon, MarketSectionIcon} from "@/ui/icons";
 
-export type GameTab = "market" | "company" | "family" | "log";
+export type GameTab = "market" | "company" | "family" | "bank" | "log";
 
 interface TabDef {
     id: GameTab;
@@ -15,6 +15,7 @@ const TABS: readonly TabDef[] = [
     {id: "market", label: "市場", icon: MarketSectionIcon},
     {id: "company", label: "創業", icon: CompanySectionIcon},
     {id: "family", label: "家庭", icon: FamilySectionIcon},
+    {id: "bank", label: "銀行", icon: BankSectionIcon},
     {id: "log", label: "日誌", icon: ScrollText},
 ];
 
@@ -33,7 +34,7 @@ export const BottomPanel = ({activeTab, onTabChange, endTurnDisabled, onEndTurn}
                     結束今年
                 </Button>
 
-                <div className="grid flex-1 grid-cols-4 gap-1.5 md:gap-2" role="tablist" aria-label="遊戲分頁">
+                <div className="grid flex-1 grid-cols-5 gap-1.5 md:gap-2" role="tablist" aria-label="遊戲分頁">
                     {TABS.map(tab => {
                         const Icon = tab.icon;
                         const active = activeTab === tab.id;

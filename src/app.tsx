@@ -27,6 +27,8 @@ export const App = () => {
     const marry = useGameStore(s => s.marry);
     const seeDoctor = useGameStore(s => s.seeDoctor);
     const donate = useGameStore(s => s.donate);
+    const takeLoan = useGameStore(s => s.takeLoan);
+    const repayLoan = useGameStore(s => s.repayLoan);
     const endTurn = useGameStore(s => s.endTurn);
     const openProsperity = useGameStore(s => s.openProsperity);
     const closeProsperity = useGameStore(s => s.closeProsperity);
@@ -107,6 +109,8 @@ export const App = () => {
             onMarry={marry}
             onSeeDoctor={() => seeDoctor()}
             onDonate={() => donate()}
+            onTakeLoan={takeLoan}
+            onRepayLoan={repayLoan}
             onEndTurn={() => endTurn()}
             onSuicide={() => suicide()}
         />

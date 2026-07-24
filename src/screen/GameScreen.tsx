@@ -5,6 +5,7 @@ import {formatMoney} from "@/game/format";
 import {getCurrentEvent, getUsedWarehouse, totalAssets} from "@/game/engine";
 import type {CompanyTypeId, GameState, GoodId, PartnerId} from "@/types/game";
 import {ActionToast} from "@/components/ActionToast";
+import {BankPanel} from "@/components/BankPanel";
 import {BottomPanel, type GameTab} from "@/components/BottomPanel";
 import {CompanyPanel} from "@/components/CompanyPanel";
 import {ConfirmModal} from "@/components/ConfirmModal";
@@ -32,6 +33,8 @@ interface Props {
     onMarry: (partnerId: PartnerId) => void;
     onSeeDoctor: () => void;
     onDonate: () => void;
+    onTakeLoan: (amount: number) => void;
+    onRepayLoan: (amount: number) => void;
     onEndTurn: () => void;
     onSuicide: () => void;
 }
@@ -49,6 +52,8 @@ export const GameScreen = ({
     onMarry,
     onSeeDoctor,
     onDonate,
+    onTakeLoan,
+    onRepayLoan,
     onEndTurn,
     onSuicide,
 }: Props) => {
@@ -124,7 +129,6 @@ export const GameScreen = ({
                 ) : null}
 
                 <section className="screen-enter screen-enter-delay-1 grid grid-cols-2 gap-2 text-sm md:text-base sm:grid-cols-3 lg:grid-cols-6">
-                    <Stat label="年齡" value={`${state.age} 歲`} />
                     <Stat label="現金" value={formatMoney(state.cash)} tone={cashTone} />
                     <Stat
                         label="健康"
@@ -136,6 +140,7 @@ export const GameScreen = ({
                     <Stat label="名聲" value={String(state.reputation)} action={<DonateButton state={state} locked={locked} onDonate={onDonate} />} />
                     <Stat label="倉庫" value={`${usedWarehouse}/${state.warehouseCapacity}`} tone={warehouseTone} />
                     <Stat label="總資產" value={formatMoney(assets)} tone="good" />
+                    <Stat label="欠款" value={formatMoney(state.loanBalance)} tone={state.loanBalance > 0 ? "danger" : "default"} />
                 </section>
 
                 {state.cash < 0 || state.health < ILLNESS_HEALTH_THRESHOLD ? (
@@ -159,6 +164,7 @@ export const GameScreen = ({
                     ) : null}
                     {activeTab === "company" ? <CompanyPanel state={state} locked={locked} onFound={onFoundCompany} onBuyShares={onBuyCompanyShares} onSellShares={onSellCompanyShares} /> : null}
                     {activeTab === "family" ? <FamilyPanel state={state} locked={locked} onMarry={onMarry} /> : null}
+                    {activeTab === "bank" ? <BankPanel state={state} locked={locked} onTakeLoan={onTakeLoan} onRepayLoan={onRepayLoan} /> : null}
                     {activeTab === "log" ? <LogPanel entries={state.log} limit={20} /> : null}
                 </div>
             </div>

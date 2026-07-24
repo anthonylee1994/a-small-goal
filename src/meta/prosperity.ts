@@ -179,7 +179,7 @@ export function runKey(game: GameState): string {
 export function computeRunPoints(game: GameState): number {
     if (game.phase !== "dead" && game.phase !== "retired") return 0;
 
-    // 未完成第一年就自殺：只係刷投胎，唔俾分。
+    // 未完成第一年就重新投胎：只係刷投胎，唔俾分。
     if (game.gameOverReason === "suicide" && game.age <= START_AGE) {
         return 0;
     }

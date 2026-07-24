@@ -12,23 +12,25 @@ import {
     dismissBirthReveal,
     dismissEvent,
     endTurn,
-    fairUnitPrice,
     foundCompany,
+    getAvailableLoan,
     getCompanySharePrice,
     donate,
     getDoctorFee,
     getDonateFee,
     getDonateReputationGain,
+    getLoanInterestRate,
+    getMaxLoan,
     getRank,
     holdingCostTotal,
     holdingUnitCost,
     inventoryValue,
-    priceSignal,
+    repayLoan,
     seeDoctor,
     sellCompanyShares,
     sellGood,
-    softenCashLoss,
     startGame,
+    takeLoan,
     totalAssets,
     getWarehouseUpgradeCost,
     upgradeWarehouse,
@@ -38,6 +40,10 @@ import {
     DOCTOR_BASE_FEE,
     DOCTOR_FEE_CAP,
     DOCTOR_WEALTH_RATE,
+    LOAN_INTEREST_RATE_HIGH,
+    LOAN_INTEREST_RATE_LOW,
+    LOAN_MAX_ASSET_RATIO,
+    LOAN_MIN_AMOUNT,
     LOW_CLASS_FIRST_COMPANY_DISCOUNT,
     DONATE_BASE_FEE,
     DONATE_REP_COST_SCALE,
@@ -422,23 +428,6 @@ describe("beginTurn immutability", () => {
     });
 });
 
-describe("softenCashLoss / priceSignal", () => {
-    it("caps negative cash losses against balance and reserve", () => {
-        expect(softenCashLoss(-40_000, 10_000, false)).toBe(-5_000);
-        expect(softenCashLoss(-40_000, 10_000, true)).toBe(-5_000);
-        expect(softenCashLoss(-10_000, 100_000, false)).toBe(-10_000);
-        expect(softenCashLoss(-10_000, 100_000, true)).toBe(-5_000);
-        expect(softenCashLoss(8_888, 1_000, false)).toBe(8_888);
-    });
-
-    it("labels prices cheap / fair / expensive vs fair unit", () => {
-        const fair = fairUnitPrice("chips", START_AGE);
-        expect(priceSignal(Math.round(fair * 0.8), fair)).toBe("cheap");
-        expect(priceSignal(fair, fair)).toBe("fair");
-        expect(priceSignal(Math.round(fair * 1.3), fair)).toBe("expensive");
-    });
-});
-
 describe("foundCompany first success + refund", () => {
     it("guarantees the first founding attempt", () => {
         let state = {...playingState(501), cash: 1_000_000, companyFoundAttempts: 0, reputation: 0};
@@ -630,5 +619,105 @@ describe("donate", () => {
     it("does nothing when cash is insufficient", () => {
         const state = {...playingState(506), reputation: 0, cash: 100};
         expect(donate(state)).toBe(state);
+    });
+});
+
+describe("loan system", () => {
+    it("interest rate scales linearly with reputation", () => {
+        expect(getLoanInterestRate(0)).toBe(LOAN_INTEREST_RATE_HIGH);
+        expect(getLoanInterestRate(100)).toBe(LOAN_INTEREST_RATE_LOW);
+        expect(getLoanInterestRate(50)).toBeCloseTo((LOAN_INTEREST_RATE_HIGH + LOAN_INTEREST_RATE_LOW) / 2, 10);
+        expect(getLoanInterestRate(25)).toBeCloseTo(LOAN_INTEREST_RATE_HIGH + (LOAN_INTEREST_RATE_LOW - LOAN_INTEREST_RATE_HIGH) * 0.25, 10);
+        expect(getLoanInterestRate(-5)).toBe(LOAN_INTEREST_RATE_HIGH);
+        expect(getLoanInterestRate(120)).toBe(LOAN_INTEREST_RATE_LOW);
+    });
+
+    it("max loan is 50% of net equity (not gross)", () => {
+        const state = {...playingState(600), cash: 200_000, loanBalance: 0};
+        expect(getMaxLoan(state)).toBe(Math.round(totalAssets(state) * LOAN_MAX_ASSET_RATIO));
+
+        // Existing debt reduces equity → lower ceiling than gross×50%.
+        const leveraged = {...playingState(600), cash: 200_000, loanBalance: 40_000};
+        const equity = totalAssets(leveraged);
+        expect(getMaxLoan(leveraged)).toBe(Math.round(equity * LOAN_MAX_ASSET_RATIO));
+        expect(getMaxLoan(leveraged)).toBeLessThan(Math.round(200_000 * LOAN_MAX_ASSET_RATIO));
+    });
+
+    it("available loan subtracts existing balance", () => {
+        const state = {...playingState(601), cash: 200_000, loanBalance: 30_000};
+        expect(getAvailableLoan(state)).toBe(Math.max(0, getMaxLoan(state) - 30_000));
+    });
+
+    it("borrowed cash does not expand the credit line (no snowball)", () => {
+        const state = {...playingState(602), cash: 100_000, reputation: 0, loanBalance: 0};
+        const max = getMaxLoan(state);
+        expect(max).toBe(50_000);
+        const next = takeLoan(state, max);
+        expect(next.cash).toBe(150_000);
+        expect(next.loanBalance).toBe(50_000);
+        // Equity unchanged → max stays 50k → nothing left to borrow.
+        expect(getMaxLoan(next)).toBe(50_000);
+        expect(getAvailableLoan(next)).toBe(0);
+        // Second borrow attempt is a no-op.
+        const again = takeLoan(next, LOAN_MIN_AMOUNT);
+        expect(again.loanBalance).toBe(50_000);
+        expect(again.cash).toBe(150_000);
+    });
+
+    it("takeLoan increases cash and loanBalance", () => {
+        const state = {...playingState(603), cash: 100_000, reputation: 0, loanBalance: 0};
+        const next = takeLoan(state, 50_000);
+        expect(next.cash).toBe(150_000);
+        expect(next.loanBalance).toBe(50_000);
+    });
+
+    it("takeLoan rejects below minimum", () => {
+        const state = {...playingState(603), cash: 100_000, loanBalance: 0};
+        const next = takeLoan(state, LOAN_MIN_AMOUNT - 1);
+        expect(next.cash).toBe(state.cash);
+        expect(next.loanBalance).toBe(0);
+    });
+
+    it("takeLoan rejects above available", () => {
+        const state = {...playingState(604), cash: 100_000, loanBalance: 0};
+        const max = getMaxLoan(state);
+        const next = takeLoan(state, max + 1);
+        expect(next.cash).toBe(state.cash);
+    });
+
+    it("repayLoan reduces cash and loanBalance", () => {
+        const state = {...playingState(605), cash: 100_000, loanBalance: 50_000};
+        const next = repayLoan(state, 20_000);
+        expect(next.cash).toBe(80_000);
+        expect(next.loanBalance).toBe(30_000);
+    });
+
+    it("repayLoan caps at balance and cash", () => {
+        const state = {...playingState(606), cash: 10_000, loanBalance: 50_000};
+        const next = repayLoan(state, 100_000);
+        expect(next.cash).toBe(0);
+        expect(next.loanBalance).toBe(40_000);
+    });
+
+    it("repayLoan does nothing with no loan", () => {
+        const state = {...playingState(607), cash: 100_000, loanBalance: 0};
+        const next = repayLoan(state, 10_000);
+        expect(next.cash).toBe(state.cash);
+        expect(next.loanBalance).toBe(0);
+    });
+
+    it("totalAssets subtracts loanBalance", () => {
+        const state = {...playingState(608), cash: 100_000, loanBalance: 30_000};
+        const gross = state.cash + inventoryValue(state) + companyValue(state);
+        expect(totalAssets(state)).toBe(gross - 30_000);
+    });
+
+    it("endTurn applies compound interest to loan", () => {
+        let state = {...playingState(609), cash: 500_000, reputation: 0, loanBalance: 100_000, health: 100};
+        const rate = getLoanInterestRate(0);
+        const expectedInterest = Math.max(1, Math.ceil(100_000 * rate));
+        state = endTurn(state);
+        // After endTurn, loan should have grown by interest (may also have other cash changes).
+        expect(state.loanBalance).toBeGreaterThanOrEqual(100_000 + expectedInterest);
     });
 });

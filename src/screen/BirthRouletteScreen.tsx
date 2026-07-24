@@ -151,7 +151,7 @@ export const BirthRouletteScreen = ({state, onConfirm}: Props) => {
                 <h1 className="text-3xl font-black leading-none tracking-tight md:text-5xl lg:text-6xl" style={{fontFamily: "var(--font-display)"}}>
                     投胎轉盤
                 </h1>
-                <p className="text-sm font-bold text-(--muted) md:text-lg">{phase === "done" ? "命運已定，睇清楚你嘅出生。" : "正在為你投胎……"}</p>
+                <p className="text-sm font-bold text-(--muted) md:text-lg">{phase === "done" ? "你的首抽如何，你的日子也必如何。" : "正在為你刷首抽…"}</p>
             </div>
 
             {/* Wheel — fixed size, not stretched by leftover viewport */}

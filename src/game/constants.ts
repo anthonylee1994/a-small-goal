@@ -21,10 +21,6 @@ export const PRICE_HIGH_TIER_MIN = 0.66;
 export const PRICE_HIGH_TIER_MAX = 1.5;
 export const HIGH_TIER_GOOD_IDS = ["bitcoin", "gold", "ev", "options"] as const;
 
-/** Relative to fair (base × inflation): below = cheap, above = expensive. */
-export const PRICE_CHEAP_RATIO = 0.9;
-export const PRICE_EXPENSIVE_RATIO = 1.15;
-
 /** Dead-poor birth: small rep head-start + first shop / first warehouse discounts. */
 export const LOW_CLASS_STARTING_REPUTATION = 5;
 /** Fraction off founding cost for the first company when birthFamily is low_class. */
@@ -90,6 +86,24 @@ export const CHILD_TUITION = 30_000;
 export const MAX_CHILDREN = 4;
 
 export const MAX_LOGS = 40;
+
+/**
+ * 銀行貸款：單筆循環貸款，利息按年結複利。
+ * 利率跟名聲線性掛鈎：0 名聲 = HIGH，100 名聲 = LOW，中間按比例。
+ */
+export const LOAN_INTEREST_RATE_HIGH = 0.15; // rep 0
+export const LOAN_INTEREST_RATE_LOW = 0.07; // rep 100
+/** Max loan = net equity (totalAssets) × this ratio — loan proceeds do not expand the line. */
+export const LOAN_MAX_ASSET_RATIO = 0.5;
+export const LOAN_MIN_AMOUNT = 10_000;
+
+/**
+ * 市場趨勢動量：去年價格偏離公平價時，今年隨機範圍會輕微偏移。
+ * 上升趨勢 → 隨機下限/上限各 +BONUS；下降趨勢 → 各 −BONUS。
+ */
+export const TREND_MOMENTUM_BONUS = 0.08;
+/** Price must deviate from fair by this ratio to count as a trend. */
+export const TREND_THRESHOLD = 0.1;
 
 export const MILESTONE_THRESHOLDS = [
     {id: "assets_1m" as const, threshold: 1_000_000, title: "百萬身家", message: "帳戶多咗個零，阿嬸都開始問你炒咩！"},

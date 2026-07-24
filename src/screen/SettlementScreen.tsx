@@ -28,7 +28,7 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const rank = getRank(assets);
     const StatusIcon = isDead ? DeathIcon : RetireIcon;
     const RankIcon = RANK_ICONS[rank.tier];
-    /** 達標一億小目標 = 贏；猝死／破產／自殺／未達標退休 = 輸。 */
+    /** 達標一億小目標 = 贏；猝死／破產／重新投胎／未達標退休 = 輸。 */
     const isWin = !isDead && rank.tier === "winner";
     /**
      * 由局況即時計分，唔靠 session 暫存 — refresh 結算頁都睇到。
@@ -37,7 +37,7 @@ export const SettlementScreen = ({state, onBackToTitle}: Props) => {
     const prosperityPointsEarned = computeRunPoints(state);
 
     const title = isSuicide ? "投胎結算" : isBankruptcy ? "破產結算" : isDead ? "猝死結算" : "退休結算";
-    const ageHint = isSuicide ? " · 自殺" : isBankruptcy ? " · 負債出局" : isDead ? " · 未活到退休" : null;
+    const ageHint = isSuicide ? " · 重新投胎" : isBankruptcy ? " · 負債出局" : isDead ? " · 未活到退休" : null;
     const badge = isSuicide ? "再嚟" : isBankruptcy ? "破產" : isDead ? "GG" : isWin ? "WIN!" : "差啲";
 
     React.useEffect(() => {

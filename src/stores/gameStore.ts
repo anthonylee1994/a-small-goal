@@ -14,10 +14,12 @@ import {
     foundCompany,
     marry,
     normalizeGameState,
+    repayLoan,
     seeDoctor,
     sellCompanyShares,
     sellGood,
     startGame,
+    takeLoan,
     upgradeWarehouse,
 } from "@/game/engine";
 import {awardRun, buyUpgrade, createDefaultMeta, getStartBonuses, normalizeMeta} from "@/meta/prosperity";
@@ -43,6 +45,8 @@ interface GameActions {
     marry: (partnerId: PartnerId) => void;
     seeDoctor: () => void;
     donate: () => void;
+    takeLoan: (amount: number) => void;
+    repayLoan: (amount: number) => void;
     endTurn: () => void;
     openProsperity: () => void;
     closeProsperity: () => void;
@@ -123,6 +127,8 @@ export const useGameStore = create<GameStore>()(
             marry: partnerId => set(s => ({game: marry(s.game, partnerId)})),
             seeDoctor: () => set(s => ({game: seeDoctor(s.game)})),
             donate: () => set(s => ({game: donate(s.game)})),
+            takeLoan: amount => set(s => ({game: takeLoan(s.game, amount)})),
+            repayLoan: amount => set(s => ({game: repayLoan(s.game, amount)})),
 
             endTurn: () =>
                 set(s => {

@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {BALANCE_SEEDS, BALANCE_STRATEGIES, runSim, summarize} from "./balance.sim";
+import {ALL_BALANCE_STRATEGIES, BALANCE_SEEDS, BALANCE_STRATEGIES, LOAN_STRATEGIES, runSim, summarize} from "./balance.sim";
 
 describe("Phase 3 balance simulation", () => {
     it("runs ≥10 fixed-seed games across strategies and prints asset distribution", () => {
@@ -73,6 +73,93 @@ describe("Phase 3 balance simulation", () => {
         // Poverty start is hard but not a hard zero on "almost" across all strategies.
         if (byFamily.low_class!.n > 0) {
             expect(byFamily.low_class!.almost).toBeGreaterThan(0);
+        }
+    });
+
+    it("bank leverage strategies stay playable and do not break win-rate soft caps", () => {
+        const results = BALANCE_SEEDS.flatMap(seed => ALL_BALANCE_STRATEGIES.map(strategy => runSim(seed, strategy)));
+
+        for (const r of results) {
+            expect(r.reason === "retirement" || r.reason === "death").toBe(true);
+            expect(r.peakLoan).toBeGreaterThanOrEqual(0);
+            expect(r.finalLoan).toBeGreaterThanOrEqual(0);
+            expect(Number.isFinite(r.finalAssets)).toBe(true);
+        }
+
+        const loanResults = results.filter(r => LOAN_STRATEGIES.includes(r.strategy));
+        const baseline = results.filter(r => BALANCE_STRATEGIES.includes(r.strategy));
+
+        // Loan bots should actually use credit on most seeds (otherwise harness is useless).
+        const loanUsers = loanResults.filter(r => r.peakLoan > 0).length;
+        expect(loanUsers / loanResults.length).toBeGreaterThan(0.5);
+
+        const loanWins = loanResults.filter(r => r.winner).length;
+        const loanWinRate = loanWins / loanResults.length;
+        const baseWins = baseline.filter(r => r.winner).length;
+        const baseWinRate = baseWins / baseline.length;
+
+        // eslint-disable-next-line no-console
+        console.log(
+            "\n=== Bank leverage balance report ===\n" +
+                summarize(results) +
+                "\n" +
+                JSON.stringify(
+                    {
+                        baseWinRate,
+                        loanWinRate,
+                        loanUsers,
+                        loanN: loanResults.length,
+                        byLoanStrategy: Object.fromEntries(
+                            LOAN_STRATEGIES.map(s => {
+                                const list = loanResults.filter(r => r.strategy === s);
+                                const finals = list.map(r => r.finalAssets).sort((a, b) => a - b);
+                                return [
+                                    s,
+                                    {
+                                        wins: list.filter(r => r.winner).length,
+                                        almost: list.filter(r => r.finalAssets >= 10_000_000).length,
+                                        deaths: list.filter(r => r.reason === "death").length,
+                                        peakLoanP50: finals.length ? list.map(r => r.peakLoan).sort((a, b) => a - b)[Math.floor(list.length / 2)] : 0,
+                                        interestP50: list.map(r => r.interestPaid).sort((a, b) => a - b)[Math.floor(list.length / 2)] ?? 0,
+                                        medianAssets: finals[Math.floor(finals.length / 2)] ?? 0,
+                                    },
+                                ];
+                            })
+                        ),
+                    },
+                    null,
+                    2
+                )
+        );
+
+        // Leverage should help sometimes, but not turn simple bots into free $100M printers.
+        expect(loanWinRate).toBeLessThan(0.45);
+        // At least one levered path still reaches almost-tier.
+        expect(loanResults.some(r => r.finalAssets >= 10_000_000)).toBe(true);
+
+        // Max-leverage yolo must remain risky: not a perfect win machine, and deaths or
+        // underperformance vs cautious paths should show up.
+        const loanYolo = loanResults.filter(r => r.strategy === "loan_yolo");
+        expect(loanYolo.filter(r => r.winner).length).toBeLessThan(loanYolo.length);
+
+        // No single loan strategy wins every seed.
+        for (const s of LOAN_STRATEGIES) {
+            const list = loanResults.filter(r => r.strategy === s);
+            expect(list.filter(r => r.winner).length).toBeLessThan(list.length);
+        }
+
+        // Smart leverage (loan_hybrid / loan_company_rush) should not be strictly worse
+        // than their baselines on median assets across the seed pool (soft: allow 25% worse).
+        for (const [base, levered] of [
+            ["hybrid", "loan_hybrid"],
+            ["company_rush", "loan_company_rush"],
+        ] as const) {
+            const baseList = results.filter(r => r.strategy === base);
+            const levList = results.filter(r => r.strategy === levered);
+            const baseMed = [...baseList.map(r => r.finalAssets)].sort((a, b) => a - b)[Math.floor(baseList.length / 2)] ?? 0;
+            const levMed = [...levList.map(r => r.finalAssets)].sort((a, b) => a - b)[Math.floor(levList.length / 2)] ?? 0;
+            // Interest should not obliterate a sane leverage strategy (median not < 50% of baseline).
+            expect(levMed).toBeGreaterThan(baseMed * 0.5);
         }
     });
 });

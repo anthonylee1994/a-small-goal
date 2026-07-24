@@ -89,6 +89,80 @@ body.modal-scroll-locked [data-modal-panel] {
     overflow-wrap: anywhere;
 }
 
+/* Hide scrollbars on horizontal drum scrollers (still scrollable). */
+.scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
+/* AmountSlider — chunky neo-brutal range thumb / track reset */
+.amount-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 2.25rem;
+    margin: 0;
+}
+.amount-slider:focus {
+    outline: none;
+}
+.amount-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow:
+        0 0 0 3px var(--bg),
+        0 0 0 5px var(--coral);
+}
+.amount-slider:focus-visible::-moz-range-thumb {
+    box-shadow:
+        0 0 0 3px var(--bg),
+        0 0 0 5px var(--coral);
+}
+.amount-slider::-webkit-slider-runnable-track {
+    height: 0.75rem;
+    background: transparent;
+    border: none;
+}
+.amount-slider::-moz-range-track {
+    height: 0.75rem;
+    background: transparent;
+    border: none;
+}
+.amount-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: -0.375rem; /* centre on 0.75rem track */
+    border-radius: 9999px;
+    border: 2px solid var(--border);
+    background: var(--accent);
+    box-shadow: 2px 2px 0 var(--border);
+    cursor: grab;
+}
+.amount-slider:active::-webkit-slider-thumb {
+    cursor: grabbing;
+    background: var(--coral);
+}
+.amount-slider::-moz-range-thumb {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    border: 2px solid var(--border);
+    background: var(--accent);
+    box-shadow: 2px 2px 0 var(--border);
+    cursor: grab;
+}
+.amount-slider:active::-moz-range-thumb {
+    cursor: grabbing;
+    background: var(--coral);
+}
+.amount-slider:disabled::-webkit-slider-thumb,
+.amount-slider:disabled::-moz-range-thumb {
+    cursor: not-allowed;
+}
+
 @keyframes modal-dimmer-in {
     from {
         opacity: 0;

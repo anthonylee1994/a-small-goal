@@ -46,6 +46,7 @@ import {
     PawPrint,
     PhoneOff,
     Pill,
+    PiggyBank,
     Receipt,
     Rocket,
     Ship,
@@ -205,6 +206,7 @@ export const BrandIcon = CircleDollarSign;
 export const MarketSectionIcon = ShoppingCart;
 export const CompanySectionIcon = Factory;
 export const FamilySectionIcon = HeartHandshake;
+export const BankSectionIcon = PiggyBank;
 export const HeartIcon = Heart;
 export const DonateIcon = HandCoins;
 export const SoundOnIcon = Volume2;
